@@ -129,14 +129,18 @@ Friday, February 27, 2026
 #### Prepared Questions & Decisions
 
 **Issue #1**  
-- How to track transport -> Use phone sensors (walking, cycling, car detection)  
-- Photo verification -> Rarely, for waste; reward points for participation
+- How to track transport; Use phone sensors (walking, cycling, car detection)  
+- Photo verification; Rarely, for waste; reward points for participation
+
 **Issue #2**  
-- Impact calculation -> Points tied to verified activities; campus-wide aggregation needed.
+- Impact calculation; Points tied to verified activities; campus-wide aggregation needed.
+
 **Issue #3**  
-- Hardware dependency -> Avoid hardware; rely on sensors and optional photos  
+- Hardware dependency; Avoid hardware; rely on sensors and optional photos
+  
 **Issue #4**  
-- User onboarding -> Include tutorial on logging activities and earning points  
+- User onboarding; Include tutorial on logging activities and earning points
+
 
 ---
 
