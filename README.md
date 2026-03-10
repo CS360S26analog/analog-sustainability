@@ -141,6 +141,16 @@ Friday, February 27, 2026
 **Issue #4**  
 - User onboarding; Include tutorial on logging activities and earning points
 
+**Issue #5**
+- Students could collude to mass-approve fake or exaggerated logs
+
+**Issue #6**
+- If points are too easy to earn, rewards lose meaning. If too hard, users disengage.
+
+**Issue #7**
+- Should students know whose log they are voting on, or should submissions be anonymous?
+
+
 
 ---
 
