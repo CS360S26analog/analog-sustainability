@@ -505,6 +505,32 @@ _Add screenshots or links to wireframe images._
 ![Screen 5 — Friends & Social](./screenshots/s5.png)
 
 
+## Screen 1 — Home Dashboard
+
+The main landing screen. Greets the user by name (Maya). Displays their current logging streak and all-time best, estimated CO₂ and waste reduction (in kg), points balance, and active Monthly Challenge progress. The activity section at the top surfaces the student's most commonly logged actions at the top for faster repeat logging and only appears once at least one prior log exists. Entry point to all core features via the bottom navbar.
+
+## Screen 2 — Log Activity
+
+Lets students record a sustainable action in one tap. Activities are grouped by category (Transport, Food, Waste, Energy). A Quick Log tab surfaces the student's most frequently used activities for repeat logging. Students choose Quick or Verified at submission. Verified entries prompt for photo proof and are sent to the community feed for peer validation.
+
+## Screen 3 — Leaderboard
+
+Campus-wide rankings showing students ordered by total points earned from verified, community-voted logs. Displays each participant's eco title, point total, and streak. The current student's rank is always visible. Updates in real time as votes are cast and points are credited.
+
+## Screen 4 Expanded — Profile (Full Detail View)
+
+The complete profile view. Shows Maya's total CO₂ saved, active streak, challenges completed, and all earned and locked achievement badges in full detail. Locked badges are greyed out to signal attainable next milestones. The Account section provides access to Settings, Privacy, Notifications (including streak reminder toggle), and Help.
+
+## Screen 4 — Profile (Default / Collapsed View)
+
+The standard in-frame profile view as navigated to via the Profile tab. Same content as the expanded view, optimised for the default phone viewport. Shows the student's eco title, points, key stats, and badge row at a glance.
+
+## Screen 5 — Friends & Social (Your Friends screen)
+
+Social screen showing a student's friend list ranked by eco points and active streak. Encourages accountability and friendly competition among peers. The "Add Friend" button in the header lets students invite others by name or username. Friend ranks update in real time as members log activities.
+
+
+
 ### Wireframes – Project Part 3
 _Add screenshots or links to wireframe images._
 
@@ -764,26 +790,3 @@ _Add screenshots or links to wireframe images._
 - [ ] After voting, the action is marked as done and the student cannot vote on the same submission again
 - [ ] If a submission reaches the required vote threshold after the student's vote, the student sees it marked as verified in the feed
 
-## Screen 1 — Home Dashboard
-
-The main landing screen. Greets the user by name (Maya). Displays their current logging streak and all-time best, estimated CO₂ and waste reduction (in kg), points balance, and active Monthly Challenge progress. The activity section at the top surfaces the student's most commonly logged actions at the top for faster repeat logging and only appears once at least one prior log exists. Entry point to all core features via the bottom navbar.
-
-## Screen 2 — Log Activity
-
-Lets students record a sustainable action in one tap. Activities are grouped by category (Transport, Food, Waste, Energy). A Quick Log tab surfaces the student's most frequently used activities for repeat logging. Students choose Quick or Verified at submission. Verified entries prompt for photo proof and are sent to the community feed for peer validation.
-
-## Screen 3 — Leaderboard
-
-Campus-wide rankings showing students ordered by total points earned from verified, community-voted logs. Displays each participant's eco title, point total, and streak. The current student's rank is always visible. Updates in real time as votes are cast and points are credited.
-
-## Screen 4 Expanded — Profile (Full Detail View)
-
-The complete profile view. Shows Maya's total CO₂ saved, active streak, challenges completed, and all earned and locked achievement badges in full detail. Locked badges are greyed out to signal attainable next milestones. The Account section provides access to Settings, Privacy, Notifications (including streak reminder toggle), and Help.
-
-## Screen 4 — Profile (Default / Collapsed View)
-
-The standard in-frame profile view as navigated to via the Profile tab. Same content as the expanded view, optimised for the default phone viewport. Shows the student's eco title, points, key stats, and badge row at a glance.
-
-## Screen 5 — Friends & Social (Your Friends screen)
-
-Social screen showing a student's friend list ranked by eco points and active streak. Encourages accountability and friendly competition among peers. The "Add Friend" button in the header lets students invite others by name or username. Friend ranks update in real time as members log activities.
