@@ -486,7 +486,6 @@ _Add screenshots or links to wireframe images._
 
 ### Wireframes – Project Part 2
 https://www.figma.com/design/jEozF9kZnQmmX199ftrxQq/Untitled?node-id=0-1&t=ZiAlzJ7MbXtacAX1-1
-_Add screenshots or links to wireframe images._
 ## Screenshots
 
 ### Screen 1 — Home Dashboard
