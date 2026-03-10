@@ -23,7 +23,7 @@
   - [Wireframes – Project Part 2](#wireframes--project-part-2)
   - [Wireframes – Project Part 3](#wireframes--project-part-3)
  
-
+- [Acceptance Criteria](#acceptance-criteria)
 ---
 ## Team Information
 - **Team Name:** Analog
@@ -489,3 +489,259 @@ _Add screenshots or links to wireframe images._
 
 ### Wireframes – Project Part 3
 _Add screenshots or links to wireframe images._
+
+---
+### Acceptance Criteria
+---
+#### A1 — Account Creation
+- [ ] The registration screen is accessible from the app's landing/login screen
+- [ ] The user must enter a campus email address, and the system rejects non-campus email domains
+- [ ] The user must set a password that meets a minimum security requirement (e.g. 8+ characters)
+- [ ] The user must confirm their password and the system blocks submission if the two fields do not match
+- [ ] The system sends a verification email to the provided address before activating the account
+- [ ] The account is not functional until the email has been verified
+- [ ] If the email is already registered, the system shows a clear message and does not create a duplicate account
+- [ ] After successful registration and verification, the user is directed to complete a basic profile (display name) before reaching the main app
+
+---
+
+#### L1 — Categorized Activity Log
+- [ ] The logging screen is accessible from the main navigation in one tap
+- [ ] Activities are grouped into clearly labeled categories (e.g. Transport, Food, Energy, Waste)
+- [ ] Each category displays a list of predefined activity options
+- [ ] The student can select an activity and submit the log without typing anything
+- [ ] The system saves the entry and it appears in the student's activity history
+- [ ] A confirmation message is shown after a successful submission
+
+---
+
+#### L2 — Frequent Activity Suggestions
+- [ ] A "Frequent" or "Recent" section appears at the top of the logging screen
+- [ ] The section shows activities the student has logged most often, ordered by frequency
+- [ ] The section only appears after the student has at least one prior log entry
+- [ ] Selecting an activity from this section follows the same submission flow as selecting from a category
+- [ ] The suggestions update to reflect the student's most recent logging patterns
+
+---
+
+#### L3 — Quick vs. Verified Tagging
+- [ ] When submitting a log, the student must choose either "Quick" or "Verified" before confirming
+- [ ] Each entry in the activity history displays a visible label indicating its type (Quick or Verified)
+- [ ] The label cannot be changed after the entry is submitted
+- [ ] Quick and Verified entries are visually distinguishable in the history list (e.g. different badge or color)
+
+---
+
+#### L4 — Attach Proof for Community Verification
+- [ ] When the student selects "Verified" during logging, they are prompted to attach proof before submitting
+- [ ] The system accepts at least one supported proof format (e.g. image upload)
+- [ ] The student cannot submit a verified log without attaching proof
+- [ ] After submission, the entry is posted to the community verification feed and marked as "Awaiting Community Verification" in the student's history
+- [ ] A confirmation message is shown stating that the log is now open for community review
+- [ ] The student can see the current vote count on their pending submission at any time
+
+---
+
+#### L5 — Edit Recent Log
+- [ ] An edit option is visible on any log entry submitted within the last 24 hours
+- [ ] The student can modify allowed fields such as activity type, category, or date
+- [ ] The updated entry is saved and reflected immediately in the activity history
+- [ ] The edit option is no longer visible on entries older than 24 hours
+- [ ] Approved verified log entries cannot be edited
+
+---
+
+#### D1 — Personal Activity Dashboard
+- [ ] The dashboard is accessible from the main navigation
+- [ ] The dashboard displays a total count of activities logged in the selected time period
+- [ ] Activity counts are broken down by category
+- [ ] The student can switch between time period views (e.g. this week, this month, all time)
+- [ ] The dashboard updates immediately when the time period selection changes
+- [ ] An empty state is shown when no logs exist for the selected period
+
+---
+
+#### D2 — Carbon & Waste Estimates
+- [ ] The dashboard displays an estimated carbon reduction figure derived from the student's logs
+- [ ] The dashboard displays an estimated waste reduction figure derived from the student's logs
+- [ ] Both figures include clearly labeled units (e.g. kg CO₂, kg waste)
+- [ ] A visible note indicates that the values are estimates based on standard emission factors
+- [ ] The figures update when logs are added, edited, or removed
+- [ ] If no qualifying logs exist, a zero value or empty state is displayed rather than an error
+
+---
+
+#### D3 — Logging Streaks
+- [ ] The dashboard displays the student's current consecutive logging streak in days
+- [ ] The dashboard displays the student's all-time longest streak in days
+- [ ] The streak increments by one when the student submits at least one log on a given calendar day
+- [ ] The current streak resets to zero if the student does not log anything on a required day
+- [ ] The all-time best is preserved when a reset occurs and does not decrease
+- [ ] Both values update in real time after a qualifying log is submitted
+
+---
+
+#### D4 — Personal Monthly Goal
+- [ ] The student can access a goal-setting screen from the dashboard
+- [ ] The student can choose a goal type (e.g. number of logs or estimated CO₂ saved)
+- [ ] The student can enter a numeric target value for the chosen goal type
+- [ ] The dashboard displays the student's progress toward their current goal for the active month
+- [ ] The goal resets or prompts the student to set a new one at the start of each month
+- [ ] The student can edit or remove their goal at any time
+
+---
+
+#### CI1 — Campus-Wide Community Impact Screen
+- [ ] The community impact screen is accessible to all logged-in students from the main navigation
+- [ ] The screen displays the total number of activities logged campus-wide for the current month
+- [ ] The screen displays the aggregated estimated carbon and waste reduction across all students
+- [ ] No individual student's data or identity is exposed; all figures are collective totals only
+- [ ] The data updates as new logs are submitted and verified across the campus
+- [ ] An empty or baseline state is shown if no data exists yet for the current period
+
+---
+
+#### S2 — Staff Creates & Configures Challenges
+- [ ] Staff can access a challenge creation form from the staff dashboard
+- [ ] The form requires a challenge name, goal description, start date, and end date
+- [ ] Staff can toggle whether team participation is enabled for the challenge
+- [ ] When teams are enabled, staff can set a maximum team size
+- [ ] The challenge becomes visible to students on its start date
+- [ ] Staff can edit a challenge before it starts and view it after it ends
+- [ ] The system prevents creating a challenge with an end date before the start date
+
+---
+
+#### S3 — Staff Publishes Educational Content
+- [ ] Staff can create a new content item with a title, body text, and category
+- [ ] Staff can save a draft without publishing it
+- [ ] Staff can publish a content item, making it visible to students immediately
+- [ ] Staff can edit a published item and save changes without unpublishing it
+- [ ] Staff can unpublish an item, which removes it from the student-facing feed without deleting it
+- [ ] Unpublished items remain accessible to staff for future editing or republishing
+
+---
+
+#### G1 — Browse & Join Challenges
+- [ ] The student can access a challenges screen from the main navigation
+- [ ] Only currently active challenges are shown (start date reached, end date not passed)
+- [ ] Each challenge card shows the challenge name, goal, and end date
+- [ ] The student can open a challenge to view a detailed description including contribution rules
+- [ ] The student can join a challenge from the detail screen with a single action
+- [ ] The student cannot join the same challenge twice
+- [ ] A joined challenge displays the student's personal progress toward the challenge goal
+
+---
+
+#### G2a — Earn Points from Community Votes
+- [ ] Points are awarded automatically once a verified log crosses the minimum vote threshold
+- [ ] The number of points awarded scales with the number of votes received, up to a defined maximum per activity type
+- [ ] The student receives an in-app notification when points are credited
+- [ ] The points transaction appears in the student's history showing the activity and vote count at time of approval
+- [ ] No points are awarded for quick logs or for verified logs that do not reach the minimum threshold before expiry
+- [ ] A student cannot earn more than the defined point cap for a single log entry regardless of votes received
+
+---
+
+#### G2b — Redeem Points for Rewards
+- [ ] The student can view their current points balance from their profile or rewards screen
+- [ ] A list of available redemption options is displayed with names and point costs
+- [ ] The student can select a redemption option and confirm the transaction
+- [ ] The system blocks the redemption if the student's balance is insufficient and shows a clear message
+- [ ] The student's points balance is deducted immediately upon successful redemption
+- [ ] A confirmation message is shown and the transaction appears in the student's points history
+
+---
+
+#### G3a — Auto-Earn Badges at Milestones
+- [ ] The system defines a set of badge milestones tied to specific measurable achievements (e.g. 10 logs, first verified log, 7-day streak)
+- [ ] A badge is awarded automatically when the student's data meets the milestone condition
+- [ ] The student receives an in-app notification when a new badge is earned
+- [ ] Each badge can only be earned once per student
+- [ ] Earning a badge does not require any manual action from the student
+
+---
+
+#### G3b — View Earned & Locked Badges
+- [ ] The student's profile displays a grid or list of all badges in the system
+- [ ] Earned badges are visually distinct from locked badges (e.g. full color vs. greyed out)
+- [ ] Each badge shows its name and a short description of how it is earned
+- [ ] Earned badges show the date they were achieved
+- [ ] The badge display updates immediately after a new badge is earned
+
+---
+
+#### G4a — Create or Join a Team
+- [ ] The student can see a "Teams" section when viewing a team-enabled challenge
+- [ ] The student can create a new team by entering a team name
+- [ ] The team name must be unique within the same challenge
+- [ ] The student can browse existing teams and request to join one
+- [ ] The system prevents joining a team that has reached the maximum size set by staff
+- [ ] A student can only belong to one team per challenge
+
+---
+
+#### G4b — Team Collective Progress
+- [ ] The team view displays the team's total contribution toward the challenge goal
+- [ ] Contributions from all team members are aggregated into a single team total
+- [ ] The team total updates when any member submits a qualifying log
+- [ ] The view shows a progress indicator comparing the team total to the challenge goal
+- [ ] Each team member's individual contribution is visible within the team view
+
+---
+
+#### G5 — Challenge Leaderboard
+- [ ] A leaderboard tab is accessible from within any challenge the student has joined
+- [ ] The leaderboard ranks participants by total points earned within that challenge
+- [ ] The student's own rank and score are always visible, even if not in the top positions
+- [ ] The leaderboard updates when any participant's score changes
+- [ ] Participants with no points are shown at the bottom as unranked or with a score of zero
+- [ ] The leaderboard shows individual rankings for individual challenges and team rankings for team challenges
+
+---
+
+#### E1 — Tips & Articles Feed
+- [ ] The student can access a content feed from the main navigation
+- [ ] The feed displays only currently published items
+- [ ] Each item in the feed shows a title, category, and short preview
+- [ ] The student can tap an item to read the full content
+- [ ] The feed shows a clear empty state when no content has been published
+- [ ] The feed updates when staff publish or unpublish items
+
+---
+
+#### SC1 — Streak Reminder Notification
+- [ ] The system sends a push notification to the student if no log has been submitted by a configurable time threshold (e.g. 9 PM)
+- [ ] The notification is only sent on days when the student has an active streak of at least one day
+- [ ] The notification is not sent if the student has already logged something that day
+- [ ] The student can enable or disable this notification from their settings
+- [ ] Only one reminder notification is sent per day regardless of continued inactivity
+
+---
+
+#### SC2 — Real-World Carbon Equivalents
+- [ ] The dashboard or impact screen displays at least one real-world equivalent alongside the raw CO₂ figure
+- [ ] Equivalents are drawn from a defined lookup table (e.g. EPA or DEFRA equivalence factors)
+- [ ] The equivalent updates when the student's carbon savings figure changes
+- [ ] The label for each equivalent is written in plain, non-technical language
+- [ ] If the student's savings are zero, the equivalent display shows a zero or baseline state rather than an error
+
+---
+
+#### V1 — Community Verification Feed
+- [ ] A community verification feed is accessible from the main navigation
+- [ ] The feed displays pending verified log submissions from other students, showing the activity type, category, submitted proof, and current vote count
+- [ ] Submissions are shown in chronological order by default, newest first
+- [ ] The student's own pending submissions do not appear in their own feed
+- [ ] Each submission shows a time remaining before it expires and closes for voting
+- [ ] Expired or already-verified submissions are removed from the active feed
+
+---
+
+#### V2 — Cast a Verification Vote
+- [ ] Each submission in the feed has a clearly visible vote/verify action
+- [ ] A student can cast one vote per submission
+- [ ] The vote count on the submission updates immediately after the student votes
+- [ ] A student cannot vote on their own submissions
+- [ ] After voting, the action is marked as done and the student cannot vote on the same submission again
+- [ ] If a submission reaches the required vote threshold after the student's vote, the student sees it marked as verified in the feed
