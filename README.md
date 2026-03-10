@@ -242,11 +242,10 @@ _Add UML diagrams here or link images from the repository._
 | US-20 | As a student, I want to create or join a team within a team challenge, so that I can participate as part of a named group rather than as an individual. | Medium | Backlog | 5 | Medium |
 | US-21 | As a student, I want to see my team's collective progress within a challenge update in real time as members log activities, so that I can see how our shared effort is adding up. | Medium | Backlog | 5 | Medium |
 | US-22  | As a student, I want to see a ranked leaderboard for a challenge I am participating in, showing points and my position relative to other participants, so that friendly competition feels fair and motivating. | Medium | Backlog | 5 | Medium |
-| US-23  | As a student, I want to browse a feed of published sustainability tips and short articles inside the app, so that I can learn practical actions to take without leaving the platform. | Low | Backlog | 3 | Low |
-| US-24 | As a student, I want to receive a push notification when I am close to midnight without having logged anything that day and I have an active streak, so that I get a timely reminder before losing progress. | Low | Backlog | 3 | Medium |
-| US-25 | As a student, I want to see my total carbon savings translated into a relatable real-world equivalent, such as the number of car-free days or trees worth of absorption, so that abstract CO₂ numbers feel personally meaningful rather than just a figure on a screen. | Low | Backlog | 2 | Low |
-| US-26  | As a student, I want to browse a feed of verified log submissions from other students that are awaiting community approval, so that I can participate in the validation process. | High | Backlog | 5 | High |
-| US-27  | As a student, I want to cast a verification vote on a peer's pending log submission, so that I can help validate genuine sustainable activity in my campus community. | High | Backlog | 3 | High |
+| US-23 | As a student, I want to receive a push notification when I am close to midnight without having logged anything that day and I have an active streak, so that I get a timely reminder before losing progress. | Low | Backlog | 3 | Medium |
+| US-24 | As a student, I want to see my total carbon savings translated into a relatable real-world equivalent, such as the number of car-free days or trees worth of absorption, so that abstract CO₂ numbers feel personally meaningful rather than just a figure on a screen. | Low | Backlog | 2 | Low |
+| US-25  | As a student, I want to browse a feed of verified log submissions from other students that are awaiting community approval, so that I can participate in the validation process. | High | Backlog | 5 | High |
+| US-26  | As a student, I want to cast a verification vote on a peer's pending log submission, so that I can help validate genuine sustainable activity in my campus community. | High | Backlog | 3 | High |
 
 ---
 
