@@ -171,41 +171,60 @@ Friday, February 27, 2026
 - [ ] List of question to ask assigned TA
 
 ---
-
-### Meeting – March 1, 2026
-
+### Meeting – March 8, 2026
 #### Date
-Sunday, March 1, 2026
-
+Sunday, March 8, 2026
 #### Attendance
 _Content to be added._
-
 ---
-
 #### Key Takeaways
-_Content to be added._
-
+- User stories need 2–3 activity examples; no limit on the number of stories.
+- Not everything in the user stories needs to be implemented, but most details should be finalized by the halfway checkpoint.
+- Each team member must contribute commits for the fourth deliverable.
+- 5–6 storyboard frames are sufficient; include the login/dashboard page.
 ---
-
-
 #### Prepared Questions & Decisions
-_Content to be added._
 
-**Issue #1**
-_Content to be added._
+**Issue #1 — How specific do user stories need to be?**
+Not very specific. 2–3 examples of activities per story is sufficient.
+
+**Issue #2 — Story 5: What is the estimated environmental impact?**
+_Answer not recorded — follow up if needed._
+
+**Issue #3 — Do we have to implement everything in the user stories?**
+No. However, most implementation details should be finalized by the halfway checkpoint.
+
+**Issue #4 — Should we add unique features to user stories?**
+Yes. There is no limit on the number of user stories.
+
+**Issue #5 — User story dependencies**
+User stories do not need to be fully independent — a small degree of dependency is acceptable.
+
+**Issue #6 — Priority and risk levels**
+Use **High**, **Medium**, or **Low** for both priority and risk level.
+
+**Issue #7 — Fourth deliverable requirements**
+Publish meeting notes and push CRC cards. Divide work among members — each member must contribute some commits.
+
+**Issue #8 — Storyboard**
+5–6 frames are sufficient. Make sure to include the login/dashboard page.
+
+**Issue #9 — Internal meeting notes**
+No need to document internal meeting notes.
+
+**Issue #10 — Acceptance criteria**
+Acceptance criteria can be submitted.
 
 ---
-
 #### General Notes
 _Content to be added._
-
 ---
-
 #### Action Items
-_Content to be added._
-
+- Finalize most implementation details before the halfway checkpoint.
+- Publish meeting notes and push CRC cards for the fourth deliverable.
+- Divide commits among all team members.
+- Create a 5–6 frame storyboard including the login/dashboard page.
 ---
-
 
 ### Meeting – TBD
 _Content to be added._
