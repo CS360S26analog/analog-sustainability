@@ -11,6 +11,8 @@
 
 - [UML Diagrams](#uml-diagrams)
 
+- [CRC Cards](#crc-cards)
+
 - [Product Backlog](#product-backlog)
   - [Product Backlog – Project Part 1](#product-backlog--project-part-1)
   - [Product Backlog – Project Part 2](#product-backlog--project-part-2)
@@ -212,6 +214,205 @@ _Content to be added._
 
 ## UML Diagrams
 _Add UML diagrams here or link images from the repository._
+
+---
+
+## CRC Cards
+---
+
+### Core User Classes
+
+| **Student** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds profile details (display name, student ID, campus email) | ActivityLog |
+| Registers using a campus email, enforces password rules, and verifies the account via email before activation | PointsBalance |
+| Submits a new activity log (quick or verified) | StreakTracker |
+| Sets a personal monthly sustainability goal | Challenge |
+| Joins an active challenge and creates or joins a team within it | Team |
+| Redeems points for a green discount or charity donation | Leaderboard |
+| Controls whether streak reminder notifications are enabled | Reward |
+| | Badge |
+| | NotificationService |
+| | Evidence |
+
+---
+
+### Activity Logging
+
+| **ActivityLog** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Records which Activity type was performed, by whom, and on what date | Student |
+| Stores whether the entry was submitted as Quick or Verified | Activity |
+| Tracks verification status for Verified entries (awaiting votes, approved, expired) | Evidence |
+| Stores any Evidence attached to a Verified entry | ImpactCalculator |
+| Allows the student to edit allowed fields within 24 hours of submission | PointsBalance |
+| Locks the entry once 24 hours have passed or the entry is approved | Dashboard |
+| Provides recent log history to surface repeat-activity suggestions | StreakTracker |
+| Stores the environmental impact estimate calculated for this entry | CommunityVerification |
+
+| **Activity** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Defines an activity type by name and category (e.g. "Cycling to campus" under Transport) | ActivityLog |
+| Holds impact data for this type (e.g. kg CO₂ and kg waste saved per use) | ImpactCalculator |
+| Holds the maximum points a single log of this type can earn through community votes | PointsBalance |
+| Flags whether this type is eligible for points at all | StaffMember |
+
+| **Evidence** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Stores the file submitted as proof of a verified activity (e.g. an image upload) | ActivityLog |
+| Validates that a file has been attached before a Verified entry can be submitted | CommunityVerification |
+| Updates the associated ActivityLog status to "awaiting community verification" on valid submission | Student |
+
+| **CommunityVerification** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds the feed of verified entries currently awaiting peer review | ActivityLog |
+| Tracks the running vote count on each pending entry | PointsBalance |
+| Marks an entry as approved once it crosses the minimum vote threshold | Student |
+| Marks an entry as expired if it does not reach the threshold in time | Evidence |
+| Passes the final vote count to PointsBalance so points can be calculated and awarded | |
+
+---
+
+### Impact & Dashboard
+
+| **ImpactCalculator** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Calculates estimated carbon and waste reduction for a given activity entry | Activity |
+| Knows which emission factor or formula applies to each activity type | ActivityLog |
+| Produces a real-world equivalent for a student's total savings (e.g. car-free days) using a defined lookup table | Dashboard |
+| Recalculates figures when logs are added, edited, or removed | |
+| Returns a zero or empty signal when no qualifying logs exist | |
+
+| **Dashboard** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Shows the student's activity count for a selected time period, broken down by category | Student |
+| Displays estimated carbon and waste reduction with labelled units and a real-world equivalent | ActivityLog |
+| Shows the student's current streak and all-time best streak | ImpactCalculator |
+| Shows progress toward the student's personal monthly goal if one is set | StreakTracker |
+| Shows campus-wide aggregated totals when viewed in community mode — collective figures only, no individual data exposed | |
+| Updates immediately when the student changes the selected time period | |
+| Shows a zero or empty state when no data exists for the selected period | |
+
+| **StreakTracker** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds the student's current consecutive logging streak in days | Student |
+| Holds the student's all-time longest streak | ActivityLog |
+| Increments the current streak when at least one log is submitted on a given calendar day | Dashboard |
+| Resets the current streak to zero if the student does not log on a required day | NotificationService |
+| Preserves the all-time best when a reset occurs | |
+
+---
+
+### Notifications
+
+| **NotificationService** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Sends a streak reminder push notification if the student has not logged by a configurable threshold (e.g. 9 PM) | Student |
+| Only sends the reminder if the student has an active streak and has not logged that day | StreakTracker |
+| Sends at most one reminder per day regardless of continued inactivity | PointsBalance |
+| Sends an in-app notification when points are credited to a student's balance | Badge |
+| Sends an in-app notification when a new badge is earned | |
+| Respects the student's notification preference setting | |
+
+---
+
+### Challenges, Teams & Leaderboard
+
+| **Challenge** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds the challenge name, goal description, start date, and end date | Student |
+| Tracks whether team participation is enabled and the max team size | Team |
+| Shows contribution rules so students know how their logs count toward the goal | StaffMember |
+| Records a student's participation when they join | Leaderboard |
+| Prevents the same student from joining twice | |
+| Prevents new enrolments once the end date has passed | |
+| Becomes visible to students on its start date | |
+
+| **Team** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds the team name and a reference to its parent Challenge | Student |
+| Records the creator and the current member list | Challenge |
+| Checks that the team name is unique within the same challenge before saving | ActivityLog |
+| Enforces the maximum team size set on the Challenge | |
+| Aggregates all members' qualifying logs into a single team contribution total | |
+| Tracks progress toward the challenge goal and updates when any member logs | |
+
+| **Leaderboard** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Maintains a ranked list of participants by points earned within a specific challenge | Student |
+| Shows individual rankings for standard challenges and team rankings for team challenges | PointsBalance |
+| Always shows the viewing student's own rank and score, even if outside the top positions | Challenge |
+| Updates when any participant's score changes | Team |
+| Shows a score of zero and unranked status for participants with no points yet | |
+
+---
+
+### Points, Badges & Rewards
+
+| **PointsBalance** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Tracks the student's current total points | Student |
+| Credits points when a verified log is approved, scaled by vote count up to the activity's defined cap | Activity |
+| Awards no points for quick logs or verified logs that expire without enough votes | CommunityVerification |
+| Takes back points if an approved entry is later invalidated, without letting the balance go below zero | Reward |
+| Handles redemption: checks the balance is sufficient, deducts the correct amount on confirmation, and records the transaction | Leaderboard |
+| Maintains a full transaction history of all credits and deductions | NotificationService |
+
+| **Reward** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds the option name and the points cost required to redeem it | Student |
+| Indicates whether the option is a green discount or a charity donation | PointsBalance |
+| Lists all available options to a student with their point costs | |
+
+| **Badge** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Defines a badge by name, description, and the milestone that triggers it (e.g. 10 logs, first verified log, 7-day streak) | Student |
+| Checks whether a student's data meets the badge condition | ActivityLog |
+| Awards the badge automatically once the condition is met — no manual action needed | StreakTracker |
+| Ensures each badge can only be awarded once per student | NotificationService |
+| Records the date the badge was earned | |
+| Displays all badges in the system, distinguishing earned from locked ones | |
+
+---
+
+### Content
+
+| **Content** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds a title, body text, category, short preview, and publication status for each article or tip | Student |
+| Supports three states: draft (staff only), published (visible to students), unpublished (hidden but not deleted) | StaffMember |
+| Returns only currently published items to the student-facing feed | |
+| Shows a clear empty state when no published content exists | |
+
+---
+
+### Staff
+
+| **StaffMember** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds staff role and authorisation level | Challenge |
+| Creates and configures challenges, including name, goal, dates, and team settings | ActivityLog |
+| Can edit a challenge before it starts and view it after it ends | Activity |
+| Creates, edits, publishes, and unpublishes content items | Content |
+| Is denied access to restricted actions if not authorised | |
+---
 
 ---
 
