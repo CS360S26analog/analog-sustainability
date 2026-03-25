@@ -245,7 +245,7 @@ _Add UML diagrams here or link images from the repository._
 |---|---|
 | **Responsibilities** | **Collaborators** |
 | Holds profile details (display name, student ID, campus email) | ActivityLog |
-| Registers using a campus email, enforces password rules, and verifies the account via email before activation | PointsBalance |
+| Delegates credential storage and verification to AuthService | PointsBalance |
 | Submits a new activity log (quick or verified) | StreakTracker |
 | Sets a personal monthly sustainability goal | Challenge |
 | Joins an active challenge and creates or joins a team within it | Team |
@@ -254,6 +254,48 @@ _Add UML diagrams here or link images from the repository._
 | | Badge |
 | | NotificationService |
 | | Evidence |
+| | AuthService |
+| | Database | 
+
+| **StaffMember** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds staff role and authorisation level | Challenge |
+| Delegates credential storage and verification to AuthService | Database |
+| Delegates authorisation checks to AuthService before restricted actions are performed | AuthService |
+| Creates and configures challenges, including name, goal, dates, and team settings | ActivityLog |
+| Can edit a challenge before it starts and view it after it ends | Activity |
+| Creates, edits, publishes, and unpublishes content items | Content |
+
+---
+
+### Authorisation
+
+| **AuthService** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Stores hashed credentials (email + password) for all accounts | Student |
+| Validates credentials on login and issues a session token | StaffMember |
+| Enforces password strength rules and blocks weak passwords | Database |
+| Sends email verification link on registration and activates account on confirmation | NotificationService | 
+| Checks authorization level before allowing access to staff-only actions |
+| Expires and invalidates session tokens on logout or timeout |
+| Handles password-reset flow (token generation, expiry, new-password save) |
+
+---
+
+### Persistence
+
+| **Database** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Persists and retrieves all entity records (students, logs, challenges, etc.) | AuthService |
+| Enforces referential integrity across related entities | Student |
+| Provides transactional writes so partial updates cannot corrupt state | ActivityLog |
+| Executes queries on behalf of service classes (no class queries the DB directly) | Challenge |
+| Stores credential records for AuthService in an isolated credentials table | PointsBalance |
+| Returns empty results rather than errors when no matching records exist | Badge |
+| | Content |
 
 ---
 
@@ -421,19 +463,6 @@ _Add UML diagrams here or link images from the repository._
 
 ---
 
-### Staff
-
-| **StaffMember** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Holds staff role and authorisation level | Challenge |
-| Creates and configures challenges, including name, goal, dates, and team settings | ActivityLog |
-| Can edit a challenge before it starts and view it after it ends | Activity |
-| Creates, edits, publishes, and unpublishes content items | Content |
-| Is denied access to restricted actions if not authorised | |
----
-
----
 
 ## Product Backlog
 
