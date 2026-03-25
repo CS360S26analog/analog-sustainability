@@ -438,34 +438,34 @@ _Add UML diagrams here or link images from the repository._
 ## Product Backlog
 
 ### Product Backlog – Project Part 1
-| ID  | User Story | Priority | Status | Story Points | Risk |
-|-----|------------|----------|--------|--------------|------|
-| US-01  | As a new user, I want to register for an account using my campus email and set a password, so that my activity data is tied to my identity and accessible only to me. | High | Backlog | 5 | Medium |
-| US-02  | As a student, I want to log a sustainable activity by selecting from a categorized list of common actions, so that I can record my habits quickly. | High | Backlog | 5 | Low |
-| US-03  | As a student, I want the logging screen to surface my most frequently used activities at the top, so that repeat actions take even fewer taps over time. | Medium | Backlog | 3 | Low |
-| US-04  | As a student, I want every log entry to be clearly marked as either quick or verified at the time of submission, so that I always know the validation status of my own activity history. | High | Backlog | 3 | Low |
-| US-05  | As a student, I want to attach proof to a verified log entry and have it submitted to the community for validation, so that my activity can be vouched for by my peers. | High | Backlog | 8 | High |
-| US-06  | As a student, I want to edit a log entry within 24 hours of submitting it, so that I can correct honest mistakes without being able to retroactively manipulate older records. | Medium | Backlog | 3 | Low |
-| US-07  | As a student, I want a personalized dashboard that shows how many activities I have logged and across which categories for a time period I can adjust, so that I can see my sustainability habits. | High | Backlog | 8 | Medium |
-| US-08  | As a student, I want my dashboard to display my estimated carbon and waste reduction based on my logs, with units shown clearly, so that I can understand the real-world meaning of my actions. | High | Backlog | 5 | Medium |
-| US-09  | As a student, I want to see my current logging streak and my all-time personal best streak on my dashboard, so that I feel motivated to keep logging consistently. | Medium | Backlog | 3 | Low |
-| US-10  | As a student, I want to set a personal monthly sustainability goal such as a target number of logs or a target impact figure, so that I have a self-directed benchmark beyond external challenges. | Low | Backlog | 3 | Low |
-| US-11 | As a student, I want to view a live campus-wide impact summary showing aggregated sustainability activity across all students, so that I can feel part of a larger collective movement. | Medium | Backlog | 5 | Medium |
-| US-12  | As a sustainability staff member, I want to create and configure a challenge by setting a name, goal, start and end dates, and whether teams are permitted, so that I can run targeted sustainability campaigns for the campus. | High | Backlog | 8 | Medium |
-| US-13  | As a sustainability staff member, I want to publish, edit, and unpublish sustainability tips and short articles, so that students always see current and relevant educational content inside the app. | Medium | Backlog | 5 | Low |
-| US-14  | As a student, I want to browse a list of currently active challenges and join one, seeing its details and how my logs will contribute to it, so that I have a target to work toward. | High | Backlog | 5 | Medium |
-| US-15 | As a student, I want to earn points based on how many community votes my verified log receives, so that more credible and impactful activities are rewarded proportionally. | High | Backlog | 5 | High |
-| US-16 | As a student, I want to view my current points balance and a list of available rewards, so that I understand what benefits my sustainability activities have earned. | High | Backlog | 3 | Low |
-| US-17 | As a student, I want to redeem my points for a selected reward such as a green discount or a charity donation, so that my accumulated points produce a tangible real-world outcome. | High | Backlog | 5 | Medium |
-| US-18 | As a student, I want to automatically earn a badge when I reach a defined sustainability milestone, so that significant achievements are recognized the moment they happen. | Medium | Backlog | 3 | Medium |
-| US-19 | As a student, I want to view all my earned badges and all locked badges on my profile, so that I can see what I have achieved and what milestones are worth pursuing next. | Medium | Backlog | 3 | Low |
-| US-20 | As a student, I want to create or join a team within a team challenge, so that I can participate as part of a named group rather than as an individual. | Medium | Backlog | 5 | Medium |
-| US-21 | As a student, I want to see my team's collective progress within a challenge update in real time as members log activities, so that I can see how our shared effort is adding up. | Medium | Backlog | 5 | Medium |
-| US-22  | As a student, I want to see a ranked leaderboard for a challenge I am participating in, showing points and my position relative to other participants, so that friendly competition feels fair and motivating. | Medium | Backlog | 5 | Medium |
-| US-23 | As a student, I want to receive a push notification when I am close to midnight without having logged anything that day and I have an active streak, so that I get a timely reminder before losing progress. | Low | Backlog | 3 | Medium |
-| US-24 | As a student, I want to see my total carbon savings translated into a relatable real-world equivalent, such as the number of car-free days or trees worth of absorption, so that abstract CO₂ numbers feel personally meaningful rather than just a figure on a screen. | Low | Backlog | 2 | Low |
-| US-25  | As a student, I want to browse a feed of verified log submissions from other students that are awaiting community approval, so that I can participate in the validation process. | High | Backlog | 5 | High |
-| US-26  | As a student, I want to cast a verification vote on a peer's pending log submission, so that I can help validate genuine sustainable activity in my campus community. | High | Backlog | 3 | High |
+| ID  | User Story | Priority | Status | Story Points | Risk | Checkpoint |
+|-----|------------|----------|--------|--------------|------|------------|
+| US-01  | As a new user, I want to register for an account using my campus email and set a password, so that my activity data is tied to my identity and accessible only to me. | High | Backlog | 5 | Medium | Half |
+| US-02  | As a student, I want to log a sustainable activity by selecting from a categorized list of common actions, so that I can record my habits quickly. | High | Backlog | 5 | Low | Half |
+| US-03  | As a student, I want the logging screen to surface my most frequently used activities at the top, so that repeat actions take even fewer taps over time. | Medium | Backlog | 3 | Low | Full |
+| US-04  | As a student, I want every log entry to be clearly marked as either quick or verified at the time of submission, so that I always know the validation status of my own activity history. | High | Backlog | 3 | Low | Half |
+| US-05  | As a student, I want to attach proof to a verified log entry and have it submitted to the community for validation, so that my activity can be vouched for by my peers. | High | Backlog | 8 | High | Full |
+| US-06  | As a student, I want to edit a log entry within 24 hours of submitting it, so that I can correct honest mistakes without being able to retroactively manipulate older records. | Medium | Backlog | 3 | Low | Full |
+| US-07  | As a student, I want a personalized dashboard that shows how many activities I have logged and across which categories for a time period I can adjust, so that I can see my sustainability habits. | High | Backlog | 8 | Medium | Half |
+| US-08  | As a student, I want my dashboard to display my estimated carbon and waste reduction based on my logs, with units shown clearly, so that I can understand the real-world meaning of my actions. | High | Backlog | 5 | Medium | Half |
+| US-09  | As a student, I want to see my current logging streak and my all-time personal best streak on my dashboard, so that I feel motivated to keep logging consistently. | Medium | Backlog | 3 | Low | Full |
+| US-10  | As a student, I want to set a personal monthly sustainability goal such as a target number of logs or a target impact figure, so that I have a self-directed benchmark beyond external challenges. | Low | Backlog | 3 | Low | Full |
+| US-11 | As a student, I want to view a live campus-wide impact summary showing aggregated sustainability activity across all students, so that I can feel part of a larger collective movement. | Medium | Backlog | 5 | Medium | Full |
+| US-12  | As a sustainability staff member, I want to create and configure a challenge by setting a name, goal, start and end dates, and whether teams are permitted, so that I can run targeted sustainability campaigns for the campus. | High | Backlog | 8 | Medium | Full |
+| US-13  | As a sustainability staff member, I want to publish, edit, and unpublish sustainability tips and short articles, so that students always see current and relevant educational content inside the app. | Medium | Backlog | 5 | Low | Full |
+| US-14  | As a student, I want to browse a list of currently active challenges and join one, seeing its details and how my logs will contribute to it, so that I have a target to work toward. | High | Backlog | 5 | Medium | Full |
+| US-15 | As a student, I want to earn points based on how many community votes my verified log receives, so that more credible and impactful activities are rewarded proportionally. | High | Backlog | 5 | High | Full |
+| US-16 | As a student, I want to view my current points balance and a list of available rewards, so that I understand what benefits my sustainability activities have earned. | High | Backlog | 3 | Low | Half |
+| US-17 | As a student, I want to redeem my points for a selected reward such as a green discount or a charity donation, so that my accumulated points produce a tangible real-world outcome. | High | Backlog | 5 | Medium | Full |
+| US-18 | As a student, I want to automatically earn a badge when I reach a defined sustainability milestone, so that significant achievements are recognized the moment they happen. | Medium | Backlog | 3 | Medium | Full |
+| US-19 | As a student, I want to view all my earned badges and all locked badges on my profile, so that I can see what I have achieved and what milestones are worth pursuing next. | Medium | Backlog | 3 | Low | Full |
+| US-20 | As a student, I want to create or join a team within a team challenge, so that I can participate as part of a named group rather than as an individual. | Medium | Backlog | 5 | Medium | Full |
+| US-21 | As a student, I want to see my team's collective progress within a challenge update in real time as members log activities, so that I can see how our shared effort is adding up. | Medium | Backlog | 5 | Medium | Full |
+| US-22  | As a student, I want to see a ranked leaderboard for a challenge I am participating in, showing points and my position relative to other participants, so that friendly competition feels fair and motivating. | Medium | Backlog | 5 | Medium | Full |
+| US-23 | As a student, I want to receive a push notification when I am close to midnight without having logged anything that day and I have an active streak, so that I get a timely reminder before losing progress. | Low | Backlog | 3 | Medium | Full |
+| US-24 | As a student, I want to see my total carbon savings translated into a relatable real-world equivalent, such as the number of car-free days or trees worth of absorption, so that abstract CO₂ numbers feel personally meaningful rather than just a figure on a screen. | Low | Backlog | 2 | Low | Full |
+| US-25  | As a student, I want to browse a feed of verified log submissions from other students that are awaiting community approval, so that I can participate in the validation process. | High | Backlog | 5 | High | Half |
+| US-26  | As a student, I want to cast a verification vote on a peer's pending log submission, so that I can help validate genuine sustainable activity in my campus community. | High | Backlog | 3 | High | Half |
 
 ---
 
