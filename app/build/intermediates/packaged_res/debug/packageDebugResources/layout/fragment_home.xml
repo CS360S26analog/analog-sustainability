@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_cream_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- ══════════════ GREEN HEADER ══════════════ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_header_green"
+            android:orientation="vertical"
+            android:paddingStart="22dp"
+            android:paddingEnd="22dp"
+            android:paddingTop="28dp"
+            android:paddingBottom="30dp">
+
+            <!-- Greeting row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Good morning 🌱"
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="14sp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Areeb!"
+                        android:textColor="@color/white"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        android:layout_marginTop="2dp"/>
+                </LinearLayout>
+
+                <!-- Avatar -->
+                <FrameLayout
+                    android:layout_width="52dp"
+                    android:layout_height="52dp">
+                    <TextView
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:background="@drawable/bg_avatar_amber"
+                        android:gravity="center"
+                        android:text="A"
+                        android:textColor="@color/white"
+                        android:textSize="20sp"
+                        android:textStyle="bold"/>
+                    <View
+                        android:layout_width="13dp"
+                        android:layout_height="13dp"
+                        android:layout_gravity="top|end"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginEnd="2dp"
+                        android:background="@drawable/bg_notification_dot"/>
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Streak card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:background="@drawable/bg_streak_card"
+                android:orientation="horizontal"
+                android:padding="14dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/bg_streak_number"
+                    android:gravity="center"
+                    android:text="14"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="10dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Keep your streak going!"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"/>
+
+                    <ProgressBar
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="7dp"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:max="100"
+                        android:progress="68"
+                        android:progressTint="@color/color_amber"
+                        android:progressBackgroundTint="#40FFFFFF"/>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="68%"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ══════════════ CONTENT ══════════════ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="16dp">
+
+            <!-- Action cards -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="185dp"
+                android:orientation="horizontal">
+
+                <!-- CYCLING card -->
+                <LinearLayout
+                    android:id="@+id/card_cycling"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="7dp"
+                    android:background="@drawable/bg_card_amber"
+                    android:orientation="vertical"
+                    android:padding="18dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CYCLING"
+                        android:textColor="@color/white"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="Log your commute"
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="12sp"/>
+
+                    <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
+
+                    <TextView
+                        android:id="@+id/btn_log_cycling"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_button_log_it"
+                        android:gravity="center"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:text="Log it →"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+                </LinearLayout>
+
+                <!-- RECYCLING card -->
+                <LinearLayout
+                    android:id="@+id/card_recycling"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="7dp"
+                    android:background="@drawable/bg_card_forest"
+                    android:orientation="vertical"
+                    android:padding="18dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RECYCLING"
+                        android:textColor="@color/white"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="Waste reduction"
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="12sp"/>
+
+                    <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
+
+                    <TextView
+                        android:id="@+id/btn_log_recycling"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_button_log_it"
+                        android:gravity="center"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:text="Log it →"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:clickable="true"
+                        android:focusable="true"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Stats row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="5dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/white">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="center" android:padding="14dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="🔥" android:textSize="26sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="14 days" android:textSize="13sp" android:textStyle="bold"
+                            android:textColor="@color/color_text_primary" android:layout_marginTop="5dp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Streak" android:textSize="11sp" android:textColor="@color/color_text_secondary"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginEnd="3dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/white">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="center" android:padding="14dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="🌍" android:textSize="26sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="2.4 kg" android:textSize="13sp" android:textStyle="bold"
+                            android:textColor="@color/color_text_primary" android:layout_marginTop="5dp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="CO₂ saved" android:textSize="11sp" android:textColor="@color/color_text_secondary"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="5dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/white">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="center" android:padding="14dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="⭐" android:textSize="26sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="1,240" android:textSize="13sp" android:textStyle="bold"
+                            android:textColor="@color/color_text_primary" android:layout_marginTop="5dp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Points" android:textSize="11sp" android:textColor="@color/color_text_secondary"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
+            <!-- Monthly Challenge header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="26dp"
+                android:layout_marginBottom="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Monthly Challenge"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_text_primary"/>
+
+                <TextView
+                    android:id="@+id/tv_see_more"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="See More →"
+                    android:textSize="13sp"
+                    android:textColor="@color/color_amber"
+                    android:clickable="true"
+                    android:focusable="true"/>
+            </LinearLayout>
+
+            <!-- Challenge card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Zero Waste February 🗑️"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"/>
+
+                    <ProgressBar
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="12dp"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:max="20"
+                        android:progress="12"
+                        android:progressTint="@color/color_green_header"
+                        android:progressBackgroundTint="#E0E0E0"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="12 / 20 days"
+                            android:textSize="13sp"
+                            android:textColor="@color/color_text_secondary"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="60% done!"
+                            android:textSize="13sp"
+                            android:textColor="@color/color_green_text"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <View android:layout_width="match_parent" android:layout_height="16dp"/>
+        </LinearLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
