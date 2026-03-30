@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.klimate.app-mergeDebugResources-29:/values-port/values-port.xml",
+            "outputFile": "com.example.klimate.app-mergeDebugResources-37:/values-port/values-port.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\marya\\.gradle\\caches\\9.1.0\\transforms\\a91c8c3d349467b913ffb78c139dbbc6\\workspace\\transformed\\appcompat-1.7.0\\res\\values-port\\values-port.xml",
+                    "source": "C:\\Users\\marya\\.gradle\\caches\\9.1.0\\transforms\\3600c7888a8d3bbb382cc32645d2d1a2\\workspace\\transformed\\appcompat-1.7.0\\res\\values-port\\values-port.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

@@ -26,6 +26,12 @@
     <color name="color_you_row_bg">#EEF7EE</color>
     <color name="white">#FFFFFF</color>
     <string name="app_name">Klimate</string>
+    <string name="gcm_defaultSenderId" translatable="false">723863860231</string>
+    <string name="google_api_key" translatable="false">AIzaSyBSzoJvw1AclXo-zy8TDYwLt5r1wntno-k</string>
+    <string name="google_app_id" translatable="false">1:723863860231:android:39d4b0a8dab1c66858a6a2</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBSzoJvw1AclXo-zy8TDYwLt5r1wntno-k</string>
+    <string name="google_storage_bucket" translatable="false">klimate-se.firebasestorage.app</string>
+    <string name="project_id" translatable="false">klimate-se</string>
     <style name="Theme.Klimate" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/color_green_header</item>
         <item name="colorPrimaryVariant">@color/color_forest_green</item>

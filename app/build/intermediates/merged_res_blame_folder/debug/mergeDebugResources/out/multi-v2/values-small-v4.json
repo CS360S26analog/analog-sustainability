@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.klimate.app-mergeDebugResources-29:/values-small-v4/values-small-v4.xml",
+            "outputFile": "com.example.klimate.app-mergeDebugResources-37:/values-small-v4/values-small-v4.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\marya\\.gradle\\caches\\9.1.0\\transforms\\8a7ae9ff739dc6bf6dd554296f8704b2\\workspace\\transformed\\material-1.12.0\\res\\values-small-v4\\values-small-v4.xml",
+                    "source": "C:\\Users\\marya\\.gradle\\caches\\9.1.0\\transforms\\72e817eabc32de8b320ed5624260396b\\workspace\\transformed\\material-1.12.0\\res\\values-small-v4\\values-small-v4.xml",
                     "from": {
                         "startLines": "2,3,4,5",
                         "startColumns": "4,4,4,4",

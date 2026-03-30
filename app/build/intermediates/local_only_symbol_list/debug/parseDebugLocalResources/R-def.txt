@@ -73,7 +73,9 @@ id btn_add_friend
 id btn_log_activity
 id btn_log_cycling
 id btn_log_recycling
+id btn_login
 id btn_quick_log
+id btn_register
 id btn_verified_log
 id card_composting
 id card_cycling
@@ -83,6 +85,9 @@ id card_recycling
 id card_reusable
 id card_transit
 id card_walked
+id et_email
+id et_name
+id et_password
 id fragment_container
 id nav_friends
 id nav_home
@@ -94,9 +99,13 @@ id row_account
 id row_help
 id row_notifications
 id row_privacy
+id tv_go_login
+id tv_go_register
 id tv_see_more
 id tv_view_all
+layout activity_login
 layout activity_main
+layout activity_register
 layout fragment_friends
 layout fragment_home
 layout fragment_log
@@ -106,6 +115,12 @@ menu bottom_nav_menu
 mipmap ic_launcher
 mipmap ic_launcher_round
 string app_name
+string gcm_defaultSenderId
+string google_api_key
+string google_app_id
+string google_crash_reporting_api_key
+string google_storage_bucket
+string project_id
 style Theme.Klimate
 xml backup_rules
 xml data_extraction_rules
