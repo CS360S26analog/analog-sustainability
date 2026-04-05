@@ -1,0 +1,266 @@
+[
+    {
+        "merged": "com.example.klimate.app-debug-39:/layout_fragment_log.xml.flat",
+        "source": "com.example.klimate.app-main-41:/layout/fragment_log.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_avatar_slate.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_avatar_slate.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_ic_profile.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/ic_profile.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/xml_backup_rules.xml.flat",
+        "source": "com.example.klimate.app-main-41:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_add_friend_btn.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_add_friend_btn.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_badge_green.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_badge_green.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/color_bottom_nav_color.xml.flat",
+        "source": "com.example.klimate.app-main-41:/color/bottom_nav_color.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/layout_activity_register.xml.flat",
+        "source": "com.example.klimate.app-main-41:/layout/activity_register.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_card_white.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_card_white.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_activity_card.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_activity_card.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_rank_3.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_rank_3.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_card_forest.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_card_forest.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_header_green.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_header_green.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_activity_card_selected.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_activity_card_selected.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_streak_number.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_streak_number.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-hdpi_ic_launcher.webp.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-hdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_avatar_amber.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_avatar_amber.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_top_rounded_white.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_top_rounded_white.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-xxhdpi_ic_launcher.webp.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-xxhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/layout_activity_login.xml.flat",
+        "source": "com.example.klimate.app-main-41:/layout/activity_login.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/layout_activity_main.xml.flat",
+        "source": "com.example.klimate.app-main-41:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_toggle_selected.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_toggle_selected.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-xxhdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-xxhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/layout_fragment_rankings.xml.flat",
+        "source": "com.example.klimate.app-main-41:/layout/fragment_rankings.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_avatar_green.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_avatar_green.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_card_amber.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_card_amber.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/layout_fragment_profile.xml.flat",
+        "source": "com.example.klimate.app-main-41:/layout/fragment_profile.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-mdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-mdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_you_row.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_you_row.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-xhdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-xhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_toggle_pill.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_toggle_pill.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/layout_fragment_home.xml.flat",
+        "source": "com.example.klimate.app-main-41:/layout/fragment_home.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/layout_fragment_friends.xml.flat",
+        "source": "com.example.klimate.app-main-41:/layout/fragment_friends.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-xxxhdpi_ic_launcher.webp.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-xxxhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_avatar_circle.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_avatar_circle.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_button_amber.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_button_amber.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-xhdpi_ic_launcher.webp.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-xhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_eco_badge.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_eco_badge.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_avatar_teal.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_avatar_teal.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_badge_locked.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_badge_locked.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_ic_rankings.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/ic_rankings.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_notification_dot.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_notification_dot.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-mdpi_ic_launcher.webp.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-mdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_button_log_it.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_button_log_it.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_winner_badge.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_winner_badge.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/xml_data_extraction_rules.xml.flat",
+        "source": "com.example.klimate.app-main-41:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_badge_amber.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_badge_amber.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_avatar_purple.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_avatar_purple.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_rank_1.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_rank_1.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_streak_card.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_streak_card.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_badge_blue.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_badge_blue.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_toggle_unselected.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_toggle_unselected.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-xxxhdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-xxxhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_ic_friends.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/ic_friends.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_ic_log.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/ic_log.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_header_gold.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_header_gold.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_leaderboard_row.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_leaderboard_row.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_avatar_brown.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_avatar_brown.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-hdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-hdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.example.klimate.app-main-41:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_ic_home.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/ic_home.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/menu_bottom_nav_menu.xml.flat",
+        "source": "com.example.klimate.app-main-41:/menu/bottom_nav_menu.xml"
+    },
+    {
+        "merged": "com.example.klimate.app-debug-39:/drawable_bg_rank_2.xml.flat",
+        "source": "com.example.klimate.app-main-41:/drawable/bg_rank_2.xml"
+    }
+]
