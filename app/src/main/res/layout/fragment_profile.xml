@@ -277,7 +277,30 @@
                         android:textColor="@color/color_text_secondary" android:layout_marginTop="6dp"/>
                 </LinearLayout>
             </LinearLayout>
+            <!-- Rewards -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="12dp">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Available Rewards"
+                    android:textSize="18sp" android:textStyle="bold" android:textColor="@color/color_text_primary"/>
+            </LinearLayout>
 
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:id="@+id/rewards_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="8dp"/>
+
+            </androidx.cardview.widget.CardView>
             <!-- Account section -->
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="Account" android:textSize="18sp" android:textStyle="bold"
