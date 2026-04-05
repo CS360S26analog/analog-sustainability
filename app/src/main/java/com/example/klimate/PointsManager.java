@@ -28,6 +28,8 @@ public class PointsManager {
         db = FirebaseFirestore.getInstance();
     }
 
+    // TODO: replace with logarithmic scaling + downvote penalty in full release.
+    // Current linear formula is intentionally simple for Half checkpoint.
     /**
      * Calculates bonus points earned based on number of upvotes received.
      * Each upvote earns 2 bonus points.
@@ -36,6 +38,21 @@ public class PointsManager {
      * @return bonus points to award
      */
     public int calculateBonusPoints(int voteCount) {
+        if (voteCount < 0) return 0;
+        return voteCount * 2;
+    }
+
+    // TODO: replace with logarithmic scaling + downvote penalty in full release.
+    // Current linear formula is intentionally simple for Half checkpoint.
+    /**
+     * Static version of calculateBonusPoints for unit testing without
+     * requiring a PointsManager instance (avoids Firebase init in tests).
+     *
+     * @param voteCount number of upvotes
+     * @return bonus points earned
+     */
+    public static int calculateBonusPointsStatic(int voteCount) {
+        if (voteCount < 0) return 0;
         return voteCount * 2;
     }
 

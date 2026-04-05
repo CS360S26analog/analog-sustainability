@@ -41,6 +41,30 @@ public class ProfileFragment extends Fragment {
     private FirebaseFirestore db;
     private FirebaseAuth auth;
 
+    /**
+     * Reward item data class — holds display info for one reward row.
+     */
+    private static class Reward {
+        final String emoji;
+        final String name;
+        final int pointsCost;
+
+        Reward(String emoji, String name, int pointsCost) {
+            this.emoji = emoji;
+            this.name = name;
+            this.pointsCost = pointsCost;
+        }
+    }
+
+    /** Hardcoded rewards catalogue for Half checkpoint. */
+    private static final Reward[] REWARDS = {
+            new Reward("☕", "Free Coffee",          500),
+            new Reward("🚲", "Bike Rental Voucher", 1200),
+            new Reward("♻️", "Eco Tote Bag",         800),
+            new Reward("🌍", "Plant a Tree",        1000),
+            new Reward("🍃", "Campus Meal Discount", 1500),
+    };
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -57,11 +81,11 @@ public class ProfileFragment extends Fragment {
         String uid = currentUser.getUid();
 
         // --- TextViews to update from Firestore ---
-        TextView tvName      = view.findViewById(R.id.tv_display_name);
+        TextView tvName        = view.findViewById(R.id.tv_display_name);
         TextView tvPointsBadge = view.findViewById(R.id.tv_points_badge);
-        TextView tvCo2       = view.findViewById(R.id.tv_co2_value);
-        TextView tvStreak    = view.findViewById(R.id.tv_streak_value);
-        TextView tvAvatar    = view.findViewById(R.id.tv_avatar_initials);
+        TextView tvCo2         = view.findViewById(R.id.tv_co2_value);
+        TextView tvStreak      = view.findViewById(R.id.tv_streak_value);
+        TextView tvAvatar      = view.findViewById(R.id.tv_avatar_initials);
 
         // --- Read user document from Firestore ---
         db.collection("users").document(uid)
@@ -73,33 +97,28 @@ public class ProfileFragment extends Fragment {
                     long streakDays    = doc.getLong("streakDays")   != null ? doc.getLong("streakDays")   : 0;
                     double co2Saved    = doc.getDouble("co2SavedKg") != null ? doc.getDouble("co2SavedKg") : 0.0;
 
-                    // Display name
                     if (tvName != null && displayName != null) {
                         tvName.setText(displayName);
                     }
 
-                    // Avatar initials (first 2 letters of display name)
                     if (tvAvatar != null && displayName != null && displayName.length() >= 2) {
                         tvAvatar.setText(displayName.substring(0, 2).toUpperCase());
                     }
 
-                    // Points badge (e.g. "• 1,840 pts")
                     if (tvPointsBadge != null) {
                         tvPointsBadge.setText("• " + totalPoints + " pts");
                     }
 
-                    // CO2 saved
                     if (tvCo2 != null) {
                         tvCo2.setText(String.format("%.1f", co2Saved));
                     }
 
-                    // Streak
                     if (tvStreak != null) {
                         tvStreak.setText(String.valueOf(streakDays));
                     }
                 });
 
-        // --- Settings rows (existing behaviour kept) ---
+        // --- Settings rows ---
         int[]    rowIds    = {R.id.row_account, R.id.row_privacy, R.id.row_notifications, R.id.row_help};
         String[] rowLabels = {"Account Settings", "Privacy", "Notifications", "Help & Support"};
 
@@ -121,6 +140,89 @@ public class ProfileFragment extends Fragment {
             );
         }
 
+        // --- Hardcoded rewards list (Half checkpoint) ---
+        populateRewards(view);
+
         return view;
+    }
+
+    /**
+     * Inflates a row for each hardcoded reward into the rewards_container
+     * LinearLayout. Each row shows an emoji, reward name, and points cost.
+     * Marked hardcoded — replace with Firestore read in a future sprint.
+     *
+     * @param root the inflated fragment view containing rewards_container
+     */
+    private void populateRewards(View root) {
+        LinearLayout container = root.findViewById(R.id.rewards_container);
+        if (container == null) return;
+
+        int dp16 = dpToPx(16);
+        int dp12 = dpToPx(12);
+        int dp8  = dpToPx(8);
+
+        for (int i = 0; i < REWARDS.length; i++) {
+            Reward reward = REWARDS[i];
+
+            // Outer row
+            LinearLayout row = new LinearLayout(getContext());
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dpToPx(56));
+            rowParams.setMargins(0, 0, 0, 0);
+            row.setLayoutParams(rowParams);
+            row.setPadding(dp16, 0, dp16, 0);
+
+            // Emoji
+            TextView tvEmoji = new TextView(getContext());
+            tvEmoji.setText(reward.emoji);
+            tvEmoji.setTextSize(20);
+            tvEmoji.setPadding(0, 0, dp12, 0);
+            row.addView(tvEmoji);
+
+            // Reward name (expands)
+            TextView tvName = new TextView(getContext());
+            tvName.setText(reward.name);
+            tvName.setTextSize(15);
+            tvName.setTextColor(getResources().getColor(R.color.color_text_primary, null));
+            LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+            tvName.setLayoutParams(nameParams);
+            row.addView(tvName);
+
+            // Points cost badge
+            TextView tvCost = new TextView(getContext());
+            tvCost.setText(reward.pointsCost + " pts");
+            tvCost.setTextSize(13);
+            tvCost.setTextColor(getResources().getColor(R.color.color_green_text, null));
+            tvCost.setTypeface(null, android.graphics.Typeface.BOLD);
+            row.addView(tvCost);
+
+            container.addView(row);
+
+            // Divider between rows (not after the last one)
+            if (i < REWARDS.length - 1) {
+                View divider = new View(getContext());
+                LinearLayout.LayoutParams divParams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, 1);
+                divParams.setMarginStart(dp16);
+                divider.setLayoutParams(divParams);
+                divider.setBackgroundColor(getResources().getColor(R.color.color_divider, null));
+                container.addView(divider);
+            }
+        }
+    }
+
+    /**
+     * Converts dp units to pixels using the current display density.
+     *
+     * @param dp value in density-independent pixels
+     * @return equivalent value in pixels
+     */
+    private int dpToPx(int dp) {
+        float density = getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 }

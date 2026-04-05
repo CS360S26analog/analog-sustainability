@@ -3605,6 +3605,7 @@ id ratio
 id rectangles
 id report_drawn
 id reverseSawtooth
+id rewards_container
 id right
 id rightToLeft
 id right_icon
@@ -3725,9 +3726,14 @@ id transition_position
 id transition_scene_layoutid_cache
 id transition_transform
 id triangle
+id tv_avatar_initials
+id tv_co2_value
+id tv_display_name
 id tv_go_login
 id tv_go_register
+id tv_points_badge
 id tv_see_more
+id tv_streak_value
 id tv_view_all
 id unchecked
 id uniform
