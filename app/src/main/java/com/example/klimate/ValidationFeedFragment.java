@@ -13,15 +13,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.klimate.model.Vote;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * ValidationFeedFragment.java
@@ -120,6 +122,7 @@ public class ValidationFeedFragment extends Fragment {
         TextView textActivity = cardView.findViewById(R.id.text_activity_type);
         TextView textTimestamp = cardView.findViewById(R.id.text_timestamp);
         TextView textProofStatus = cardView.findViewById(R.id.text_proof_status);
+        TextView textUpvoteCount = cardView.findViewById(R.id.text_upvote_count);
         TextView btnUpvote = cardView.findViewById(R.id.btn_upvote);
         TextView btnDownvote = cardView.findViewById(R.id.btn_downvote);
 
@@ -128,6 +131,7 @@ public class ValidationFeedFragment extends Fragment {
             logId = document.getId();
         }
 
+        String documentId = document.getId();
         String userId = document.getString("userId");
         String activityType = document.getString("activityType");
         String proofUrl = document.getString("proofUrl");
@@ -137,6 +141,7 @@ public class ValidationFeedFragment extends Fragment {
         textInitials.setText("ST");
         textActivity.setText(activityType != null ? activityType : "Unknown activity");
         textTimestamp.setText(formatTimestamp(timestamp));
+        textUpvoteCount.setText("Loading...");
 
         if (TextUtils.isEmpty(proofUrl)) {
             textProofStatus.setText("No proof uploaded");
@@ -147,8 +152,89 @@ public class ValidationFeedFragment extends Fragment {
         loadSubmitterName(userId, textName, textInitials);
 
         final String finalLogId = logId;
-        btnUpvote.setOnClickListener(v -> castVote(finalLogId, true, btnUpvote, btnDownvote));
-        btnDownvote.setOnClickListener(v -> castVote(finalLogId, false, btnUpvote, btnDownvote));
+        final String finalDocumentId = documentId;
+
+        refreshVoteState(finalLogId, finalDocumentId, textUpvoteCount, btnUpvote, btnDownvote);
+
+        btnUpvote.setOnClickListener(v -> castVote(
+                finalLogId,
+                finalDocumentId,
+                true,
+                textUpvoteCount,
+                btnUpvote,
+                btnDownvote
+        ));
+
+        btnDownvote.setOnClickListener(v -> castVote(
+                finalLogId,
+                finalDocumentId,
+                false,
+                textUpvoteCount,
+                btnUpvote,
+                btnDownvote
+        ));
+    }
+
+    private void refreshVoteState(@NonNull String logId,
+                                  @NonNull String activityLogDocumentId,
+                                  @NonNull TextView textUpvoteCount,
+                                  @NonNull TextView btnUpvote,
+                                  @NonNull TextView btnDownvote) {
+        db.collection("votes")
+                .whereEqualTo("logId", logId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    int upvoteCount = 0;
+
+                    for (QueryDocumentSnapshot voteDocument : querySnapshot) {
+                        Boolean isUpvote = readVoteIsUpvote(voteDocument);
+                        if (Boolean.TRUE.equals(isUpvote)) {
+                            upvoteCount++;
+                        }
+                    }
+
+                    textUpvoteCount.setText(formatUpvoteCount(upvoteCount));
+
+                    db.collection("activity_logs")
+                            .document(activityLogDocumentId)
+                            .update("voteCount", upvoteCount);
+
+                    FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                    if (currentUser == null) {
+                        btnUpvote.setEnabled(false);
+                        btnDownvote.setEnabled(false);
+                        return;
+                    }
+
+                    String currentUserId = currentUser.getUid();
+                    boolean alreadyVoted = false;
+
+                    for (QueryDocumentSnapshot voteDocument : querySnapshot) {
+                        String voterId = voteDocument.getString("voterId");
+                        if (currentUserId.equals(voterId)) {
+                            alreadyVoted = true;
+                            break;
+                        }
+                    }
+
+                    btnUpvote.setEnabled(!alreadyVoted);
+                    btnDownvote.setEnabled(!alreadyVoted);
+                })
+                .addOnFailureListener(e -> {
+                    textUpvoteCount.setText("0 upvotes");
+                    btnUpvote.setEnabled(true);
+                    btnDownvote.setEnabled(true);
+                });
+    }
+
+    @Nullable
+    private Boolean readVoteIsUpvote(@NonNull DocumentSnapshot voteDocument) {
+        Boolean isUpvote = voteDocument.getBoolean("isUpvote");
+        if (isUpvote != null) {
+            return isUpvote;
+        }
+
+        return voteDocument.getBoolean("upvote");
     }
 
     private void loadSubmitterName(@Nullable String userId,
@@ -172,7 +258,9 @@ public class ValidationFeedFragment extends Fragment {
     }
 
     private void castVote(@Nullable String logId,
+                          @NonNull String activityLogDocumentId,
                           boolean isUpvote,
+                          @NonNull TextView textUpvoteCount,
                           @NonNull TextView btnUpvote,
                           @NonNull TextView btnDownvote) {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -200,24 +288,37 @@ public class ValidationFeedFragment extends Fragment {
                                 "You already voted on this submission",
                                 Toast.LENGTH_SHORT
                         ).show();
+
+                        refreshVoteState(
+                                logId,
+                                activityLogDocumentId,
+                                textUpvoteCount,
+                                btnUpvote,
+                                btnDownvote
+                        );
                         return;
                     }
 
                     String voteId = db.collection("votes").document().getId();
-                    Vote vote = new Vote(
-                            voteId,
-                            logId,
-                            voterId,
-                            isUpvote,
-                            Timestamp.now()
-                    );
+
+                    Map<String, Object> voteData = new HashMap<>();
+                    voteData.put("voteId", voteId);
+                    voteData.put("logId", logId);
+                    voteData.put("voterId", voterId);
+                    voteData.put("isUpvote", isUpvote);
+                    voteData.put("timestamp", Timestamp.now());
 
                     db.collection("votes")
                             .document(voteId)
-                            .set(vote)
+                            .set(voteData)
                             .addOnSuccessListener(unused -> {
-                                btnUpvote.setEnabled(false);
-                                btnDownvote.setEnabled(false);
+                                refreshVoteState(
+                                        logId,
+                                        activityLogDocumentId,
+                                        textUpvoteCount,
+                                        btnUpvote,
+                                        btnDownvote
+                                );
 
                                 Toast.makeText(
                                         requireContext(),
@@ -245,6 +346,13 @@ public class ValidationFeedFragment extends Fragment {
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd MMM  h:mm a", Locale.getDefault());
         return formatter.format(timestamp.toDate());
+    }
+
+    private String formatUpvoteCount(int voteCount) {
+        if (voteCount == 1) {
+            return "1 upvote";
+        }
+        return voteCount + " upvotes";
     }
 
     private String makeInitials(@NonNull String name) {
