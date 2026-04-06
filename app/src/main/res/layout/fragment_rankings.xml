@@ -40,7 +40,6 @@
                 android:textStyle="bold"
                 android:layout_marginTop="2dp"/>
 
-            <!-- Winner badge -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -56,13 +55,11 @@
                 android:textSize="13sp"
                 android:textStyle="bold"/>
 
-            <!-- Podium -->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="160dp"
                 android:layout_marginTop="8dp">
 
-                <!-- Rank 1 (centre, tallest) -->
                 <LinearLayout
                     android:id="@+id/podium_1"
                     android:layout_width="90dp"
@@ -89,14 +86,22 @@
                         android:background="@drawable/bg_rank_1"
                         android:orientation="vertical"
                         android:gravity="center">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="1" android:textColor="@color/white" android:textSize="28sp" android:textStyle="bold"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="Alex K." android:textColor="#CCFFFFFF" android:textSize="11sp"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1"
+                            android:textColor="@color/white"
+                            android:textSize="28sp"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Alex K."
+                            android:textColor="#CCFFFFFF"
+                            android:textSize="11sp"/>
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Rank 2 (left) -->
                 <LinearLayout
                     android:layout_width="78dp"
                     android:layout_height="wrap_content"
@@ -123,14 +128,22 @@
                         android:background="@drawable/bg_rank_2"
                         android:orientation="vertical"
                         android:gravity="center">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="2" android:textColor="@color/white" android:textSize="22sp" android:textStyle="bold"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="Priya S." android:textColor="#CCFFFFFF" android:textSize="10sp"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2"
+                            android:textColor="@color/white"
+                            android:textSize="22sp"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Priya S."
+                            android:textColor="#CCFFFFFF"
+                            android:textSize="10sp"/>
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Rank 3 (right) -->
                 <LinearLayout
                     android:layout_width="78dp"
                     android:layout_height="wrap_content"
@@ -157,10 +170,19 @@
                         android:background="@drawable/bg_rank_3"
                         android:orientation="vertical"
                         android:gravity="center">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="3" android:textColor="@color/white" android:textSize="20sp" android:textStyle="bold"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="James L." android:textColor="#CCFFFFFF" android:textSize="10sp"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="3"
+                            android:textColor="@color/white"
+                            android:textSize="20sp"
+                            android:textStyle="bold"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="James L."
+                            android:textColor="#CCFFFFFF"
+                            android:textSize="10sp"/>
                     </LinearLayout>
                 </LinearLayout>
             </RelativeLayout>
@@ -175,6 +197,50 @@
             android:paddingEnd="16dp"
             android:paddingTop="18dp"
             android:paddingBottom="16dp">
+
+            <LinearLayout
+                android:id="@+id/card_open_validation_feed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_leaderboard_row"
+                android:orientation="horizontal"
+                android:padding="14dp"
+                android:gravity="center_vertical"
+                android:clickable="true"
+                android:focusable="true">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Review pending submissions"
+                        android:textColor="@color/color_text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Open the community validation feed"
+                        android:textColor="@color/color_text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Open →"
+                    android:textColor="@color/color_green_text"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <!-- Row 04 - YOU -->
             <LinearLayout
@@ -211,14 +277,30 @@
                     android:layout_weight="1"
                     android:layout_marginStart="10dp"
                     android:orientation="vertical">
-                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="Maya P." android:textSize="15sp" android:textStyle="bold" android:textColor="@color/color_text_primary"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text=" (You)" android:textSize="13sp" android:textColor="@color/color_text_secondary"/>
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Maya P."
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/color_text_primary"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=" (You)"
+                            android:textSize="13sp"
+                            android:textColor="@color/color_text_secondary"/>
                     </LinearLayout>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="🍃 1,840 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🍃 1,840 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text"/>
                 </LinearLayout>
 
                 <TextView
@@ -240,21 +322,52 @@
                 android:padding="12dp"
                 android:gravity="center_vertical">
 
-                <TextView android:layout_width="32dp" android:layout_height="wrap_content"
-                    android:text="05" android:textSize="14sp" android:textColor="@color/color_text_secondary"/>
-                <TextView android:layout_width="44dp" android:layout_height="44dp"
-                    android:layout_marginStart="8dp" android:background="@drawable/bg_avatar_brown"
-                    android:gravity="center" android:text="CW" android:textColor="@color/white"
-                    android:textSize="13sp" android:textStyle="bold"/>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:layout_marginStart="10dp" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Chris W." android:textSize="15sp" android:textStyle="bold" android:textColor="@color/color_text_primary"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="🍃 1,760 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                <TextView
+                    android:layout_width="32dp"
+                    android:layout_height="wrap_content"
+                    android:text="05"
+                    android:textSize="14sp"
+                    android:textColor="@color/color_text_secondary"/>
+
+                <TextView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_avatar_brown"
+                    android:gravity="center"
+                    android:text="CW"
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:textStyle="bold"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Chris W."
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🍃 1,760 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text"/>
                 </LinearLayout>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="-1 ▼" android:textSize="13sp" android:textColor="@color/color_red_text" android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-1 ▼"
+                    android:textSize="13sp"
+                    android:textColor="@color/color_red_text"
+                    android:textStyle="bold"/>
             </LinearLayout>
 
             <!-- Row 06 -->
@@ -267,21 +380,52 @@
                 android:padding="12dp"
                 android:gravity="center_vertical">
 
-                <TextView android:layout_width="32dp" android:layout_height="wrap_content"
-                    android:text="06" android:textSize="14sp" android:textColor="@color/color_text_secondary"/>
-                <TextView android:layout_width="44dp" android:layout_height="44dp"
-                    android:layout_marginStart="8dp" android:background="@drawable/bg_avatar_amber"
-                    android:gravity="center" android:text="SR" android:textColor="@color/white"
-                    android:textSize="13sp" android:textStyle="bold"/>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:layout_marginStart="10dp" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Sofia R." android:textSize="15sp" android:textStyle="bold" android:textColor="@color/color_text_primary"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="🍃 1,640 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                <TextView
+                    android:layout_width="32dp"
+                    android:layout_height="wrap_content"
+                    android:text="06"
+                    android:textSize="14sp"
+                    android:textColor="@color/color_text_secondary"/>
+
+                <TextView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_avatar_amber"
+                    android:gravity="center"
+                    android:text="SR"
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:textStyle="bold"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sofia R."
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🍃 1,640 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text"/>
                 </LinearLayout>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="-2 ▼" android:textSize="13sp" android:textColor="@color/color_red_text" android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-2 ▼"
+                    android:textSize="13sp"
+                    android:textColor="@color/color_red_text"
+                    android:textStyle="bold"/>
             </LinearLayout>
 
             <!-- Row 07 -->
@@ -294,21 +438,52 @@
                 android:padding="12dp"
                 android:gravity="center_vertical">
 
-                <TextView android:layout_width="32dp" android:layout_height="wrap_content"
-                    android:text="07" android:textSize="14sp" android:textColor="@color/color_text_secondary"/>
-                <TextView android:layout_width="44dp" android:layout_height="44dp"
-                    android:layout_marginStart="8dp" android:background="@drawable/bg_avatar_teal"
-                    android:gravity="center" android:text="OA" android:textColor="@color/white"
-                    android:textSize="13sp" android:textStyle="bold"/>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:layout_marginStart="10dp" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Omar A." android:textSize="15sp" android:textStyle="bold" android:textColor="@color/color_text_primary"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="🍃 1,520 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                <TextView
+                    android:layout_width="32dp"
+                    android:layout_height="wrap_content"
+                    android:text="07"
+                    android:textSize="14sp"
+                    android:textColor="@color/color_text_secondary"/>
+
+                <TextView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_avatar_teal"
+                    android:gravity="center"
+                    android:text="OA"
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:textStyle="bold"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Omar A."
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🍃 1,520 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text"/>
                 </LinearLayout>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="+1 ▲" android:textSize="13sp" android:textColor="@color/color_green_text" android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+1 ▲"
+                    android:textSize="13sp"
+                    android:textColor="@color/color_green_text"
+                    android:textStyle="bold"/>
             </LinearLayout>
 
         </LinearLayout>
