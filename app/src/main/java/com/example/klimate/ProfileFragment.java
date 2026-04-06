@@ -20,6 +20,7 @@
  */
 package com.example.klimate;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -140,6 +141,18 @@ public class ProfileFragment extends Fragment {
             );
         }
 
+        // --- Log out ---
+        LinearLayout rowLogout = view.findViewById(R.id.row_logout);
+        if (rowLogout != null) {
+            rowLogout.setOnClickListener(v -> {
+                auth.signOut();
+                Intent intent = new Intent(getActivity(), LoginActivity.class);
+                // Clear the entire back stack so Back can't return to the app
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+            });
+        }
+
         // --- Hardcoded rewards list (Half checkpoint) ---
         populateRewards(view);
 
@@ -159,7 +172,6 @@ public class ProfileFragment extends Fragment {
 
         int dp16 = dpToPx(16);
         int dp12 = dpToPx(12);
-        int dp8  = dpToPx(8);
 
         for (int i = 0; i < REWARDS.length; i++) {
             Reward reward = REWARDS[i];
@@ -171,7 +183,6 @@ public class ProfileFragment extends Fragment {
             LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     dpToPx(56));
-            rowParams.setMargins(0, 0, 0, 0);
             row.setLayoutParams(rowParams);
             row.setPadding(dp16, 0, dp16, 0);
 

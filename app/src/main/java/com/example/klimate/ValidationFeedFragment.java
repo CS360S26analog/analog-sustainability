@@ -36,7 +36,9 @@ import java.util.Map;
  *
  * Outstanding issues: actual remote proof image loading can be
  * added later if the project includes an image loading library.
+ *
  * @author Karar
+ * @author Haroon
  */
 public class ValidationFeedFragment extends Fragment {
 
@@ -47,8 +49,8 @@ public class ValidationFeedFragment extends Fragment {
     /**
      * Inflates the validation feed layout and loads pending submissions.
      *
-     * @param inflater the LayoutInflater used to inflate views
-     * @param container the parent view group
+     * @param inflater           the LayoutInflater used to inflate views
+     * @param container          the parent view group
      * @param savedInstanceState previously saved fragment state
      * @return the root view for the validation feed screen
      */
@@ -117,24 +119,24 @@ public class ValidationFeedFragment extends Fragment {
     }
 
     private void bindLogCard(@NonNull View cardView, @NonNull DocumentSnapshot document) {
-        TextView textInitials = cardView.findViewById(R.id.text_submitter_initials);
-        TextView textName = cardView.findViewById(R.id.text_submitter_name);
-        TextView textActivity = cardView.findViewById(R.id.text_activity_type);
-        TextView textTimestamp = cardView.findViewById(R.id.text_timestamp);
+        TextView textInitials    = cardView.findViewById(R.id.text_submitter_initials);
+        TextView textName        = cardView.findViewById(R.id.text_submitter_name);
+        TextView textActivity    = cardView.findViewById(R.id.text_activity_type);
+        TextView textTimestamp   = cardView.findViewById(R.id.text_timestamp);
         TextView textProofStatus = cardView.findViewById(R.id.text_proof_status);
         TextView textUpvoteCount = cardView.findViewById(R.id.text_upvote_count);
-        TextView btnUpvote = cardView.findViewById(R.id.btn_upvote);
-        TextView btnDownvote = cardView.findViewById(R.id.btn_downvote);
+        TextView btnUpvote       = cardView.findViewById(R.id.btn_upvote);
+        TextView btnDownvote     = cardView.findViewById(R.id.btn_downvote);
 
         String logId = document.getString("logId");
         if (TextUtils.isEmpty(logId)) {
             logId = document.getId();
         }
 
-        String documentId = document.getId();
-        String userId = document.getString("userId");
+        String documentId  = document.getId();
+        String userId      = document.getString("userId");
         String activityType = document.getString("activityType");
-        String proofUrl = document.getString("proofUrl");
+        String proofUrl    = document.getString("proofUrl");
         Timestamp timestamp = document.getTimestamp("timestamp");
 
         textName.setText("Student");
@@ -151,27 +153,19 @@ public class ValidationFeedFragment extends Fragment {
 
         loadSubmitterName(userId, textName, textInitials);
 
-        final String finalLogId = logId;
+        final String finalLogId      = logId;
         final String finalDocumentId = documentId;
 
         refreshVoteState(finalLogId, finalDocumentId, textUpvoteCount, btnUpvote, btnDownvote);
 
         btnUpvote.setOnClickListener(v -> castVote(
-                finalLogId,
-                finalDocumentId,
-                true,
-                textUpvoteCount,
-                btnUpvote,
-                btnDownvote
+                finalLogId, finalDocumentId, true,
+                textUpvoteCount, btnUpvote, btnDownvote
         ));
 
         btnDownvote.setOnClickListener(v -> castVote(
-                finalLogId,
-                finalDocumentId,
-                false,
-                textUpvoteCount,
-                btnUpvote,
-                btnDownvote
+                finalLogId, finalDocumentId, false,
+                textUpvoteCount, btnUpvote, btnDownvote
         ));
     }
 
@@ -230,26 +224,20 @@ public class ValidationFeedFragment extends Fragment {
     @Nullable
     private Boolean readVoteIsUpvote(@NonNull DocumentSnapshot voteDocument) {
         Boolean isUpvote = voteDocument.getBoolean("isUpvote");
-        if (isUpvote != null) {
-            return isUpvote;
-        }
-
+        if (isUpvote != null) return isUpvote;
         return voteDocument.getBoolean("upvote");
     }
 
     private void loadSubmitterName(@Nullable String userId,
                                    @NonNull TextView textName,
                                    @NonNull TextView textInitials) {
-        if (TextUtils.isEmpty(userId)) {
-            return;
-        }
+        if (TextUtils.isEmpty(userId)) return;
 
         db.collection("users")
                 .document(userId)
                 .get()
                 .addOnSuccessListener(userDocument -> {
                     String displayName = userDocument.getString("displayName");
-
                     if (!TextUtils.isEmpty(displayName)) {
                         textName.setText(displayName);
                         textInitials.setText(makeInitials(displayName));
@@ -290,11 +278,8 @@ public class ValidationFeedFragment extends Fragment {
                         ).show();
 
                         refreshVoteState(
-                                logId,
-                                activityLogDocumentId,
-                                textUpvoteCount,
-                                btnUpvote,
-                                btnDownvote
+                                logId, activityLogDocumentId,
+                                textUpvoteCount, btnUpvote, btnDownvote
                         );
                         return;
                     }
@@ -312,12 +297,29 @@ public class ValidationFeedFragment extends Fragment {
                             .document(voteId)
                             .set(voteData)
                             .addOnSuccessListener(unused -> {
+                                // Recalculate and award bonus points to the log owner
+                                db.collection("activity_logs")
+                                        .document(activityLogDocumentId)
+                                        .get()
+                                        .addOnSuccessListener(logDoc -> {
+                                            if (!logDoc.exists()) return;
+
+                                            String logOwnerId = logDoc.getString("userId");
+                                            Long prevBonus    = logDoc.getLong("bonusPoints");
+                                            int previousBonus = (prevBonus != null) ? prevBonus.intValue() : 0;
+
+                                            if (logOwnerId != null) {
+                                                new PointsManager().attachVoteListener(
+                                                        activityLogDocumentId,
+                                                        logOwnerId,
+                                                        previousBonus
+                                                );
+                                            }
+                                        });
+
                                 refreshVoteState(
-                                        logId,
-                                        activityLogDocumentId,
-                                        textUpvoteCount,
-                                        btnUpvote,
-                                        btnDownvote
+                                        logId, activityLogDocumentId,
+                                        textUpvoteCount, btnUpvote, btnDownvote
                                 );
 
                                 Toast.makeText(
@@ -340,26 +342,19 @@ public class ValidationFeedFragment extends Fragment {
     }
 
     private String formatTimestamp(@Nullable Timestamp timestamp) {
-        if (timestamp == null) {
-            return "Just now";
-        }
-
+        if (timestamp == null) return "Just now";
         SimpleDateFormat formatter = new SimpleDateFormat("dd MMM  h:mm a", Locale.getDefault());
         return formatter.format(timestamp.toDate());
     }
 
     private String formatUpvoteCount(int voteCount) {
-        if (voteCount == 1) {
-            return "1 upvote";
-        }
+        if (voteCount == 1) return "1 upvote";
         return voteCount + " upvotes";
     }
 
     private String makeInitials(@NonNull String name) {
         String trimmedName = name.trim();
-        if (trimmedName.isEmpty()) {
-            return "ST";
-        }
+        if (trimmedName.isEmpty()) return "ST";
 
         String[] parts = trimmedName.split("\\s+");
 
@@ -368,7 +363,7 @@ public class ValidationFeedFragment extends Fragment {
             return first.substring(0, Math.min(2, first.length())).toUpperCase(Locale.getDefault());
         }
 
-        String firstLetter = parts[0].substring(0, 1);
+        String firstLetter  = parts[0].substring(0, 1);
         String secondLetter = parts[1].substring(0, 1);
         return (firstLetter + secondLetter).toUpperCase(Locale.getDefault());
     }

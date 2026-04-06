@@ -13,9 +13,12 @@
  * pending_verification status correctly.
  *
  * @author Izza
+ * @author Haroon
  */
 package com.example.klimate;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,7 +43,7 @@ public class LogFragment extends Fragment {
     private LinearLayout selectedCard = null;
     private String selectedActivityName = null;
 
-    // Default = quick unless you wire verified tab/button to change it
+    // Default = quick unless the verified tab is selected
     private String selectedStatus = "quick";
 
     private FirebaseFirestore db;
@@ -74,27 +77,63 @@ public class LogFragment extends Fragment {
             cards[i].setOnClickListener(v -> selectCard(cards, (LinearLayout) v, activityNames[index]));
         }
 
-        View quickTab = view.findViewById(R.id.btn_quick_log);
+        View quickTab    = view.findViewById(R.id.btn_quick_log);
         View verifiedTab = view.findViewById(R.id.btn_verified_log);
 
-        if (quickTab != null) {
+        // FIX: switch visual active state between the two tabs
+        if (quickTab != null && verifiedTab != null) {
             quickTab.setOnClickListener(v -> {
                 selectedStatus = "quick";
-                Toast.makeText(getContext(), "Quick Log selected", Toast.LENGTH_SHORT).show();
+                setActiveTab(quickTab, verifiedTab);
             });
-        }
 
-        if (verifiedTab != null) {
             verifiedTab.setOnClickListener(v -> {
                 selectedStatus = "pending_verification";
-                Toast.makeText(getContext(), "Verified Log selected", Toast.LENGTH_SHORT).show();
+                setActiveTab(verifiedTab, quickTab);
             });
+
+            // Start with Quick tab visually active
+            setActiveTab(quickTab, verifiedTab);
         }
 
         TextView btnLog = view.findViewById(R.id.btn_log_activity);
         btnLog.setOnClickListener(v -> submitLog(cards));
 
         return view;
+    }
+
+    /**
+     * Marks one tab as visually active and the other as inactive,
+     * animating the text colour on both so the switch feels smooth.
+     * Background swaps immediately (the pill shape can't cross-fade
+     * without a custom drawable, but the colour animation makes the
+     * overall transition feel polished).
+     *
+     * @param active   the TextView tab that should appear selected
+     * @param inactive the TextView tab that should appear unselected
+     */
+    private void setActiveTab(View active, View inactive) {
+        // Swap backgrounds immediately
+        active.setBackgroundResource(R.drawable.bg_toggle_selected);
+        inactive.setBackground(null);
+
+        // Animate text colour: active → white, inactive → color_text_secondary
+        int white       = requireContext().getColor(android.R.color.white);
+        int secondary   = requireContext().getColor(R.color.color_text_secondary);
+
+        animateTextColor((TextView) active,   secondary, white);
+        animateTextColor((TextView) inactive, white,     secondary);
+    }
+
+    /**
+     * Smoothly animates a TextView's text colour from {@code fromColor}
+     * to {@code toColor} over 200 ms.
+     */
+    private void animateTextColor(TextView tv, int fromColor, int toColor) {
+        ValueAnimator animator = ValueAnimator.ofObject(new ArgbEvaluator(), fromColor, toColor);
+        animator.setDuration(200);
+        animator.addUpdateListener(anim -> tv.setTextColor((int) anim.getAnimatedValue()));
+        animator.start();
     }
 
     private void selectCard(LinearLayout[] cards, LinearLayout card, String name) {
@@ -138,6 +177,9 @@ public class LogFragment extends Fragment {
 
         docRef.set(log)
                 .addOnSuccessListener(unused -> {
+                    // Award base points to the user immediately on any log submit
+                    new PointsManager().awardBasePoints(currentUser.getUid(), basePoints);
+
                     String message;
                     if ("pending_verification".equals(selectedStatus)) {
                         message = "Verified log submitted for proof/validation";
@@ -149,7 +191,14 @@ public class LogFragment extends Fragment {
                     deselectAll(cards);
                     selectedCard = null;
                     selectedActivityName = null;
+
+                    // Reset tab back to Quick after a successful submit
                     selectedStatus = "quick";
+                    View quickTab    = getView() != null ? getView().findViewById(R.id.btn_quick_log)    : null;
+                    View verifiedTab = getView() != null ? getView().findViewById(R.id.btn_verified_log) : null;
+                    if (quickTab != null && verifiedTab != null) {
+                        setActiveTab(quickTab, verifiedTab);
+                    }
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(getContext(),
@@ -157,27 +206,17 @@ public class LogFragment extends Fragment {
                                 Toast.LENGTH_LONG).show()
                 );
     }
-
     private int getPointsForActivity(String activityType) {
         switch (activityType) {
-            case "Cycling":
-                return 15;
-            case "Public Transit":
-                return 12;
-            case "Recycling":
-                return 8;
-            case "Plant-based meal":
-                return 10;
-            case "Reusable cup":
-                return 5;
-            case "Composting":
-                return 9;
-            case "Walked":
-                return 10;
-            case "Energy saving":
-                return 7;
-            default:
-                return 5;
+            case "Cycling":        return 30;
+            case "Public Transit": return 20;
+            case "Recycling":      return 15;
+            case "Plant-based meal": return 25;
+            case "Reusable cup":   return 10;
+            case "Composting":     return 20;
+            case "Walked":         return 20;
+            case "Energy saving":  return 10;
+            default:               return 0;
         }
     }
 }
