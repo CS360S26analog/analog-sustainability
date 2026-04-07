@@ -1,249 +1,193 @@
-# Project Documentation
+# Project Documentation — Team Analog
+
+---
 
 ## Table of Contents
+
 - [Team Information](#team-information)
-
 - [Meeting Minutes](#meeting-minutes)
-- - [Meeting – Feb 20, 2026](#meeting--feb-20-2026)
+  - [Meeting – Feb 20, 2026](#meeting--feb-20-2026)
   - [Meeting – Feb 27, 2026](#meeting--feb-27-2026)
-  - [Meeting – March 1, 2026](#meeting--March-1-2026)
-  - [Meeting - TBD](#meeting--TBD)
-
+  - [Meeting – March 8, 2026](#meeting--march-8-2026)
+  - [Meeting – March 17, 2026](#meeting--march-17-2026)
+  - [Meeting – March 30, 2026](#meeting--march-30-2026)
 - [UML Diagrams](#uml-diagrams)
-
 - [CRC Cards](#crc-cards)
-
 - [Product Backlog](#product-backlog)
-  - [Product Backlog – Project Part 1](#product-backlog--project-part-1)
-  - [Product Backlog – Project Part 2](#product-backlog--project-part-2)
-  - [Product Backlog – Project Part 3](#product-backlog--project-part-3)
-
-- [Wireframes](#wireframes)
-  - [Wireframes – Project Part 1](#wireframes--project-part-1)
-  - [Wireframes – Project Part 2](#wireframes--project-part-2)
-  - [Wireframes – Project Part 3](#wireframes--project-part-3)
- 
+  - [Part 1](#product-backlog--project-part-1)
+  - [Part 2](#product-backlog--project-part-2)
+  - [Part 3](#product-backlog--project-part-3)
+- [Wireframes & Screenshots](#wireframes--screenshots)
+  - [Part 1](#wireframes--project-part-1)
+  - [Part 2](#wireframes--project-part-2)
+  - [Part 3](#wireframes--project-part-3)
 - [Acceptance Criteria](#acceptance-criteria)
+- [App Repo Structure – Project Part 3](#klimate-android-app---project-part-3)
+- [Sprint Planning and Reviews](#sprint-planning-and-reviews)
 
-- [App Repo Structure - Project Part 3](#klimate-android-app---project-part-3)
 ---
-## Team Information
-- **Team Name:** Analog
 
-| Name               | Roll Number | GitHub ID |
-|--------------------|-------------|-----------|
-| Izza Shahid        | 27100406    | [izzashahidd](https://github.com/izzashahidd)       |
-| Karar Haider       | 27100468    | [KH-stack](https://github.com/KH-stack)             |
-| Maryam Waseem      | 27100013    | [mardyweb](https://github.com/mardyweb)             |
-| Maryam Ali         | 27100202    | [maryamali-394](https://github.com/maryamali-394)   |
-| Haroon Ahmad       | 27100259    | [SillyGooos](https://github.com/SillyGooos)         |
+## Team Information
+
+**Team Name:** Analog
+
+| Name | Roll Number | GitHub ID |
+|------|-------------|-----------|
+| Izza Shahid | 27100406 | [izzashahidd](https://github.com/izzashahidd) |
+| Karar Haider | 27100468 | [KH-stack](https://github.com/KH-stack) |
+| Maryam Waseem | 27100013 | [mardyweb](https://github.com/mardyweb) |
+| Maryam Ali | 27100202 | [maryamali-394](https://github.com/maryamali-394) |
+| Haroon Ahmad | 27100259 | [SillyGooos](https://github.com/SillyGooos) |
+
 ---
 
 ## Meeting Minutes
 
-### Meeting – Feb 20, 2026
+<details>
+<summary><strong>Meeting – Feb 20, 2026</strong></summary>
 
 #### Date
 Friday, February 20, 2026
 
 #### Attendance
-- Izza Shahid  
-- Karar Haider  
-- Maryam Waseem  
-- Maryam Ali  
+- Izza Shahid
+- Karar Haider
+- Maryam Waseem
+- Maryam Ali
 - Haroon Ahmad
 
----
-
 #### Key Takeaways
-- Keep **meeting notes for every meeting**:
-  - Date, attendamce, discussion, reasons, outcomes, future tasks, questions, summary.
+- Keep **meeting notes for every meeting**: Date, attendance, discussion, reasons, outcomes, future tasks, questions, summary.
 - Ensure assignments are **evenly divided** and all members contribute to **all areas** (readme, code, design, etc.).
-- Ensure the project has clear **differentiating factors** compared to similar sustainability or tracking apps. 
+- Ensure the project has clear **differentiating factors** compared to similar sustainability or tracking apps.
 - Focus on **gamification**, **campus-wide interaction**, and **accurate environmental impact tracking**.
-- Maintain a **backlog**:
-  - Tasks to do
-  - Improvements
-  - Missing features
-  - Needed resources
-- Create a **Figma storyboard** showing the full app flow.
-  - Activity logging
-  - Dashboard / visualization
-  - Challenges & leaderboard
-  - Navigation between screens
-  - Export storyboard as images.
-- Focus on core features:
-  - Activity logging
-  - Impact dashboard
-  - Campus impact tracking
-  - Challenges & badges
-  - Tips / content
-  - Team challenges
-- Storyboard must be **complete but high-level**.
-  - Extra small feature storyboards allowed.
+- Maintain a **backlog**: Tasks to do, improvements, missing features, needed resources.
+- Create a **Figma storyboard** showing the full app flow: Activity logging, Dashboard / visualization, Challenges & leaderboard, Navigation between screens. Export storyboard as images.
+- Focus on core features: Activity logging, Impact dashboard, Campus impact tracking, Challenges & badges, Tips / content, Team challenges.
+- Storyboard must be **complete but high-level**. Extra small feature storyboards allowed.
 - Keep a list of **open questions** in meetings.
-
----
 
 #### General Notes
 - Maintain consistent formatting for user stories and storyboards.
-- Submit **one main storyboard** (high-level).
-- Storyboard does not need to be visually polished.
+- Submit **one main storyboard** (high-level). Storyboard does not need to be visually polished.
 - Supplementary videos and feature storyboards are allowed.
-- Presentation:
-  - 10 minutes per group
-  - Dataset generated by team
+- Presentation: 10 minutes per group, dataset generated by team.
 - No strict requirements — apply reasonable design judgment.
+
+#### Action Items
+- [x] Maintain meeting minutes for every meeting
+- [ ] Finalize and document complete storyboard
+
+</details>
 
 ---
 
-#### Action Items
-- [x] Maintain meeting minutes for every meeting  
-- [ ] Finalize and document complete storyboard  
-
-### Meeting – Feb 27, 2026
+<details>
+<summary><strong>Meeting – Feb 27, 2026</strong></summary>
 
 #### Date
 Friday, February 27, 2026
 
 #### Attendance
-- Izza Shahid   
-- Karar Haider 
-- Maryam Waseem 
+- Izza Shahid
+- Karar Haider
+- Maryam Waseem
 - Maryam Ali
 - Haroon Ahmad
----
 
 #### Key Takeaways
 - Focus on **gamified sustainability platform** for students.
-- Core features to prioritize:  
-  - Daily activity logging (transport, energy, waste)  
-  - Personal dashboards with visualizations  
-  - Campus-wide impact tracking  
-  - Challenges, leaderboards, badges  
-  - Educational tips and team-based challenges  
-- Verification strategies: can use phone sensors for transport, occasional photo submissions for waste tracking.
+- Core features to prioritize: Daily activity logging (transport, energy, waste), Personal dashboards with visualizations, Campus-wide impact tracking, Challenges, leaderboards, badges, Educational tips and team-based challenges.
+- Verification strategies: phone sensors for transport, occasional photo submissions for waste tracking.
 - Points system to incentivize sustainable behavior, redeemable for rewards.
-- Key challenges to monitor: user engagement, data visualization, gamification mechanics, and impact calculation accuracy.  
+- Key challenges to monitor: user engagement, data visualization, gamification mechanics, and impact calculation accuracy.
 - Research alternative apps and existing user stories to inform design.
-
----
-
 
 #### Prepared Questions & Decisions
 
-**Issue #1**  
-- How to track transport; Use phone sensors (walking, cycling, car detection)  
-- Photo verification; Rarely, for waste; reward points for participation
-
-**Issue #2**  
-- Impact calculation; Points tied to verified activities; campus-wide aggregation needed.
-
-**Issue #3**  
-- Hardware dependency; Avoid hardware; rely on sensors and optional photos
-  
-**Issue #4**  
-- User onboarding; Include tutorial on logging activities and earning points
-
-**Issue #5**
-- Students could collude to mass-approve fake or exaggerated logs
-
-**Issue #6**
-- If points are too easy to earn, rewards lose meaning. If too hard, users disengage.
-
-**Issue #7**
-- Should students know whose log they are voting on, or should submissions be anonymous?
-
-
-
----
+| Issue | Decision |
+|-------|----------|
+| Transport tracking | Use phone sensors (walking, cycling, car detection) |
+| Photo verification | Rarely, for waste; reward points for participation |
+| Impact calculation | Points tied to verified activities; campus-wide aggregation needed |
+| Hardware dependency | Avoid hardware; rely on sensors and optional photos |
+| User onboarding | Include tutorial on logging activities and earning points |
+| Collusion risk | Students could collude to mass-approve fake or exaggerated logs |
+| Points balance | If too easy, rewards lose meaning; if too hard, users disengage |
+| Anonymity | Should students know whose log they are voting on, or should submissions be anonymous? |
 
 #### General Notes
-- Inspiration from existing sustainability apps and campus initiatives.  
-- Points system acts as gamification lever to increase engagement.  
-- Visual dashboard is crucial to show personal and collective impact.  
-- Storyboard should include activity logging, dashboard, challenge participation, and reward flow.  
-
----
+- Inspiration from existing sustainability apps and campus initiatives.
+- Points system acts as gamification lever to increase engagement.
+- Visual dashboard is crucial to show personal and collective impact.
+- Storyboard should include activity logging, dashboard, challenge participation, and reward flow.
 
 #### Action Items
-- [ ] Think of Unique features
-- [ ] List of who to interview (Campus relevant personell) + Students
-- [ ] Think of Interview Questiosn
-- [ ] List of question to ask assigned TA
+- [ ] Think of unique features
+- [ ] List of who to interview (Campus relevant personnel + Students)
+- [ ] Think of interview questions
+- [ ] List of questions to ask assigned TA
+
+</details>
 
 ---
-### Meeting – March 8, 2026
+
+<details>
+<summary><strong>Meeting – March 8, 2026</strong></summary>
+
 #### Date
 Sunday, March 8, 2026
+
 #### Attendance
-- Izza Shahid   
-- Karar Haider 
-- Maryam Waseem 
+- Izza Shahid
+- Karar Haider
+- Maryam Waseem
 - Maryam Ali
 - Haroon Ahmad
----
 
 #### Key Takeaways
 - User stories need 2–3 activity examples; no limit on the number of stories.
 - Not everything in the user stories needs to be implemented, but most details should be finalized by the halfway checkpoint.
 - Each team member must contribute commits for the fourth deliverable.
 - 5–6 storyboard frames are sufficient; include the login/dashboard page.
----
+
 #### Prepared Questions & Decisions
 
-**Issue #1 — How specific do user stories need to be?**
-Not very specific. 2–3 examples of activities per story is sufficient.
+| Issue | Resolution |
+|-------|------------|
+| How specific do user stories need to be? | Not very specific. 2–3 examples of activities per story is sufficient. |
+| Story 5: What is the estimated environmental impact? | Answer not recorded — follow up if needed. |
+| Do we have to implement everything in the user stories? | No. However, most implementation details should be finalized by the halfway checkpoint. |
+| Should we add unique features to user stories? | Yes. There is no limit on the number of user stories. |
+| User story dependencies | A small degree of dependency is acceptable. |
+| Priority and risk levels | Use **High**, **Medium**, or **Low** for both. |
+| Fourth deliverable requirements | Publish meeting notes and push CRC cards. Each member must contribute some commits. |
+| Storyboard | 5–6 frames are sufficient. Include the login/dashboard page. |
+| Internal meeting notes | No need to document internal meeting notes. |
+| Acceptance criteria | Acceptance criteria can be submitted. |
 
-**Issue #2 — Story 5: What is the estimated environmental impact?**
-_Answer not recorded — follow up if needed._
-
-**Issue #3 — Do we have to implement everything in the user stories?**
-No. However, most implementation details should be finalized by the halfway checkpoint.
-
-**Issue #4 — Should we add unique features to user stories?**
-Yes. There is no limit on the number of user stories.
-
-**Issue #5 — User story dependencies**
-User stories do not need to be fully independent — a small degree of dependency is acceptable.
-
-**Issue #6 — Priority and risk levels**
-Use **High**, **Medium**, or **Low** for both priority and risk level.
-
-**Issue #7 — Fourth deliverable requirements**
-Publish meeting notes and push CRC cards. Divide work among members — each member must contribute some commits.
-
-**Issue #8 — Storyboard**
-5–6 frames are sufficient. Make sure to include the login/dashboard page.
-
-**Issue #9 — Internal meeting notes**
-No need to document internal meeting notes.
-
-**Issue #10 — Acceptance criteria**
-Acceptance criteria can be submitted.
-
----
-#### General Notes
-_Content to be added._
----
 #### Action Items
 - Finalize most implementation details before the halfway checkpoint.
 - Publish meeting notes and push CRC cards for the fourth deliverable.
 - Divide commits among all team members.
 - Create a 5–6 frame storyboard including the login/dashboard page.
+
+</details>
+
 ---
 
-### Meeting – March 17, 2026
+<details>
+<summary><strong>Meeting – March 17, 2026</strong></summary>
+
 #### Date
 Tuesday, March 17, 2026
 
 #### Attendance
-- Izza Shahid   
-- Karar Haider 
-- Maryam Waseem 
+- Izza Shahid
+- Karar Haider
+- Maryam Waseem
 - Maryam Ali
 - Haroon Ahmad
----
 
 #### Key Takeaways
 - Use a separate **Authorization class** to handle authentication logic and interaction with backend (e.g., Firebase).
@@ -251,7 +195,6 @@ Tuesday, March 17, 2026
 - Track all tasks, bugs, and features using **GitHub Issues**.
 - Reviewed and evaluated the **first deliverable**.
 
----
 #### Notes
 - Authorization should not be mixed with UI logic — keep it modular.
 - Issues should reflect actual development progress and features.
@@ -261,65 +204,783 @@ Tuesday, March 17, 2026
 - Ensure app naming is consistent across UI and documentation.
 - Move all development tracking to GitHub Issues.
 
+</details>
+
 ---
 
-### Meeting – March 30, 2026
+<details>
+<summary><strong>Meeting – March 30, 2026</strong></summary>
+
 #### Date
 Monday, March 30, 2026
 
 #### Attendance
-- Izza Shahid   
-- Karar Haider 
-- Maryam Waseem 
+- Izza Shahid
+- Karar Haider
+- Maryam Waseem
 - Maryam Ali
 - Haroon Ahmad
----
 
 #### Key Takeaways
 - Presented a working **app demo**.
-- Demonstrated:
-  - **US-01 (User Registration/Login)**
-  - **US-05 (Verified logging with proof)**
+- Demonstrated **US-01 (User Registration/Login)** and **US-05 (Verified logging with proof)**.
 - Showed **Firebase integration** (authentication + data handling).
 - No major feedback was given.
 
----
 #### Notes
 - Core features are functional and connected to backend.
 - Validation and logging flow demonstrated successfully.
 
----
 #### Action Items
 - Continue building remaining features.
 - Improve UI/UX and complete pending user stories.
 
+</details>
+
 ---
 
 ## UML Diagrams
-<img src="./screenshots/UML_class_diagram.png" width="800"/>
 
-Shows the overall structure of the application, including key classes such as users, activities, logs, and validation system. It illustrates how different components interact, including relationships between models, repositories, and UI layers.
+<img src="./screenshots/UML_class_diagram.png" width="800"/>
 
 The UML class diagram represents the core architecture of the application and how different components interact.
 
-- **User** is the central entity, storing profile data, points, streaks, and activity history.
-- **Activity** defines different sustainable actions (e.g., cycling, recycling) with associated points.
-- **ActivityLog** records each user action, including type, timestamp, and whether it is quick or verified.
-- **VerifiedLog / Validation** handles logs that require proof and community voting.
-- **Vote** represents user validation actions (upvote/downvote) on verified logs.
-- **Reward** and **Badge** represent incentives earned through points and milestones.
-- **Leaderboard** aggregates user rankings based on points.
-- **Challenge** tracks monthly or campus-wide goals and user participation.
-- **Repository / Manager classes** act as intermediaries between data and UI, handling storage and logic.
+<details>
+<summary><strong>Diagram Description</strong></summary>
 
-Overall, the diagram shows a layered structure where:
+Shows the overall structure of the application, including key classes such as users, activities, logs, and the validation system. It illustrates how different components interact, including relationships between models, repositories, and UI layers.
+
+- **User** — Central entity storing profile data, points, streaks, and activity history.
+- **Activity** — Defines sustainable actions (e.g., cycling, recycling) with associated points.
+- **ActivityLog** — Records each user action, including type, timestamp, and quick vs. verified status.
+- **VerifiedLog / Validation** — Handles logs that require proof and community voting.
+- **Vote** — Represents user validation actions (upvote/downvote) on verified logs.
+- **Reward & Badge** — Represent incentives earned through points and milestones.
+- **Leaderboard** — Aggregates user rankings based on points.
+- **Challenge** — Tracks monthly or campus-wide goals and user participation.
+- **Repository / Manager classes** — Intermediaries between data and UI, handling storage and logic.
+
+**Layered structure:**
 - Models represent data (User, Activity, Log)
 - Logic/Managers handle processing (Validation, Leaderboard)
 - UI components interact with these layers to display information
-  
+
+</details>
+
 ---
 
-## Klimate Android App - Project Part 3
+## CRC Cards
+
+<details>
+<summary><strong>Core User Classes</strong></summary>
+
+| **Student** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds profile details (display name, student ID, campus email) | ActivityLog |
+| Delegates credential storage and verification to AuthService | PointsBalance |
+| Submits a new activity log (quick or verified) | StreakTracker |
+| Sets a personal monthly sustainability goal | Challenge |
+| Joins an active challenge and creates or joins a team within it | Team |
+| Redeems points for a green discount or charity donation | Leaderboard |
+| Controls whether streak reminder notifications are enabled | Reward |
+| | Badge |
+| | NotificationService |
+| | Evidence |
+| | AuthService |
+| | Database |
+
+| **StaffMember** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds staff role and authorisation level | Challenge |
+| Delegates credential storage and verification to AuthService | Database |
+| Delegates authorisation checks to AuthService before restricted actions | AuthService |
+| Creates and configures challenges (name, goal, dates, team settings) | ActivityLog |
+| Can edit a challenge before it starts and view it after it ends | Activity |
+| Creates, edits, publishes, and unpublishes content items | Content |
+
+</details>
+
+<details>
+<summary><strong>Authorisation</strong></summary>
+
+| **AuthService** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Stores hashed credentials (email + password) for all accounts | Student |
+| Validates credentials on login and issues a session token | StaffMember |
+| Enforces password strength rules and blocks weak passwords | Database |
+| Sends email verification link on registration and activates account on confirmation | NotificationService |
+| Checks authorization level before allowing access to staff-only actions | |
+| Expires and invalidates session tokens on logout or timeout | |
+| Handles password-reset flow (token generation, expiry, new-password save) | |
+
+</details>
+
+<details>
+<summary><strong>Persistence</strong></summary>
+
+| **Database** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Persists and retrieves all entity records (students, logs, challenges, etc.) | AuthService |
+| Enforces referential integrity across related entities | Student |
+| Provides transactional writes so partial updates cannot corrupt state | ActivityLog |
+| Executes queries on behalf of service classes (no class queries the DB directly) | Challenge |
+| Stores credential records for AuthService in an isolated credentials table | PointsBalance |
+| Returns empty results rather than errors when no matching records exist | Badge |
+| | Content |
+
+</details>
+
+<details>
+<summary><strong>Activity Logging</strong></summary>
+
+| **ActivityLog** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Records which Activity type was performed, by whom, and on what date | Student |
+| Stores whether the entry was submitted as Quick or Verified | Activity |
+| Tracks verification status for Verified entries (awaiting votes, approved, expired) | Evidence |
+| Stores any Evidence attached to a Verified entry | ImpactCalculator |
+| Allows the student to edit allowed fields within 24 hours of submission | PointsBalance |
+| Locks the entry once 24 hours have passed or the entry is approved | Dashboard |
+| Provides recent log history to surface repeat-activity suggestions | StreakTracker |
+| Stores the environmental impact estimate calculated for this entry | CommunityVerification |
+
+| **Activity** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Defines an activity type by name and category (e.g. "Cycling to campus" under Transport) | ActivityLog |
+| Holds impact data for this type (e.g. kg CO₂ and kg waste saved per use) | ImpactCalculator |
+| Holds the maximum points a single log of this type can earn through community votes | PointsBalance |
+| Flags whether this type is eligible for points at all | StaffMember |
+
+| **Evidence** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Stores the file submitted as proof of a verified activity (e.g. an image upload) | ActivityLog |
+| Validates that a file has been attached before a Verified entry can be submitted | CommunityVerification |
+| Updates the associated ActivityLog status to "awaiting community verification" on valid submission | Student |
+
+| **CommunityVerification** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds the feed of verified entries currently awaiting peer review | ActivityLog |
+| Tracks the running vote count on each pending entry | PointsBalance |
+| Marks an entry as approved once it crosses the minimum vote threshold | Student |
+| Marks an entry as expired if it does not reach the threshold in time | Evidence |
+| Passes the final vote count to PointsBalance so points can be calculated and awarded | |
+
+</details>
+
+<details>
+<summary><strong>Impact & Dashboard</strong></summary>
+
+| **ImpactCalculator** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Calculates estimated carbon and waste reduction for a given activity entry | Activity |
+| Knows which emission factor or formula applies to each activity type | ActivityLog |
+| Produces a real-world equivalent for a student's total savings (e.g. car-free days) using a defined lookup table | Dashboard |
+| Recalculates figures when logs are added, edited, or removed | |
+| Returns a zero or empty signal when no qualifying logs exist | |
+
+| **Dashboard** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Shows the student's activity count for a selected time period, broken down by category | Student |
+| Displays estimated carbon and waste reduction with labelled units and a real-world equivalent | ActivityLog |
+| Shows the student's current streak and all-time best streak | ImpactCalculator |
+| Shows progress toward the student's personal monthly goal if one is set | StreakTracker |
+| Shows campus-wide aggregated totals in community mode — collective figures only, no individual data exposed | |
+| Updates immediately when the student changes the selected time period | |
+| Shows a zero or empty state when no data exists for the selected period | |
+
+| **StreakTracker** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds the student's current consecutive logging streak in days | Student |
+| Holds the student's all-time longest streak | ActivityLog |
+| Increments the current streak when at least one log is submitted on a given calendar day | Dashboard |
+| Resets the current streak to zero if the student does not log on a required day | NotificationService |
+| Preserves the all-time best when a reset occurs | |
+
+</details>
+
+<details>
+<summary><strong>Notifications</strong></summary>
+
+| **NotificationService** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Sends a streak reminder push notification if the student has not logged by a configurable threshold (e.g. 9 PM) | Student |
+| Only sends the reminder if the student has an active streak and has not logged that day | StreakTracker |
+| Sends at most one reminder per day regardless of continued inactivity | PointsBalance |
+| Sends an in-app notification when points are credited to a student's balance | Badge |
+| Sends an in-app notification when a new badge is earned | |
+| Respects the student's notification preference setting | |
+
+</details>
+
+<details>
+<summary><strong>Challenges, Teams & Leaderboard</strong></summary>
+
+| **Challenge** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds the challenge name, goal description, start date, and end date | Student |
+| Tracks whether team participation is enabled and the max team size | Team |
+| Shows contribution rules so students know how their logs count toward the goal | StaffMember |
+| Records a student's participation when they join | Leaderboard |
+| Prevents the same student from joining twice | |
+| Prevents new enrolments once the end date has passed | |
+| Becomes visible to students on its start date | |
+
+| **Team** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds the team name and a reference to its parent Challenge | Student |
+| Records the creator and the current member list | Challenge |
+| Checks that the team name is unique within the same challenge before saving | ActivityLog |
+| Enforces the maximum team size set on the Challenge | |
+| Aggregates all members' qualifying logs into a single team contribution total | |
+| Tracks progress toward the challenge goal and updates when any member logs | |
+
+| **Leaderboard** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Maintains a ranked list of participants by points earned within a specific challenge | Student |
+| Shows individual rankings for standard challenges and team rankings for team challenges | PointsBalance |
+| Always shows the viewing student's own rank and score, even if outside the top positions | Challenge |
+| Updates when any participant's score changes | Team |
+| Shows a score of zero and unranked status for participants with no points yet | |
+
+</details>
+
+<details>
+<summary><strong>Points, Badges & Rewards</strong></summary>
+
+| **PointsBalance** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Tracks the student's current total points | Student |
+| Credits points when a verified log is approved, scaled by vote count up to the activity's defined cap | Activity |
+| Awards no points for quick logs or verified logs that expire without enough votes | CommunityVerification |
+| Takes back points if an approved entry is later invalidated, without letting the balance go below zero | Reward |
+| Handles redemption: checks balance, deducts the correct amount on confirmation, and records the transaction | Leaderboard |
+| Maintains a full transaction history of all credits and deductions | NotificationService |
+
+| **Reward** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds the option name and the points cost required to redeem it | Student |
+| Indicates whether the option is a green discount or a charity donation | PointsBalance |
+| Lists all available options to a student with their point costs | |
+
+| **Badge** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Defines a badge by name, description, and the milestone that triggers it (e.g. 10 logs, first verified log, 7-day streak) | Student |
+| Checks whether a student's data meets the badge condition | ActivityLog |
+| Awards the badge automatically once the condition is met — no manual action needed | StreakTracker |
+| Ensures each badge can only be awarded once per student | NotificationService |
+| Records the date the badge was earned | |
+| Displays all badges in the system, distinguishing earned from locked ones | |
+
+</details>
+
+<details>
+<summary><strong>Content</strong></summary>
+
+| **Content** | |
+|---|---|
+| **Responsibilities** | **Collaborators** |
+| Holds a title, body text, category, short preview, and publication status for each article or tip | Student |
+| Supports three states: draft (staff only), published (visible to students), unpublished (hidden but not deleted) | StaffMember |
+| Returns only currently published items to the student-facing feed | |
+| Shows a clear empty state when no published content exists | |
+
+</details>
+
+---
+
+## Product Backlog
+
+### Product Backlog – Project Part 1
+
+<details>
+<summary><strong>View Full Backlog (Part 1)</strong></summary>
+
+| ID | User Story | Priority | Status | Story Points | Risk | Checkpoint |
+|----|------------|----------|--------|--------------|------|------------|
+| US-01 | As a new user, I want to register for an account using my campus email and set a password, so that my activity data is tied to my identity and accessible only to me. | High | Backlog | 5 | Medium | Half |
+| US-02 | As a student, I want to log a sustainable activity by selecting from a categorized list of common actions, so that I can record my habits quickly. | High | Backlog | 5 | Low | Half |
+| US-03 | As a student, I want the logging screen to surface my most frequently used activities at the top, so that repeat actions take even fewer taps over time. | Medium | Backlog | 3 | Low | Full |
+| US-04 | As a student, I want every log entry to be clearly marked as either quick or verified at the time of submission, so that I always know the validation status of my own activity history. | High | Backlog | 3 | Low | Half |
+| US-05 | As a student, I want to attach proof to a verified log entry and have it submitted to the community for validation, so that my activity can be vouched for by my peers. | High | Backlog | 8 | High | Full |
+| US-06 | As a student, I want to edit a log entry within 24 hours of submitting it, so that I can correct honest mistakes without being able to retroactively manipulate older records. | Medium | Backlog | 3 | Low | Full |
+| US-07 | As a student, I want a personalized dashboard that shows how many activities I have logged and across which categories for a time period I can adjust, so that I can see my sustainability habits. | High | Backlog | 8 | Medium | Half |
+| US-08 | As a student, I want my dashboard to display my estimated carbon and waste reduction based on my logs, with units shown clearly, so that I can understand the real-world meaning of my actions. | High | Backlog | 5 | Medium | Half |
+| US-09 | As a student, I want to see my current logging streak and my all-time personal best streak on my dashboard, so that I feel motivated to keep logging consistently. | Medium | Backlog | 3 | Low | Full |
+| US-10 | As a student, I want to set a personal monthly sustainability goal such as a target number of logs or a target impact figure, so that I have a self-directed benchmark beyond external challenges. | Low | Backlog | 3 | Low | Full |
+| US-11 | As a student, I want to view a live campus-wide impact summary showing aggregated sustainability activity across all students, so that I can feel part of a larger collective movement. | Medium | Backlog | 5 | Medium | Full |
+| US-12 | As a sustainability staff member, I want to create and configure a challenge by setting a name, goal, start and end dates, and whether teams are permitted, so that I can run targeted sustainability campaigns for the campus. | High | Backlog | 8 | Medium | Full |
+| US-13 | As a sustainability staff member, I want to publish, edit, and unpublish sustainability tips and short articles, so that students always see current and relevant educational content inside the app. | Medium | Backlog | 5 | Low | Full |
+| US-14 | As a student, I want to browse a list of currently active challenges and join one, seeing its details and how my logs will contribute to it, so that I have a target to work toward. | High | Backlog | 5 | Medium | Full |
+| US-15 | As a student, I want to earn points based on how many community votes my verified log receives, so that more credible and impactful activities are rewarded proportionally. | High | Backlog | 5 | High | Full |
+| US-16 | As a student, I want to view my current points balance and a list of available rewards, so that I understand what benefits my sustainability activities have earned. | High | Backlog | 3 | Low | Half |
+| US-17 | As a student, I want to redeem my points for a selected reward such as a green discount or a charity donation, so that my accumulated points produce a tangible real-world outcome. | High | Backlog | 5 | Medium | Full |
+| US-18 | As a student, I want to automatically earn a badge when I reach a defined sustainability milestone, so that significant achievements are recognized the moment they happen. | Medium | Backlog | 3 | Medium | Full |
+| US-19 | As a student, I want to view all my earned badges and all locked badges on my profile, so that I can see what I have achieved and what milestones are worth pursuing next. | Medium | Backlog | 3 | Low | Full |
+| US-20 | As a student, I want to create or join a team within a team challenge, so that I can participate as part of a named group rather than as an individual. | Medium | Backlog | 5 | Medium | Full |
+| US-21 | As a student, I want to see my team's collective progress within a challenge update in real time as members log activities, so that I can see how our shared effort is adding up. | Medium | Backlog | 5 | Medium | Full |
+| US-22 | As a student, I want to see a ranked leaderboard for a challenge I am participating in, showing points and my position relative to other participants, so that friendly competition feels fair and motivating. | Medium | Backlog | 5 | Medium | Full |
+| US-23 | As a student, I want to receive a push notification when I am close to midnight without having logged anything that day and I have an active streak, so that I get a timely reminder before losing progress. | Low | Backlog | 3 | Medium | Full |
+| US-24 | As a student, I want to see my total carbon savings translated into a relatable real-world equivalent, such as the number of car-free days or trees worth of absorption, so that abstract CO₂ numbers feel personally meaningful. | Low | Backlog | 2 | Low | Full |
+| US-25 | As a student, I want to browse a feed of verified log submissions from other students that are awaiting community approval, so that I can participate in the validation process. | High | Backlog | 5 | High | Half |
+| US-26 | As a student, I want to cast a verification vote on a peer's pending log submission, so that I can help validate genuine sustainable activity in my campus community. | High | Backlog | 3 | High | Half |
+
+</details>
+
+---
+
+### Product Backlog – Project Part 2
+
+<details>
+<summary><strong>View Full Backlog (Part 2)</strong></summary>
+
+| ID | User Story | Priority | Status | Progress | Story Points | Risk | Checkpoint |
+|----|------------|----------|--------|----------|--------------|------|------------|
+| US-01 | Register account | High | Backlog | Done | 5 | Medium | Half |
+| US-02 | Log activity | High | Backlog | Done | 5 | Low | Half |
+| US-03 | Frequent activities | Medium | Backlog | Done | 3 | Low | Full |
+| US-04 | Mark quick/verified logs | High | Backlog | Done | 3 | Low | Half |
+| US-05 | Attach proof for verification | High | Backlog | Done | 8 | High | Full |
+| US-06 | Edit log entry | Medium | Backlog | Done | 3 | Low | Full |
+| US-07 | Dashboard overview | High | Backlog | Done | 8 | Medium | Half |
+| US-08 | CO₂ & waste tracking | High | Backlog | Done | 5 | Medium | Half |
+| US-09 | Streak tracking | Medium | Backlog | Done | 3 | Low | Full |
+| US-10 | Monthly goals | Low | Backlog | Not Started | 3 | Low | Full |
+| US-11 | Campus impact summary | Medium | Backlog | Not Started | 5 | Medium | Full |
+| US-12 | Create challenges (admin) | High | Backlog | Not Started | 8 | Medium | Full |
+| US-13 | Publish tips/articles | Medium | Backlog | Not Started | 5 | Low | Full |
+| US-14 | Join challenges | High | Backlog | Done | 5 | Medium | Full |
+| US-15 | Points from votes | High | Backlog | Done | 5 | High | Full |
+| US-16 | View points & rewards | High | Backlog | Done | 3 | Low | Half |
+| US-17 | Redeem rewards | High | Backlog | In Progress | 5 | Medium | Full |
+| US-18 | Earn badges | Medium | Backlog | In Progress | 3 | Medium | Full |
+| US-19 | View badges | Medium | Backlog | In Progress | 3 | Low | Full |
+| US-20 | Team participation | Medium | Backlog | Not Started | 5 | Medium | Full |
+| US-21 | Team progress tracking | Medium | Backlog | Not Started | 5 | Medium | Full |
+| US-22 | Leaderboard | Medium | Backlog | Done | 5 | Medium | Full |
+| US-23 | Reminder notifications | Low | Backlog | Not Started | 3 | Medium | Full |
+| US-24 | CO₂ equivalence display | Low | Backlog | Not Started | 2 | Low | Full |
+| US-25 | Validation feed | High | Backlog | Done | 5 | High | Half |
+| US-26 | Voting on logs | High | Backlog | Done | 3 | High | Half |
+
+</details>
+
+---
+
+### Product Backlog – Project Part 3
+
+| ID | User Story | Priority | Status |
+|----|------------|----------|--------|
+
+---
+
+## Wireframes & Screenshots
+
+### Wireframes – Project Part 1
+*(To be added)*
+
+---
+
+### Wireframes – Project Part 2
+
+Figma: [View Wireframes](https://www.figma.com/design/jEozF9kZnQmmX199ftrxQq/Untitled?node-id=0-1&t=ZiAlzJ7MbXtacAX1-1)
+
+<details>
+<summary><strong>Screen Descriptions</strong></summary>
+
+**Screen 1 — Home Dashboard**
+The main landing screen. Greets the user by name (Maya). Displays their current logging streak and all-time best, estimated CO₂ and waste reduction (in kg), points balance, and active Monthly Challenge progress. The activity section at the top surfaces the student's most commonly logged actions for faster repeat logging (only appears once at least one prior log exists). Entry point to all core features via the bottom navbar.
+
+**Screen 2 — Log Activity**
+Lets students record a sustainable action in one tap. Activities are grouped by category (Transport, Food, Waste, Energy). A Quick Log tab surfaces the student's most frequently used activities for repeat logging. Students choose Quick or Verified at submission. Verified entries prompt for photo proof and are sent to the community feed for peer validation.
+
+**Screen 3 — Leaderboard**
+Campus-wide rankings showing students ordered by total points earned from verified, community-voted logs. Displays each participant's eco title, point total, and streak. The current student's rank is always visible. Updates in real time as votes are cast and points are credited.
+
+**Screen 4 — Profile (Default / Collapsed View)**
+The standard in-frame profile view. Shows the student's eco title, points, key stats, and badge row at a glance.
+
+**Screen 4 Expanded — Profile (Full Detail View)**
+Shows Maya's total CO₂ saved, active streak, challenges completed, and all earned and locked achievement badges in full detail. Locked badges are greyed out to signal attainable next milestones. The Account section provides access to Settings, Privacy, Notifications (including streak reminder toggle), and Help.
+
+**Screen 5 — Friends & Social**
+Social screen showing a student's friend list ranked by eco points and active streak. Encourages accountability and friendly competition among peers. The "Add Friend" button lets students invite others by name or username. Friend ranks update in real time as members log activities.
+
+</details>
+
+<details>
+<summary><strong>Screenshots</strong></summary>
+
+| Screen | Screenshot |
+|--------|-----------|
+| Home Dashboard | ![Home Dashboard](./screenshots/s1.png) |
+| Log Activity | ![Log Activity](./screenshots/s2.png) |
+| Leaderboard | ![Leaderboard](./screenshots/s3.png) |
+| Profile | ![Profile](./screenshots/s4.png) |
+| Friends & Social | ![Friends & Social](./screenshots/s5.png) |
+
+</details>
+
+<details>
+<summary><strong>Wireframe Screenshots</strong></summary>
+
+| Screen | Preview |
+|--------|---------|
+| Dashboard | <img src="./screenshots/Dashboard.png" width="250"/> |
+| Login | <img src="./screenshots/Login.png" width="250"/> |
+| Sign Up | <img src="./screenshots/SignUp.png" width="250"/> |
+| Log Activity (Quick) | <img src="./screenshots/QuickLog.png" width="250"/> |
+| Log Activity (Verified 1) | <img src="./screenshots/VerifiedLog1.png" width="250"/> |
+| Log Activity (Verified 2) | <img src="./screenshots/VerifiedLog2.png" width="250"/> |
+| Log Activity (Verified 3) | <img src="./screenshots/VerifiedLog3.png" width="250"/> |
+| About (Logging) | <img src="./screenshots/About(Logging).png" width="250"/> |
+| History | <img src="./screenshots/History.png" width="250"/> |
+| Leaderboard | <img src="./screenshots/Leaderboard.png" width="250"/> |
+| Validation Feed 1 | <img src="./screenshots/ValidationFeed1.png" width="250"/> |
+| Validation Feed 2 | <img src="./screenshots/ValidationFeed2.png" width="250"/> |
+| Account (Main) | <img src="./screenshots/Account1.png" width="250"/> |
+| Account (Options) | <img src="./screenshots/Account2.png" width="250"/> |
+| Friends | <img src="./screenshots/Friends.png" width="250"/> |
+
+</details>
+
+---
+
+### Wireframes – Project Part 3
+*(To be added)*
+
+---
+
+## Acceptance Criteria
+
+<details>
+<summary><strong>A1 — Account Creation</strong></summary>
+
+- [ ] The registration screen is accessible from the app's landing/login screen
+- [ ] The user must enter a campus email address, and the system rejects non-campus email domains
+- [ ] The user must set a password that meets a minimum security requirement (e.g. 8+ characters)
+- [ ] The user must confirm their password and the system blocks submission if the two fields do not match
+- [ ] The system sends a verification email to the provided address before activating the account
+- [ ] The account is not functional until the email has been verified
+- [ ] If the email is already registered, the system shows a clear message and does not create a duplicate account
+- [ ] After successful registration and verification, the user is directed to complete a basic profile (display name) before reaching the main app
+
+</details>
+
+<details>
+<summary><strong>L1 — Categorized Activity Log</strong></summary>
+
+- [ ] The logging screen is accessible from the main navigation in one tap
+- [ ] Activities are grouped into clearly labeled categories (e.g. Transport, Food, Energy, Waste)
+- [ ] Each category displays a list of predefined activity options
+- [ ] The student can select an activity and submit the log without typing anything
+- [ ] The system saves the entry and it appears in the student's activity history
+- [ ] A confirmation message is shown after a successful submission
+
+</details>
+
+<details>
+<summary><strong>L2 — Frequent Activity Suggestions</strong></summary>
+
+- [ ] A "Frequent" or "Recent" section appears at the top of the logging screen
+- [ ] The section shows activities the student has logged most often, ordered by frequency
+- [ ] The section only appears after the student has at least one prior log entry
+- [ ] Selecting an activity from this section follows the same submission flow as selecting from a category
+- [ ] The suggestions update to reflect the student's most recent logging patterns
+
+</details>
+
+<details>
+<summary><strong>L3 — Quick vs. Verified Tagging</strong></summary>
+
+- [ ] When submitting a log, the student must choose either "Quick" or "Verified" before confirming
+- [ ] Each entry in the activity history displays a visible label indicating its type (Quick or Verified)
+- [ ] The label cannot be changed after the entry is submitted
+- [ ] Quick and Verified entries are visually distinguishable in the history list (e.g. different badge or color)
+
+</details>
+
+<details>
+<summary><strong>L4 — Attach Proof for Community Verification</strong></summary>
+
+- [ ] When the student selects "Verified" during logging, they are prompted to attach proof before submitting
+- [ ] The system accepts at least one supported proof format (e.g. image upload)
+- [ ] The student cannot submit a verified log without attaching proof
+- [ ] After submission, the entry is posted to the community verification feed and marked as "Awaiting Community Verification" in the student's history
+- [ ] A confirmation message is shown stating that the log is now open for community review
+- [ ] The student can see the current vote count on their pending submission at any time
+
+</details>
+
+<details>
+<summary><strong>L5 — Edit Recent Log</strong></summary>
+
+- [ ] An edit option is visible on any log entry submitted within the last 24 hours
+- [ ] The student can modify allowed fields such as activity type, category, or date
+- [ ] The updated entry is saved and reflected immediately in the activity history
+- [ ] The edit option is no longer visible on entries older than 24 hours
+- [ ] Approved verified log entries cannot be edited
+
+</details>
+
+<details>
+<summary><strong>D1 — Personal Activity Dashboard</strong></summary>
+
+- [ ] The dashboard is accessible from the main navigation
+- [ ] The dashboard displays a total count of activities logged in the selected time period
+- [ ] Activity counts are broken down by category
+- [ ] The student can switch between time period views (e.g. this week, this month, all time)
+- [ ] The dashboard updates immediately when the time period selection changes
+- [ ] An empty state is shown when no logs exist for the selected period
+
+</details>
+
+<details>
+<summary><strong>D2 — Carbon & Waste Estimates</strong></summary>
+
+- [ ] The dashboard displays an estimated carbon reduction figure derived from the student's logs
+- [ ] The dashboard displays an estimated waste reduction figure derived from the student's logs
+- [ ] Both figures include clearly labeled units (e.g. kg CO₂, kg waste)
+- [ ] A visible note indicates that the values are estimates based on standard emission factors
+- [ ] The figures update when logs are added, edited, or removed
+- [ ] If no qualifying logs exist, a zero value or empty state is displayed rather than an error
+
+</details>
+
+<details>
+<summary><strong>D3 — Logging Streaks</strong></summary>
+
+- [ ] The dashboard displays the student's current consecutive logging streak in days
+- [ ] The dashboard displays the student's all-time longest streak in days
+- [ ] The streak increments by one when the student submits at least one log on a given calendar day
+- [ ] The current streak resets to zero if the student does not log anything on a required day
+- [ ] The all-time best is preserved when a reset occurs and does not decrease
+- [ ] Both values update in real time after a qualifying log is submitted
+
+</details>
+
+<details>
+<summary><strong>D4 — Personal Monthly Goal</strong></summary>
+
+- [ ] The student can access a goal-setting screen from the dashboard
+- [ ] The student can choose a goal type (e.g. number of logs or estimated CO₂ saved)
+- [ ] The student can enter a numeric target value for the chosen goal type
+- [ ] The dashboard displays the student's progress toward their current goal for the active month
+- [ ] The goal resets or prompts the student to set a new one at the start of each month
+- [ ] The student can edit or remove their goal at any time
+
+</details>
+
+<details>
+<summary><strong>CI1 — Campus-Wide Community Impact Screen</strong></summary>
+
+- [ ] The community impact screen is accessible to all logged-in students from the main navigation
+- [ ] The screen displays the total number of activities logged campus-wide for the current month
+- [ ] The screen displays the aggregated estimated carbon and waste reduction across all students
+- [ ] No individual student's data or identity is exposed; all figures are collective totals only
+- [ ] The data updates as new logs are submitted and verified across the campus
+- [ ] An empty or baseline state is shown if no data exists yet for the current period
+
+</details>
+
+<details>
+<summary><strong>S2 — Staff Creates & Configures Challenges</strong></summary>
+
+- [ ] Staff can access a challenge creation form from the staff dashboard
+- [ ] The form requires a challenge name, goal description, start date, and end date
+- [ ] Staff can toggle whether team participation is enabled for the challenge
+- [ ] When teams are enabled, staff can set a maximum team size
+- [ ] The challenge becomes visible to students on its start date
+- [ ] Staff can edit a challenge before it starts and view it after it ends
+- [ ] The system prevents creating a challenge with an end date before the start date
+
+</details>
+
+<details>
+<summary><strong>S3 — Staff Publishes Educational Content</strong></summary>
+
+- [ ] Staff can create a new content item with a title, body text, and category
+- [ ] Staff can save a draft without publishing it
+- [ ] Staff can publish a content item, making it visible to students immediately
+- [ ] Staff can edit a published item and save changes without unpublishing it
+- [ ] Staff can unpublish an item, which removes it from the student-facing feed without deleting it
+- [ ] Unpublished items remain accessible to staff for future editing or republishing
+
+</details>
+
+<details>
+<summary><strong>G1 — Browse & Join Challenges</strong></summary>
+
+- [ ] The student can access a challenges screen from the main navigation
+- [ ] Only currently active challenges are shown (start date reached, end date not passed)
+- [ ] Each challenge card shows the challenge name, goal, and end date
+- [ ] The student can open a challenge to view a detailed description including contribution rules
+- [ ] The student can join a challenge from the detail screen with a single action
+- [ ] The student cannot join the same challenge twice
+- [ ] A joined challenge displays the student's personal progress toward the challenge goal
+
+</details>
+
+<details>
+<summary><strong>G2a — Earn Points from Community Votes</strong></summary>
+
+- [ ] Points are awarded automatically once a verified log crosses the minimum vote threshold
+- [ ] The number of points awarded scales with the number of votes received, up to a defined maximum per activity type
+- [ ] The student receives an in-app notification when points are credited
+- [ ] The points transaction appears in the student's history showing the activity and vote count at time of approval
+- [ ] No points are awarded for quick logs or for verified logs that do not reach the minimum threshold before expiry
+- [ ] A student cannot earn more than the defined point cap for a single log entry regardless of votes received
+
+</details>
+
+<details>
+<summary><strong>G2b — Redeem Points for Rewards</strong></summary>
+
+- [ ] The student can view their current points balance from their profile or rewards screen
+- [ ] A list of available redemption options is displayed with names and point costs
+- [ ] The student can select a redemption option and confirm the transaction
+- [ ] The system blocks the redemption if the student's balance is insufficient and shows a clear message
+- [ ] The student's points balance is deducted immediately upon successful redemption
+- [ ] A confirmation message is shown and the transaction appears in the student's points history
+
+</details>
+
+<details>
+<summary><strong>G3a — Auto-Earn Badges at Milestones</strong></summary>
+
+- [ ] The system defines a set of badge milestones tied to specific measurable achievements (e.g. 10 logs, first verified log, 7-day streak)
+- [ ] A badge is awarded automatically when the student's data meets the milestone condition
+- [ ] The student receives an in-app notification when a new badge is earned
+- [ ] Each badge can only be earned once per student
+- [ ] Earning a badge does not require any manual action from the student
+
+</details>
+
+<details>
+<summary><strong>G3b — View Earned & Locked Badges</strong></summary>
+
+- [ ] The student's profile displays a grid or list of all badges in the system
+- [ ] Earned badges are visually distinct from locked badges (e.g. full color vs. greyed out)
+- [ ] Each badge shows its name and a short description of how it is earned
+- [ ] Earned badges show the date they were achieved
+- [ ] The badge display updates immediately after a new badge is earned
+
+</details>
+
+<details>
+<summary><strong>G4a — Create or Join a Team</strong></summary>
+
+- [ ] The student can see a "Teams" section when viewing a team-enabled challenge
+- [ ] The student can create a new team by entering a team name
+- [ ] The team name must be unique within the same challenge
+- [ ] The student can browse existing teams and request to join one
+- [ ] The system prevents joining a team that has reached the maximum size set by staff
+- [ ] A student can only belong to one team per challenge
+
+</details>
+
+<details>
+<summary><strong>G4b — Team Collective Progress</strong></summary>
+
+- [ ] The team view displays the team's total contribution toward the challenge goal
+- [ ] Contributions from all team members are aggregated into a single team total
+- [ ] The team total updates when any member submits a qualifying log
+- [ ] The view shows a progress indicator comparing the team total to the challenge goal
+- [ ] Each team member's individual contribution is visible within the team view
+
+</details>
+
+<details>
+<summary><strong>G5 — Challenge Leaderboard</strong></summary>
+
+- [ ] A leaderboard tab is accessible from within any challenge the student has joined
+- [ ] The leaderboard ranks participants by total points earned within that challenge
+- [ ] The student's own rank and score are always visible, even if not in the top positions
+- [ ] The leaderboard updates when any participant's score changes
+- [ ] Participants with no points are shown at the bottom as unranked or with a score of zero
+- [ ] The leaderboard shows individual rankings for individual challenges and team rankings for team challenges
+
+</details>
+
+<details>
+<summary><strong>E1 — Tips & Articles Feed</strong></summary>
+
+- [ ] The student can access a content feed from the main navigation
+- [ ] The feed displays only currently published items
+- [ ] Each item in the feed shows a title, category, and short preview
+- [ ] The student can tap an item to read the full content
+- [ ] The feed shows a clear empty state when no content has been published
+- [ ] The feed updates when staff publish or unpublish items
+
+</details>
+
+<details>
+<summary><strong>SC1 — Streak Reminder Notification</strong></summary>
+
+- [ ] The system sends a push notification to the student if no log has been submitted by a configurable time threshold (e.g. 9 PM)
+- [ ] The notification is only sent on days when the student has an active streak of at least one day
+- [ ] The notification is not sent if the student has already logged something that day
+- [ ] The student can enable or disable this notification from their settings
+- [ ] Only one reminder notification is sent per day regardless of continued inactivity
+
+</details>
+
+<details>
+<summary><strong>SC2 — Real-World Carbon Equivalents</strong></summary>
+
+- [ ] The dashboard or impact screen displays at least one real-world equivalent alongside the raw CO₂ figure
+- [ ] Equivalents are drawn from a defined lookup table (e.g. EPA or DEFRA equivalence factors)
+- [ ] The equivalent updates when the student's carbon savings figure changes
+- [ ] The label for each equivalent is written in plain, non-technical language
+- [ ] If the student's savings are zero, the equivalent display shows a zero or baseline state rather than an error
+
+</details>
+
+<details>
+<summary><strong>V1 — Community Verification Feed</strong></summary>
+
+- [ ] A community verification feed is accessible from the main navigation
+- [ ] The feed displays pending verified log submissions from other students, showing the activity type, category, submitted proof, and current vote count
+- [ ] Submissions are shown in chronological order by default, newest first
+- [ ] The student's own pending submissions do not appear in their own feed
+- [ ] Each submission shows a time remaining before it expires and closes for voting
+- [ ] Expired or already-verified submissions are removed from the active feed
+
+</details>
+
+<details>
+<summary><strong>V2 — Cast a Verification Vote</strong></summary>
+
+- [ ] Each submission in the feed has a clearly visible vote/verify action
+- [ ] A student can cast one vote per submission
+- [ ] The vote count on the submission updates immediately after the student votes
+- [ ] A student cannot vote on their own submissions
+- [ ] After voting, the action is marked as done and the student cannot vote on the same submission again
+- [ ] If a submission reaches the required vote threshold after the student's vote, the student sees it marked as verified in the feed
+
+</details>
+
+---
+
+## Klimate Android App — Project Part 3
+
 ### Repository Structure
 
 ```
@@ -358,46 +1019,49 @@ app/src/androidTest/java/com/example/klimate/
     BottomNavUiTest.java        UI tests for bottom navigation between all tabs
     ValidationFeedUiTest.java   UI tests for validation feed navigation
 ```
+
 ### Tech Stack
 
-- Language: Java
-- Platform: Android (minSdk 24, targetSdk 34)
-- Backend: Firebase Authentication, Firestore, Firebase Storage
-- Architecture: MVVM for dashboard (DashboardViewModel and LiveData), MVC elsewhere
+| Layer | Technology |
+|-------|------------|
+| Language | Java |
+| Platform | Android (minSdk 24, targetSdk 34) |
+| Backend | Firebase Authentication, Firestore, Firebase Storage |
+| Architecture | MVVM for dashboard (DashboardViewModel + LiveData), MVC elsewhere |
 
 ### Firestore Collections
 
 | Collection | Purpose |
-|---|---|
-| users/{uid} | User profile, total points, streak, CO2 saved |
-| activity_logs/{logId} | Sustainability activity log entries |
-| votes/{voteId} | Community votes on pending verified logs |
+|------------|---------|
+| `users/{uid}` | User profile, total points, streak, CO₂ saved |
+| `activity_logs/{logId}` | Sustainability activity log entries |
+| `votes/{voteId}` | Community votes on pending verified logs |
 
 ### Running Tests
 
-Unit tests (no emulator required):
+**Unit tests** (no emulator required):
+```bash
+./gradlew test
+```
 
-    ./gradlew test
-
-UI tests (requires API 34 emulator, user must be signed in first):
-
-    ./gradlew connectedAndroidTest
-
+**UI tests** (requires API 34 emulator; user must be signed in first):
+```bash
+./gradlew connectedAndroidTest
+```
 
 ---
-# Sprint Planning and Reviews
 
-### Sprint 1 — March 23 to March 30
+## Sprint Planning and Reviews
 
-#### Sprint Planning (March 23)
+<details>
+<summary><strong>Sprint 1 — March 23 to March 30</strong></summary>
 
-**Goal:**  
-Set up Firebase, establish the shared project structure, and begin work on all half-checkpoint stories.
+### Sprint Planning (March 23)
 
-**Planned User Stories & Owners**
+**Goal:** Set up Firebase, establish the shared project structure, and begin work on all half-checkpoint stories.
 
 | User Story | Owner | Plan |
-|-----------|------|------|
+|-----------|-------|------|
 | US-01 — Register/Login | Maryam W | Set up Firebase Auth, RegisterActivity, LoginActivity, and user storage |
 | US-02 — Log Activity | Izza | Start LogFragment flow and ActivityLog model |
 | US-04 — Quick/Verified logs | Izza | Add status handling for quick vs verified logs |
@@ -409,56 +1073,51 @@ Set up Firebase, establish the shared project structure, and begin work on all h
 | US-25 — Validation feed | Karar | Start pending logs feed |
 | US-26 — Voting system | Karar | Start vote model and voting flow |
 
----
+### Sprint Review (March 30)
 
-#### Sprint Review (March 30)
+**Summary:** Firebase setup and authentication were completed early. Most remaining half-checkpoint stories were started and carried into Sprint 2. The team also demoed core progress to the TA during lab.
 
-**Summary:**  
-Firebase setup and authentication were completed early. Most remaining half-checkpoint stories were started and carried into Sprint 2. The team also demoed core progress to the TA during lab.
+| Story | Status |
+|-------|--------|
+| US-01 (Register/Login) | ✅ Done |
+| US-02, US-04, US-05, US-07, US-08, US-15, US-16, US-25, US-26 | 🔄 In Progress |
 
-**Progress by end of Sprint 1**
-- **Done:** US-01 (Register/Login)
-- **In Progress:** US-02, US-04, US-05, US-07, US-08, US-15, US-16, US-25, US-26
-
-**Additional Contributions**
+**Additional Contributions:**
 - Izza implemented the **History** screen and **About/Info (Logging)** feature.
 - Maryam W contributed to authentication testing and documentation.
 
+</details>
+
 ---
 
-### Sprint 2 — March 30 to April 6
+<details>
+<summary><strong>Sprint 2 — March 30 to April 6</strong></summary>
 
-#### Sprint Planning (March 30)
+### Sprint Planning (March 30)
 
-**Goal:**  
-Finish all half-checkpoint stories, integrate branches into `main`, complete testing/documentation, and polish the app for demo.
+**Goal:** Finish all half-checkpoint stories, integrate branches into `main`, complete testing/documentation, and polish the app for demo.
 
-**More Specific Sprint 2 Plan**
-
-| Area | Owner | Specific planned work |
-|------|-------|------------------------|
+| Area | Owner | Planned Work |
+|------|-------|--------------|
 | Auth + docs/tests | Maryam W | Finalize auth flow, add comments/Javadoc, complete `UserTest` and `AuthUiTest`, update README and backlog |
-| Logging | Izza | Complete Firestore logging, quick/verified status, fix UI issues, add **History** and **About (Logging)**, merge changes |
+| Logging | Izza | Complete Firestore logging, quick/verified status, fix UI issues, add History and About (Logging), merge changes |
 | Dashboard / stats | Maryam A | Finalize dashboard integration, connect streak/points/CO₂ to UI |
 | Validation feed / voting | Karar | Complete validation feed, voting logic, and double-vote prevention |
 | Proof upload / profile / points | Haroon | Complete photo upload, quick log, verified log, points updates, and profile integration |
 
-**Planned integration tasks**
-- Merge dashboard with logging flow  
-- Fix HomeFragment and UI issues  
-- Finalize monthly challenge UI  
-- Add missing comments and Javadoc  
-- Update README and documentation  
-- Merge all branches into `main` via PRs  
+**Integration tasks planned:**
+- Merge dashboard with logging flow
+- Fix HomeFragment and UI issues
+- Finalize monthly challenge UI
+- Add missing comments and Javadoc
+- Update README and documentation
+- Merge all branches into `main` via PRs
 
----
+### Sprint Review (April 6 / Final Merge April 7)
 
-#### Sprint Review (April 6 / Final Merge on April 7)
+**Summary:** All half-checkpoint stories were completed. Final commits focused on fixing UI issues, merging branches, adding documentation, and polishing the app.
 
-**Summary:**  
-All half-checkpoint stories were completed. Final commits focused on fixing UI issues, merging branches, adding documentation, and polishing the app.
-
-**What was completed in Sprint 2**
+**Completed in Sprint 2:**
 - Authentication (Login/Register)
 - Activity logging (Quick + Verified)
 - Proof upload (Firebase Storage)
@@ -469,692 +1128,12 @@ All half-checkpoint stories were completed. Final commits focused on fixing UI i
 - About/Info logging feature
 - Documentation, comments, and README updates
 
+</details>
+
 ---
 
 ### Key Observations
 
-- Sprint 1 focused on setup and initial implementation.  
-- Sprint 2 focused on integration, fixing bugs, merging work, and documentation.  
-- Final week involved significant UI fixes, feature completion, and polishing before submission.
----
-
-## CRC Cards
----
-
-### Core User Classes
-
-| **Student** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Holds profile details (display name, student ID, campus email) | ActivityLog |
-| Delegates credential storage and verification to AuthService | PointsBalance |
-| Submits a new activity log (quick or verified) | StreakTracker |
-| Sets a personal monthly sustainability goal | Challenge |
-| Joins an active challenge and creates or joins a team within it | Team |
-| Redeems points for a green discount or charity donation | Leaderboard |
-| Controls whether streak reminder notifications are enabled | Reward |
-| | Badge |
-| | NotificationService |
-| | Evidence |
-| | AuthService |
-| | Database | 
-
-| **StaffMember** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Holds staff role and authorisation level | Challenge |
-| Delegates credential storage and verification to AuthService | Database |
-| Delegates authorisation checks to AuthService before restricted actions are performed | AuthService |
-| Creates and configures challenges, including name, goal, dates, and team settings | ActivityLog |
-| Can edit a challenge before it starts and view it after it ends | Activity |
-| Creates, edits, publishes, and unpublishes content items | Content |
-
----
-
-### Authorisation
-
-| **AuthService** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Stores hashed credentials (email + password) for all accounts | Student |
-| Validates credentials on login and issues a session token | StaffMember |
-| Enforces password strength rules and blocks weak passwords | Database |
-| Sends email verification link on registration and activates account on confirmation | NotificationService | 
-| Checks authorization level before allowing access to staff-only actions |
-| Expires and invalidates session tokens on logout or timeout |
-| Handles password-reset flow (token generation, expiry, new-password save) |
-
----
-
-### Persistence
-
-| **Database** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Persists and retrieves all entity records (students, logs, challenges, etc.) | AuthService |
-| Enforces referential integrity across related entities | Student |
-| Provides transactional writes so partial updates cannot corrupt state | ActivityLog |
-| Executes queries on behalf of service classes (no class queries the DB directly) | Challenge |
-| Stores credential records for AuthService in an isolated credentials table | PointsBalance |
-| Returns empty results rather than errors when no matching records exist | Badge |
-| | Content |
-
----
-
-### Activity Logging
-
-| **ActivityLog** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Records which Activity type was performed, by whom, and on what date | Student |
-| Stores whether the entry was submitted as Quick or Verified | Activity |
-| Tracks verification status for Verified entries (awaiting votes, approved, expired) | Evidence |
-| Stores any Evidence attached to a Verified entry | ImpactCalculator |
-| Allows the student to edit allowed fields within 24 hours of submission | PointsBalance |
-| Locks the entry once 24 hours have passed or the entry is approved | Dashboard |
-| Provides recent log history to surface repeat-activity suggestions | StreakTracker |
-| Stores the environmental impact estimate calculated for this entry | CommunityVerification |
-
-| **Activity** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Defines an activity type by name and category (e.g. "Cycling to campus" under Transport) | ActivityLog |
-| Holds impact data for this type (e.g. kg CO₂ and kg waste saved per use) | ImpactCalculator |
-| Holds the maximum points a single log of this type can earn through community votes | PointsBalance |
-| Flags whether this type is eligible for points at all | StaffMember |
-
-| **Evidence** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Stores the file submitted as proof of a verified activity (e.g. an image upload) | ActivityLog |
-| Validates that a file has been attached before a Verified entry can be submitted | CommunityVerification |
-| Updates the associated ActivityLog status to "awaiting community verification" on valid submission | Student |
-
-| **CommunityVerification** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Holds the feed of verified entries currently awaiting peer review | ActivityLog |
-| Tracks the running vote count on each pending entry | PointsBalance |
-| Marks an entry as approved once it crosses the minimum vote threshold | Student |
-| Marks an entry as expired if it does not reach the threshold in time | Evidence |
-| Passes the final vote count to PointsBalance so points can be calculated and awarded | |
-
----
-
-### Impact & Dashboard
-
-| **ImpactCalculator** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Calculates estimated carbon and waste reduction for a given activity entry | Activity |
-| Knows which emission factor or formula applies to each activity type | ActivityLog |
-| Produces a real-world equivalent for a student's total savings (e.g. car-free days) using a defined lookup table | Dashboard |
-| Recalculates figures when logs are added, edited, or removed | |
-| Returns a zero or empty signal when no qualifying logs exist | |
-
-| **Dashboard** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Shows the student's activity count for a selected time period, broken down by category | Student |
-| Displays estimated carbon and waste reduction with labelled units and a real-world equivalent | ActivityLog |
-| Shows the student's current streak and all-time best streak | ImpactCalculator |
-| Shows progress toward the student's personal monthly goal if one is set | StreakTracker |
-| Shows campus-wide aggregated totals when viewed in community mode — collective figures only, no individual data exposed | |
-| Updates immediately when the student changes the selected time period | |
-| Shows a zero or empty state when no data exists for the selected period | |
-
-| **StreakTracker** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Holds the student's current consecutive logging streak in days | Student |
-| Holds the student's all-time longest streak | ActivityLog |
-| Increments the current streak when at least one log is submitted on a given calendar day | Dashboard |
-| Resets the current streak to zero if the student does not log on a required day | NotificationService |
-| Preserves the all-time best when a reset occurs | |
-
----
-
-### Notifications
-
-| **NotificationService** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Sends a streak reminder push notification if the student has not logged by a configurable threshold (e.g. 9 PM) | Student |
-| Only sends the reminder if the student has an active streak and has not logged that day | StreakTracker |
-| Sends at most one reminder per day regardless of continued inactivity | PointsBalance |
-| Sends an in-app notification when points are credited to a student's balance | Badge |
-| Sends an in-app notification when a new badge is earned | |
-| Respects the student's notification preference setting | |
-
----
-
-### Challenges, Teams & Leaderboard
-
-| **Challenge** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Holds the challenge name, goal description, start date, and end date | Student |
-| Tracks whether team participation is enabled and the max team size | Team |
-| Shows contribution rules so students know how their logs count toward the goal | StaffMember |
-| Records a student's participation when they join | Leaderboard |
-| Prevents the same student from joining twice | |
-| Prevents new enrolments once the end date has passed | |
-| Becomes visible to students on its start date | |
-
-| **Team** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Holds the team name and a reference to its parent Challenge | Student |
-| Records the creator and the current member list | Challenge |
-| Checks that the team name is unique within the same challenge before saving | ActivityLog |
-| Enforces the maximum team size set on the Challenge | |
-| Aggregates all members' qualifying logs into a single team contribution total | |
-| Tracks progress toward the challenge goal and updates when any member logs | |
-
-| **Leaderboard** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Maintains a ranked list of participants by points earned within a specific challenge | Student |
-| Shows individual rankings for standard challenges and team rankings for team challenges | PointsBalance |
-| Always shows the viewing student's own rank and score, even if outside the top positions | Challenge |
-| Updates when any participant's score changes | Team |
-| Shows a score of zero and unranked status for participants with no points yet | |
-
----
-
-### Points, Badges & Rewards
-
-| **PointsBalance** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Tracks the student's current total points | Student |
-| Credits points when a verified log is approved, scaled by vote count up to the activity's defined cap | Activity |
-| Awards no points for quick logs or verified logs that expire without enough votes | CommunityVerification |
-| Takes back points if an approved entry is later invalidated, without letting the balance go below zero | Reward |
-| Handles redemption: checks the balance is sufficient, deducts the correct amount on confirmation, and records the transaction | Leaderboard |
-| Maintains a full transaction history of all credits and deductions | NotificationService |
-
-| **Reward** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Holds the option name and the points cost required to redeem it | Student |
-| Indicates whether the option is a green discount or a charity donation | PointsBalance |
-| Lists all available options to a student with their point costs | |
-
-| **Badge** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Defines a badge by name, description, and the milestone that triggers it (e.g. 10 logs, first verified log, 7-day streak) | Student |
-| Checks whether a student's data meets the badge condition | ActivityLog |
-| Awards the badge automatically once the condition is met — no manual action needed | StreakTracker |
-| Ensures each badge can only be awarded once per student | NotificationService |
-| Records the date the badge was earned | |
-| Displays all badges in the system, distinguishing earned from locked ones | |
-
----
-
-### Content
-
-| **Content** | |
-|---|---|
-| **Responsibilities** | **Collaborators** |
-| Holds a title, body text, category, short preview, and publication status for each article or tip | Student |
-| Supports three states: draft (staff only), published (visible to students), unpublished (hidden but not deleted) | StaffMember |
-| Returns only currently published items to the student-facing feed | |
-| Shows a clear empty state when no published content exists | |
-
----
-
-
-## Product Backlog
-
-### Product Backlog – Project Part 1
-| ID  | User Story | Priority | Status | Story Points | Risk | Checkpoint |
-|-----|------------|----------|--------|--------------|------|------------|
-| US-01  | As a new user, I want to register for an account using my campus email and set a password, so that my activity data is tied to my identity and accessible only to me. | High | Backlog | 5 | Medium | Half |
-| US-02  | As a student, I want to log a sustainable activity by selecting from a categorized list of common actions, so that I can record my habits quickly. | High | Backlog | 5 | Low | Half |
-| US-03  | As a student, I want the logging screen to surface my most frequently used activities at the top, so that repeat actions take even fewer taps over time. | Medium | Backlog | 3 | Low | Full |
-| US-04  | As a student, I want every log entry to be clearly marked as either quick or verified at the time of submission, so that I always know the validation status of my own activity history. | High | Backlog | 3 | Low | Half |
-| US-05  | As a student, I want to attach proof to a verified log entry and have it submitted to the community for validation, so that my activity can be vouched for by my peers. | High | Backlog | 8 | High | Full |
-| US-06  | As a student, I want to edit a log entry within 24 hours of submitting it, so that I can correct honest mistakes without being able to retroactively manipulate older records. | Medium | Backlog | 3 | Low | Full |
-| US-07  | As a student, I want a personalized dashboard that shows how many activities I have logged and across which categories for a time period I can adjust, so that I can see my sustainability habits. | High | Backlog | 8 | Medium | Half |
-| US-08  | As a student, I want my dashboard to display my estimated carbon and waste reduction based on my logs, with units shown clearly, so that I can understand the real-world meaning of my actions. | High | Backlog | 5 | Medium | Half |
-| US-09  | As a student, I want to see my current logging streak and my all-time personal best streak on my dashboard, so that I feel motivated to keep logging consistently. | Medium | Backlog | 3 | Low | Full |
-| US-10  | As a student, I want to set a personal monthly sustainability goal such as a target number of logs or a target impact figure, so that I have a self-directed benchmark beyond external challenges. | Low | Backlog | 3 | Low | Full |
-| US-11 | As a student, I want to view a live campus-wide impact summary showing aggregated sustainability activity across all students, so that I can feel part of a larger collective movement. | Medium | Backlog | 5 | Medium | Full |
-| US-12  | As a sustainability staff member, I want to create and configure a challenge by setting a name, goal, start and end dates, and whether teams are permitted, so that I can run targeted sustainability campaigns for the campus. | High | Backlog | 8 | Medium | Full |
-| US-13  | As a sustainability staff member, I want to publish, edit, and unpublish sustainability tips and short articles, so that students always see current and relevant educational content inside the app. | Medium | Backlog | 5 | Low | Full |
-| US-14  | As a student, I want to browse a list of currently active challenges and join one, seeing its details and how my logs will contribute to it, so that I have a target to work toward. | High | Backlog | 5 | Medium | Full |
-| US-15 | As a student, I want to earn points based on how many community votes my verified log receives, so that more credible and impactful activities are rewarded proportionally. | High | Backlog | 5 | High | Full |
-| US-16 | As a student, I want to view my current points balance and a list of available rewards, so that I understand what benefits my sustainability activities have earned. | High | Backlog | 3 | Low | Half |
-| US-17 | As a student, I want to redeem my points for a selected reward such as a green discount or a charity donation, so that my accumulated points produce a tangible real-world outcome. | High | Backlog | 5 | Medium | Full |
-| US-18 | As a student, I want to automatically earn a badge when I reach a defined sustainability milestone, so that significant achievements are recognized the moment they happen. | Medium | Backlog | 3 | Medium | Full |
-| US-19 | As a student, I want to view all my earned badges and all locked badges on my profile, so that I can see what I have achieved and what milestones are worth pursuing next. | Medium | Backlog | 3 | Low | Full |
-| US-20 | As a student, I want to create or join a team within a team challenge, so that I can participate as part of a named group rather than as an individual. | Medium | Backlog | 5 | Medium | Full |
-| US-21 | As a student, I want to see my team's collective progress within a challenge update in real time as members log activities, so that I can see how our shared effort is adding up. | Medium | Backlog | 5 | Medium | Full |
-| US-22  | As a student, I want to see a ranked leaderboard for a challenge I am participating in, showing points and my position relative to other participants, so that friendly competition feels fair and motivating. | Medium | Backlog | 5 | Medium | Full |
-| US-23 | As a student, I want to receive a push notification when I am close to midnight without having logged anything that day and I have an active streak, so that I get a timely reminder before losing progress. | Low | Backlog | 3 | Medium | Full |
-| US-24 | As a student, I want to see my total carbon savings translated into a relatable real-world equivalent, such as the number of car-free days or trees worth of absorption, so that abstract CO₂ numbers feel personally meaningful rather than just a figure on a screen. | Low | Backlog | 2 | Low | Full |
-| US-25  | As a student, I want to browse a feed of verified log submissions from other students that are awaiting community approval, so that I can participate in the validation process. | High | Backlog | 5 | High | Half |
-| US-26  | As a student, I want to cast a verification vote on a peer's pending log submission, so that I can help validate genuine sustainable activity in my campus community. | High | Backlog | 3 | High | Half |
-
----
-
-### Product Backlog – Project Part 2
-
-| ID  | User Story | Priority | Status | Progress | Story Points | Risk | Checkpoint |
-|-----|------------|----------|--------|----------|--------------|------|------------|
-| US-01 | Register account | High | Backlog | Done | 5 | Medium | Half |
-| US-02 | Log activity | High | Backlog | Done | 5 | Low | Half |
-| US-03 | Frequent activities | Medium | Backlog | Done | 3 | Low | Full |
-| US-04 | Mark quick/verified logs | High | Backlog | Done | 3 | Low | Half |
-| US-05 | Attach proof for verification | High | Backlog | Done | 8 | High | Full |
-| US-06 | Edit log entry | Medium | Backlog | Done | 3 | Low | Full |
-| US-07 | Dashboard overview | High | Backlog | Done | 8 | Medium | Half |
-| US-08 | CO₂ & waste tracking | High | Backlog | Done | 5 | Medium | Half |
-| US-09 | Streak tracking | Medium | Backlog | Done | 3 | Low | Full |
-| US-10 | Monthly goals | Low | Backlog | Not Started | 3 | Low | Full |
-| US-11 | Campus impact summary | Medium | Backlog | Not Started | 5 | Medium | Full |
-| US-12 | Create challenges (admin) | High | Backlog | Not Started | 8 | Medium | Full |
-| US-13 | Publish tips/articles | Medium | Backlog | Not Started | 5 | Low | Full |
-| US-14 | Join challenges | High | Backlog | Done | 5 | Medium | Full |
-| US-15 | Points from votes | High | Backlog | Done | 5 | High | Full |
-| US-16 | View points & rewards | High | Backlog | Done | 3 | Low | Half |
-| US-17 | Redeem rewards | High | Backlog | In Progress | 5 | Medium | Full |
-| US-18 | Earn badges | Medium | Backlog | In Progress | 3 | Medium | Full |
-| US-19 | View badges | Medium | Backlog | In Progress | 3 | Low | Full |
-| US-20 | Team participation | Medium | Backlog | Not Started | 5 | Medium | Full |
-| US-21 | Team progress tracking | Medium | Backlog | Not Started | 5 | Medium | Full |
-| US-22 | Leaderboard | Medium | Backlog | Done | 5 | Medium | Full |
-| US-23 | Reminder notifications | Low | Backlog | Not Started | 3 | Medium | Full |
-| US-24 | CO₂ equivalence display | Low | Backlog | Not Started | 2 | Low | Full |
-| US-25 | Validation feed | High | Backlog | Done | 5 | High | Half |
-| US-26 | Voting on logs | High | Backlog | Done | 3 | High | Half |
-
-### Product Backlog – Project Part 3
-| ID | User Story | Priority | Status |
-|----|------------|----------|--------|
-
----
-
-## Wireframes
-
-### Wireframes – Project Part 2
-https://www.figma.com/design/jEozF9kZnQmmX199ftrxQq/Untitled?node-id=0-1&t=ZiAlzJ7MbXtacAX1-1
-## Screenshots
-
-### Screen 1 — Home Dashboard
-![Screen 1 — Home Dashboard](./screenshots/s1.png)
-
-### Screen 2 — Log Activity
-![Screen 2 — Log Activity](./screenshots/s2.png)
-
-### Screen 3 — Leaderboard
-![Screen 3 — Leaderboard](./screenshots/s3.png)
-
-### Screen 4 — Profile
-![Screen 4 — Profile](./screenshots/s4.png)
-
-### Screen 5 — Friends & Social
-![Screen 5 — Friends & Social](./screenshots/s5.png)
-
-
-## Screen 1 — Home Dashboard
-
-The main landing screen. Greets the user by name (Maya). Displays their current logging streak and all-time best, estimated CO₂ and waste reduction (in kg), points balance, and active Monthly Challenge progress. The activity section at the top surfaces the student's most commonly logged actions at the top for faster repeat logging and only appears once at least one prior log exists. Entry point to all core features via the bottom navbar.
-
-## Screen 2 — Log Activity
-
-Lets students record a sustainable action in one tap. Activities are grouped by category (Transport, Food, Waste, Energy). A Quick Log tab surfaces the student's most frequently used activities for repeat logging. Students choose Quick or Verified at submission. Verified entries prompt for photo proof and are sent to the community feed for peer validation.
-
-## Screen 3 — Leaderboard
-
-Campus-wide rankings showing students ordered by total points earned from verified, community-voted logs. Displays each participant's eco title, point total, and streak. The current student's rank is always visible. Updates in real time as votes are cast and points are credited.
-
-## Screen 4 Expanded — Profile (Full Detail View)
-
-The complete profile view. Shows Maya's total CO₂ saved, active streak, challenges completed, and all earned and locked achievement badges in full detail. Locked badges are greyed out to signal attainable next milestones. The Account section provides access to Settings, Privacy, Notifications (including streak reminder toggle), and Help.
-
-## Screen 4 — Profile (Default / Collapsed View)
-
-The standard in-frame profile view as navigated to via the Profile tab. Same content as the expanded view, optimised for the default phone viewport. Shows the student's eco title, points, key stats, and badge row at a glance.
-
-## Screen 5 — Friends & Social (Your Friends screen)
-
-Social screen showing a student's friend list ranked by eco points and active streak. Encourages accountability and friendly competition among peers. The "Add Friend" button in the header lets students invite others by name or username. Friend ranks update in real time as members log activities.
-
-
-
-### Wireframes – Project Part 2
-
-### Friends
-<img src="./screenshots/Friends.png" width="300"/>
-
-Shows the friends list with names, points, and streaks.
-
-### Account 1
-<img src="./screenshots/Account1.png" width="300"/>
-
-Shows the main profile page with user stats, achievements, and rewards.
-
-### Account 2
-<img src="./screenshots/Account2.png" width="300"/>
-
-Shows account options such as settings, privacy, notifications, and support.
-
-### Validation Feed 1
-<img src="./screenshots/ValidationFeed1.png" width="300"/>
-
-Shows the validation feed where users review verified activity submissions.
-
-### Validation Feed 2
-<img src="./screenshots/ValidationFeed2.png" width="300"/>
-
-Shows more validation entries with proof, votes, and review options.
-
-### Leaderboard
-<img src="./screenshots/Leaderboard.png" width="300"/>
-
-Shows user rankings based on points and leaderboard position.
-
-### Verified Log 1
-<img src="./screenshots/VerifiedLog1.png" width="300"/>
-
-Shows a verified log entry with proof photo upload.
-
-### Verified Log 2
-<img src="./screenshots/VerifiedLog2.png" width="300"/>
-
-Shows the verified logging screen with proof photo attached.
-
-### Verified Log 3
-<img src="./screenshots/VerifiedLog3.png" width="300"/>
-
-Shows a verified submission in the review feed with voting options.
-
-### Quick Log
-<img src="./screenshots/QuickLog.png" width="300"/>
-
-Shows quick logging of common sustainable activities.
-
-### About (Logging)
-<img src="./screenshots/About(Logging).png" width="300"/>
-
-Explains what each logging activity means.
-
-### History
-<img src="./screenshots/History.png" width="300"/>
-
-Shows previously logged activities with status, edit, and delete options.
-
-### Dashboard
-<img src="./screenshots/Dashboard.png" width="300"/>
-
-Shows the home dashboard with streak, points, CO₂ saved, and challenges.
-
-### Login
-<img src="./screenshots/Login.png" width="300"/>
-
-Shows the login screen for existing users.
-
-### Sign Up
-<img src="./screenshots/SignUp.png" width="300"/>
-
-Shows the account creation screen for new users.
-
----
-### Acceptance Criteria
----
-#### A1 — Account Creation
-- [ ] The registration screen is accessible from the app's landing/login screen
-- [ ] The user must enter a campus email address, and the system rejects non-campus email domains
-- [ ] The user must set a password that meets a minimum security requirement (e.g. 8+ characters)
-- [ ] The user must confirm their password and the system blocks submission if the two fields do not match
-- [ ] The system sends a verification email to the provided address before activating the account
-- [ ] The account is not functional until the email has been verified
-- [ ] If the email is already registered, the system shows a clear message and does not create a duplicate account
-- [ ] After successful registration and verification, the user is directed to complete a basic profile (display name) before reaching the main app
-
----
-
-#### L1 — Categorized Activity Log
-- [ ] The logging screen is accessible from the main navigation in one tap
-- [ ] Activities are grouped into clearly labeled categories (e.g. Transport, Food, Energy, Waste)
-- [ ] Each category displays a list of predefined activity options
-- [ ] The student can select an activity and submit the log without typing anything
-- [ ] The system saves the entry and it appears in the student's activity history
-- [ ] A confirmation message is shown after a successful submission
-
----
-
-#### L2 — Frequent Activity Suggestions
-- [ ] A "Frequent" or "Recent" section appears at the top of the logging screen
-- [ ] The section shows activities the student has logged most often, ordered by frequency
-- [ ] The section only appears after the student has at least one prior log entry
-- [ ] Selecting an activity from this section follows the same submission flow as selecting from a category
-- [ ] The suggestions update to reflect the student's most recent logging patterns
-
----
-
-#### L3 — Quick vs. Verified Tagging
-- [ ] When submitting a log, the student must choose either "Quick" or "Verified" before confirming
-- [ ] Each entry in the activity history displays a visible label indicating its type (Quick or Verified)
-- [ ] The label cannot be changed after the entry is submitted
-- [ ] Quick and Verified entries are visually distinguishable in the history list (e.g. different badge or color)
-
----
-
-#### L4 — Attach Proof for Community Verification
-- [ ] When the student selects "Verified" during logging, they are prompted to attach proof before submitting
-- [ ] The system accepts at least one supported proof format (e.g. image upload)
-- [ ] The student cannot submit a verified log without attaching proof
-- [ ] After submission, the entry is posted to the community verification feed and marked as "Awaiting Community Verification" in the student's history
-- [ ] A confirmation message is shown stating that the log is now open for community review
-- [ ] The student can see the current vote count on their pending submission at any time
-
----
-
-#### L5 — Edit Recent Log
-- [ ] An edit option is visible on any log entry submitted within the last 24 hours
-- [ ] The student can modify allowed fields such as activity type, category, or date
-- [ ] The updated entry is saved and reflected immediately in the activity history
-- [ ] The edit option is no longer visible on entries older than 24 hours
-- [ ] Approved verified log entries cannot be edited
-
----
-
-#### D1 — Personal Activity Dashboard
-- [ ] The dashboard is accessible from the main navigation
-- [ ] The dashboard displays a total count of activities logged in the selected time period
-- [ ] Activity counts are broken down by category
-- [ ] The student can switch between time period views (e.g. this week, this month, all time)
-- [ ] The dashboard updates immediately when the time period selection changes
-- [ ] An empty state is shown when no logs exist for the selected period
-
----
-
-#### D2 — Carbon & Waste Estimates
-- [ ] The dashboard displays an estimated carbon reduction figure derived from the student's logs
-- [ ] The dashboard displays an estimated waste reduction figure derived from the student's logs
-- [ ] Both figures include clearly labeled units (e.g. kg CO₂, kg waste)
-- [ ] A visible note indicates that the values are estimates based on standard emission factors
-- [ ] The figures update when logs are added, edited, or removed
-- [ ] If no qualifying logs exist, a zero value or empty state is displayed rather than an error
-
----
-
-#### D3 — Logging Streaks
-- [ ] The dashboard displays the student's current consecutive logging streak in days
-- [ ] The dashboard displays the student's all-time longest streak in days
-- [ ] The streak increments by one when the student submits at least one log on a given calendar day
-- [ ] The current streak resets to zero if the student does not log anything on a required day
-- [ ] The all-time best is preserved when a reset occurs and does not decrease
-- [ ] Both values update in real time after a qualifying log is submitted
-
----
-
-#### D4 — Personal Monthly Goal
-- [ ] The student can access a goal-setting screen from the dashboard
-- [ ] The student can choose a goal type (e.g. number of logs or estimated CO₂ saved)
-- [ ] The student can enter a numeric target value for the chosen goal type
-- [ ] The dashboard displays the student's progress toward their current goal for the active month
-- [ ] The goal resets or prompts the student to set a new one at the start of each month
-- [ ] The student can edit or remove their goal at any time
-
----
-
-#### CI1 — Campus-Wide Community Impact Screen
-- [ ] The community impact screen is accessible to all logged-in students from the main navigation
-- [ ] The screen displays the total number of activities logged campus-wide for the current month
-- [ ] The screen displays the aggregated estimated carbon and waste reduction across all students
-- [ ] No individual student's data or identity is exposed; all figures are collective totals only
-- [ ] The data updates as new logs are submitted and verified across the campus
-- [ ] An empty or baseline state is shown if no data exists yet for the current period
-
----
-
-#### S2 — Staff Creates & Configures Challenges
-- [ ] Staff can access a challenge creation form from the staff dashboard
-- [ ] The form requires a challenge name, goal description, start date, and end date
-- [ ] Staff can toggle whether team participation is enabled for the challenge
-- [ ] When teams are enabled, staff can set a maximum team size
-- [ ] The challenge becomes visible to students on its start date
-- [ ] Staff can edit a challenge before it starts and view it after it ends
-- [ ] The system prevents creating a challenge with an end date before the start date
-
----
-
-#### S3 — Staff Publishes Educational Content
-- [ ] Staff can create a new content item with a title, body text, and category
-- [ ] Staff can save a draft without publishing it
-- [ ] Staff can publish a content item, making it visible to students immediately
-- [ ] Staff can edit a published item and save changes without unpublishing it
-- [ ] Staff can unpublish an item, which removes it from the student-facing feed without deleting it
-- [ ] Unpublished items remain accessible to staff for future editing or republishing
-
----
-
-#### G1 — Browse & Join Challenges
-- [ ] The student can access a challenges screen from the main navigation
-- [ ] Only currently active challenges are shown (start date reached, end date not passed)
-- [ ] Each challenge card shows the challenge name, goal, and end date
-- [ ] The student can open a challenge to view a detailed description including contribution rules
-- [ ] The student can join a challenge from the detail screen with a single action
-- [ ] The student cannot join the same challenge twice
-- [ ] A joined challenge displays the student's personal progress toward the challenge goal
-
----
-
-#### G2a — Earn Points from Community Votes
-- [ ] Points are awarded automatically once a verified log crosses the minimum vote threshold
-- [ ] The number of points awarded scales with the number of votes received, up to a defined maximum per activity type
-- [ ] The student receives an in-app notification when points are credited
-- [ ] The points transaction appears in the student's history showing the activity and vote count at time of approval
-- [ ] No points are awarded for quick logs or for verified logs that do not reach the minimum threshold before expiry
-- [ ] A student cannot earn more than the defined point cap for a single log entry regardless of votes received
-
----
-
-#### G2b — Redeem Points for Rewards
-- [ ] The student can view their current points balance from their profile or rewards screen
-- [ ] A list of available redemption options is displayed with names and point costs
-- [ ] The student can select a redemption option and confirm the transaction
-- [ ] The system blocks the redemption if the student's balance is insufficient and shows a clear message
-- [ ] The student's points balance is deducted immediately upon successful redemption
-- [ ] A confirmation message is shown and the transaction appears in the student's points history
-
----
-
-#### G3a — Auto-Earn Badges at Milestones
-- [ ] The system defines a set of badge milestones tied to specific measurable achievements (e.g. 10 logs, first verified log, 7-day streak)
-- [ ] A badge is awarded automatically when the student's data meets the milestone condition
-- [ ] The student receives an in-app notification when a new badge is earned
-- [ ] Each badge can only be earned once per student
-- [ ] Earning a badge does not require any manual action from the student
-
----
-
-#### G3b — View Earned & Locked Badges
-- [ ] The student's profile displays a grid or list of all badges in the system
-- [ ] Earned badges are visually distinct from locked badges (e.g. full color vs. greyed out)
-- [ ] Each badge shows its name and a short description of how it is earned
-- [ ] Earned badges show the date they were achieved
-- [ ] The badge display updates immediately after a new badge is earned
-
----
-
-#### G4a — Create or Join a Team
-- [ ] The student can see a "Teams" section when viewing a team-enabled challenge
-- [ ] The student can create a new team by entering a team name
-- [ ] The team name must be unique within the same challenge
-- [ ] The student can browse existing teams and request to join one
-- [ ] The system prevents joining a team that has reached the maximum size set by staff
-- [ ] A student can only belong to one team per challenge
-
----
-
-#### G4b — Team Collective Progress
-- [ ] The team view displays the team's total contribution toward the challenge goal
-- [ ] Contributions from all team members are aggregated into a single team total
-- [ ] The team total updates when any member submits a qualifying log
-- [ ] The view shows a progress indicator comparing the team total to the challenge goal
-- [ ] Each team member's individual contribution is visible within the team view
-
----
-
-#### G5 — Challenge Leaderboard
-- [ ] A leaderboard tab is accessible from within any challenge the student has joined
-- [ ] The leaderboard ranks participants by total points earned within that challenge
-- [ ] The student's own rank and score are always visible, even if not in the top positions
-- [ ] The leaderboard updates when any participant's score changes
-- [ ] Participants with no points are shown at the bottom as unranked or with a score of zero
-- [ ] The leaderboard shows individual rankings for individual challenges and team rankings for team challenges
-
----
-
-#### E1 — Tips & Articles Feed
-- [ ] The student can access a content feed from the main navigation
-- [ ] The feed displays only currently published items
-- [ ] Each item in the feed shows a title, category, and short preview
-- [ ] The student can tap an item to read the full content
-- [ ] The feed shows a clear empty state when no content has been published
-- [ ] The feed updates when staff publish or unpublish items
-
----
-
-#### SC1 — Streak Reminder Notification
-- [ ] The system sends a push notification to the student if no log has been submitted by a configurable time threshold (e.g. 9 PM)
-- [ ] The notification is only sent on days when the student has an active streak of at least one day
-- [ ] The notification is not sent if the student has already logged something that day
-- [ ] The student can enable or disable this notification from their settings
-- [ ] Only one reminder notification is sent per day regardless of continued inactivity
-
----
-
-#### SC2 — Real-World Carbon Equivalents
-- [ ] The dashboard or impact screen displays at least one real-world equivalent alongside the raw CO₂ figure
-- [ ] Equivalents are drawn from a defined lookup table (e.g. EPA or DEFRA equivalence factors)
-- [ ] The equivalent updates when the student's carbon savings figure changes
-- [ ] The label for each equivalent is written in plain, non-technical language
-- [ ] If the student's savings are zero, the equivalent display shows a zero or baseline state rather than an error
-
----
-
-#### V1 — Community Verification Feed
-- [ ] A community verification feed is accessible from the main navigation
-- [ ] The feed displays pending verified log submissions from other students, showing the activity type, category, submitted proof, and current vote count
-- [ ] Submissions are shown in chronological order by default, newest first
-- [ ] The student's own pending submissions do not appear in their own feed
-- [ ] Each submission shows a time remaining before it expires and closes for voting
-- [ ] Expired or already-verified submissions are removed from the active feed
-
----
-
-#### V2 — Cast a Verification Vote
-- [ ] Each submission in the feed has a clearly visible vote/verify action
-- [ ] A student can cast one vote per submission
-- [ ] The vote count on the submission updates immediately after the student votes
-- [ ] A student cannot vote on their own submissions
-- [ ] After voting, the action is marked as done and the student cannot vote on the same submission again
-- [ ] If a submission reaches the required vote threshold after the student's vote, the student sees it marked as verified in the feed
-
+- **Sprint 1** focused on setup and initial implementation.
+- **Sprint 2** focused on integration, fixing bugs, merging work, and documentation.
+- The final week involved significant UI fixes, feature completion, and polishing before submission.
