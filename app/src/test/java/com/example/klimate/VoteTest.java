@@ -1,3 +1,13 @@
+/**
+ * VoteTest.java
+ *
+ * Unit tests for the Vote model class.
+ * Tests cover constructor initialisation, upvote and downvote flag
+ * correctness, and getter/setter behaviour.
+ * No Firebase or Android dependencies needed — pure Java logic only.
+ *
+ * @author Karar
+ */
 package com.example.klimate;
 
 import static org.junit.Assert.assertEquals;

@@ -1,3 +1,13 @@
+/**
+ * ActivityLogTest.java
+ *
+ * Unit tests for the ActivityLog model class.
+ * Tests cover constructor initialisation, status field values,
+ * points calculation via getTotalPoints(), and getter/setter correctness.
+ * No Firebase or Android dependencies needed — pure Java logic only.
+ *
+ * @author Izza
+ */
 package com.example.klimate;
 
 import static org.junit.Assert.assertEquals;
