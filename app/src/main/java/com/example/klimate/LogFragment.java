@@ -19,12 +19,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.Calendar;
 
 public class LogFragment extends Fragment {
 
@@ -96,9 +96,7 @@ public class LogFragment extends Fragment {
     }
 
     private void saveQuickLog(LinearLayout[] cards, TextView btnLog) {
-        if (isSaving) {
-            return;
-        }
+        if (isSaving) return;
 
         if (currentUser == null) {
             Toast.makeText(getContext(), "You must be logged in to save an activity", Toast.LENGTH_SHORT).show();
@@ -138,7 +136,7 @@ public class LogFragment extends Fragment {
 
                     Toast.makeText(
                             getContext(),
-                            activityName + " logged successfully ✅",
+                            activityName + " logged successfully ✅ +" + basePoints + " pts",
                             Toast.LENGTH_SHORT
                     ).show();
 
@@ -245,24 +243,15 @@ public class LogFragment extends Fragment {
 
     private int getBasePoints(String activityType) {
         switch (activityType) {
-            case "Cycling":
-                return 30;
-            case "Public Transit":
-                return 20;
-            case "Recycling":
-                return 15;
-            case "Plant-based meal":
-                return 25;
-            case "Reusable cup":
-                return 10;
-            case "Composting":
-                return 20;
-            case "Walked":
-                return 20;
-            case "Energy saving":
-                return 10;
-            default:
-                return 5;
+            case "Cycling": return 30;
+            case "Public Transit": return 20;
+            case "Recycling": return 15;
+            case "Plant-based meal": return 25;
+            case "Reusable cup": return 10;
+            case "Composting": return 20;
+            case "Walked": return 20;
+            case "Energy saving": return 10;
+            default: return 5;
         }
     }
 }
