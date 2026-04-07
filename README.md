@@ -508,7 +508,7 @@ Shows the overall structure of the application, including key classes such as us
 
 ## Product Backlog
 
-### Product Backlog – Project Part 1
+### Product Backlog – Project Part 2
 
 <details>
 <summary><strong>View Full Backlog (Part 1)</strong></summary>
@@ -546,7 +546,7 @@ Shows the overall structure of the application, including key classes such as us
 
 ---
 
-### Product Backlog – Project Part 2
+### Product Backlog – Project Part 3
 
 <details>
 <summary><strong>View Full Backlog (Part 2)</strong></summary>
@@ -584,19 +584,7 @@ Shows the overall structure of the application, including key classes such as us
 
 ---
 
-### Product Backlog – Project Part 3
-
-| ID | User Story | Priority | Status |
-|----|------------|----------|--------|
-
----
-
 ## Wireframes & Screenshots
-
-### Wireframes – Project Part 1
-*(To be added)*
-
----
 
 ### Wireframes – Project Part 2
 
