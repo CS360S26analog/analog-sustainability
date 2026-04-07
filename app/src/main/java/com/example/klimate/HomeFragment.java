@@ -101,6 +101,7 @@ public class HomeFragment extends Fragment {
                     tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
             );
             loadMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
+            loadOptionalStats(view);
         }
 
         return view;
@@ -142,6 +143,38 @@ public class HomeFragment extends Fragment {
                 tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
         );
         loadMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
+        loadOptionalStats(view);
+    }
+
+    private void loadOptionalStats(View view) {
+        int pointsId = requireContext().getResources().getIdentifier("tv_points_value", "id", requireContext().getPackageName());
+        int co2Id = requireContext().getResources().getIdentifier("tv_co2_saved", "id", requireContext().getPackageName());
+
+        TextView tvPoints = pointsId != 0 ? view.findViewById(pointsId) : null;
+        TextView tvCo2Saved = co2Id != 0 ? view.findViewById(co2Id) : null;
+
+        if (tvPoints == null && tvCo2Saved == null) {
+            return;
+        }
+
+        db.collection("users")
+                .document(currentUser.getUid())
+                .get()
+                .addOnSuccessListener(document -> {
+                    if (!document.exists()) return;
+
+                    Long totalPoints = document.getLong("totalPoints");
+                    Double co2SavedKg = document.getDouble("co2SavedKg");
+
+                    if (tvPoints != null) {
+                        tvPoints.setText(String.valueOf(totalPoints != null ? totalPoints : 0));
+                    }
+
+                    if (tvCo2Saved != null) {
+                        double value = co2SavedKg != null ? co2SavedKg : 0.0;
+                        tvCo2Saved.setText(String.format(Locale.getDefault(), "%.1f kg", value));
+                    }
+                });
     }
 
     private void setRandomGreeting(TextView tvGreetingMessage) {

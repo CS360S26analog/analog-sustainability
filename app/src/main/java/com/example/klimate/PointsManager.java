@@ -1,21 +1,13 @@
-/**
- * PointsManager.java
- *
- * Handles points calculation and awarding for verified activity logs.
- * Listens for vote changes on a given log and updates bonusPoints on
- * the ActivityLog document and totalPoints on the User document.
- * Also awards base points when any log is submitted.
- *
- * @author Haroon
- * @author Izza
- */
 package com.example.klimate;
+
+import android.util.Log;
 
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class PointsManager {
 
+    private static final String TAG = "PointsManager";
     private final FirebaseFirestore db;
 
     public PointsManager() {
@@ -35,7 +27,13 @@ public class PointsManager {
     public void awardBasePoints(String userId, int basePoints) {
         db.collection("users")
                 .document(userId)
-                .update("totalPoints", FieldValue.increment(basePoints));
+                .update("totalPoints", FieldValue.increment(basePoints))
+                .addOnSuccessListener(unused ->
+                        Log.d(TAG, "Base points added: +" + basePoints + " to user " + userId)
+                )
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Failed to add base points", e)
+                );
     }
 
     public void attachVoteListener(String logId, String userId) {
@@ -75,7 +73,7 @@ public class PointsManager {
                 });
     }
 
-	public void attachVoteListener(String logId, String userId, int previousBonus) {
-	    attachVoteListener(logId, userId);
-	}
+    public void attachVoteListener(String logId, String userId, int previousBonus) {
+        attachVoteListener(logId, userId);
+    }
 }
