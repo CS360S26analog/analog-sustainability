@@ -1,3 +1,20 @@
+/**
+ * HomeFragment.java
+ *
+ * The main dashboard screen of the Klimate app. Displays the current
+ * user's greeting, streak, CO2 saved, points, activity cards, and
+ * monthly challenge progress. Reads live data directly from Firestore.
+ *
+ * Role in design: Part of the View layer (MVVM). Observes Firestore
+ * in real time to keep dashboard stats current. Navigates to
+ * LogFragment via the cycling and recycling action cards, and to
+ * HistoryFragment via the activity history card.
+ *
+ * Outstanding issues: time period filter (weekly/monthly) not yet
+ * connected to UI, currently shows all-time stats.
+ *
+ * @author Maryam Ali
+ */
 package com.example.klimate;
 
 import android.graphics.Typeface;

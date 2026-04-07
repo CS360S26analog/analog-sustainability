@@ -92,6 +92,7 @@ public class ValidationFeedFragment extends Fragment {
                 .whereEqualTo("status", "pending_verification")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!isAdded() || getContext() == null) return;
                     validationFeedContainer.removeAllViews();
 
                     if (queryDocumentSnapshots.isEmpty()) {
@@ -436,7 +437,8 @@ public class ValidationFeedFragment extends Fragment {
     }
 
     private int dpToPx(int dp) {
-        float density = requireContext().getResources().getDisplayMetrics().density;
+        if (getContext() == null) return dp;
+        float density = getContext().getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
     }
 }

@@ -1,3 +1,19 @@
+/**
+ * MainActivity.java
+ *
+ * The primary host activity of the Klimate app. Manages the bottom
+ * navigation bar and switches between the five main fragments:
+ * HomeFragment, LogFragment, RankingsFragment, FriendsFragment,
+ * and ProfileFragment.
+ *
+ * Role in design: Part of the Navigation layer. Acts as the container
+ * for all main screen fragments. Uses Android's FragmentManager to
+ * replace the fragment container on each tab selection.
+ *
+ * Outstanding issues: none.
+ *
+ * @author Team Analog
+ */
 package com.example.klimate;
 
 import android.os.Bundle;

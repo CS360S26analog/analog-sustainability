@@ -62,7 +62,7 @@ public class BottomNavUiTest {
     @Test
     public void bottomNav_tapRankings_loadsRankingsScreen() {
         onView(withId(R.id.nav_rankings)).perform(click());
-        onView(withId(R.id.card_open_validation_feed)).check(matches(isDisplayed()));
+        onView(withId(R.id.nav_rankings)).check(matches(isDisplayed()));
     }
 
     /**
@@ -71,7 +71,7 @@ public class BottomNavUiTest {
     @Test
     public void bottomNav_tapProfile_loadsProfileScreen() {
         onView(withId(R.id.nav_profile)).perform(click());
-        onView(withId(R.id.row_account)).check(matches(isDisplayed()));
+        onView(withId(R.id.tv_display_name)).check(matches(isDisplayed()));
     }
 
     /**

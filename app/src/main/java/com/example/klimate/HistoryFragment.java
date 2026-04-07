@@ -1,3 +1,21 @@
+/**
+ * HistoryFragment.java
+ *
+ * Displays the current user's full activity log history, sorted by
+ * most recent first. Each log entry can be edited or deleted within
+ * 24 hours of submission. Edits and deletions trigger a full
+ * recalculation of the user's total points, CO2 saved, and streak.
+ *
+ * Role in design: Part of the View layer (MVC). Reads and writes to
+ * the activity_logs Firestore collection. Also updates the users
+ * collection via recalculateUserStats() after any modification.
+ * Accessible from the Home screen.
+ *
+ * Outstanding issues: streak calculation uses a simplified consecutive
+ * day check and may not handle timezone edge cases correctly.
+ *
+ * @author Team Analog
+ */
 package com.example.klimate;
 
 import android.os.Bundle;
