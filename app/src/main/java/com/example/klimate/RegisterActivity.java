@@ -1,13 +1,23 @@
 /**
  * RegisterActivity.java
  *
- * Handles new user registration using Firebase Authentication.
- * Creates the Firebase Auth account, then writes a User document
- * to Firestore under users/{uid} with initial zero stats.
+ * Handles new user registration for the Klimate app. Creates a Firebase
+ * Authentication account using the provided email and password, then
+ * writes a corresponding User document to the Firestore "users" collection
+ * under the document ID matching the Firebase Auth UID.
  *
- * Role in design: One-time onboarding screen for new users.
- * Outstanding issues: Campus email domain validation is a basic
- * string check — could be made stricter per university domain.
+ * The Firestore document is initialised with zero values for totalPoints,
+ * streakDays, and co2SavedKg so that downstream reads always find a
+ * valid document structure.
+ *
+ * Role in design: Part of the Auth layer (one-time onboarding screen).
+ * Depends on User.java (Model layer) to structure the Firestore write.
+ * On success, hands control to MainActivity.
+ *
+ * Outstanding issues:
+ * - Campus email domain validation is a basic non-empty check only.
+ *   Could be made stricter (e.g. must end in @lums.edu.pk).
+ * - No duplicate display name check across existing users.
  *
  * @author Maryam Waseem
  */
@@ -33,6 +43,13 @@ public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
+    /**
+     * Initialises the registration screen. Sets up the name, email,
+     * and password input fields along with the register button
+     * and the link back to the login screen.
+     *
+     * @param savedInstanceState previously saved instance state, or null
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +68,13 @@ public class RegisterActivity extends AppCompatActivity {
         tvLogin.setOnClickListener(v -> finish()); // go back to login
     }
 
+    /**
+     * Reads the name, email, and password fields and validates they are
+     * non-empty and that the password meets the minimum length requirement.
+     * Creates a Firebase Auth account, then writes a new User document to
+     * Firestore on success. Navigates to MainActivity when both operations
+     * complete successfully.
+     */
     private void registerUser() {
         String name     = etName.getText().toString().trim();
         String email    = etEmail.getText().toString().trim();

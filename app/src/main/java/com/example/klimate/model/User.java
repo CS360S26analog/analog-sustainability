@@ -2,17 +2,23 @@
  * User.java
  *
  * Model class representing a registered Klimate app user.
- * Stores authentication identity, display name, and aggregated sustainability
- * statistics (points, streak, CO2 saved). Mapped to the "users" Firestore
- * collection where each document ID equals the Firebase Auth UID.
+ * Stores the user's authentication identity, display name, and aggregated
+ * sustainability statistics: total points earned, current logging streak,
+ * and cumulative CO2 saved.
  *
- * Role in design: Part of the Model layer (MVC). Written by RegisterActivity
- * on first registration and read by HomeFragment / ProfileFragment to display
- * live stats. DashboardViewModel updates totalPoints, streakDays, and
- * co2SavedKg whenever new activity logs are processed.
+ * Each instance maps to a single document in the Firestore "users"
+ * collection, where the document ID equals the Firebase Auth UID.
+ * The no-argument constructor is required by Firestore for automatic
+ * deserialization via toObject(User.class).
  *
- * Outstanding issues: streakDays reset logic (midnight check) not yet
- * implemented — currently only increments.
+ * Role in design: Part of the Model layer (MVC/MVVM). Written by
+ * RegisterActivity on first registration. Read by DashboardViewModel
+ * (to populate the home screen) and ProfileFragment (to display live
+ * stats). Updated by PointsManager whenever the user earns points.
+ *
+ * Outstanding issues:
+ * - streakDays is only ever incremented; the reset logic (check whether
+ *   the user logged anything yesterday at midnight) is not yet implemented.
  *
  * @author Maryam Waseem
  */
@@ -32,6 +38,7 @@ public class User {
 
     /**
      * Required no-argument constructor for Firestore deserialization.
+     * Do not remove as Firestore's toObject() call depends on this.
      */
     public User() {}
 

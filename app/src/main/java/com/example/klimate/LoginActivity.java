@@ -1,12 +1,21 @@
 /**
  * LoginActivity.java
  *
- * Handles user login using Firebase Authentication (email + password).
- * On successful login, navigates to MainActivity.
- * On failure, displays an error message to the user.
+ * Entry point of the app for returning users. Handles email and password
+ * authentication using Firebase Authentication. On successful login,
+ * navigates the user to MainActivity. On failure, displays an error
+ * message via Toast.
  *
- * Role in design: Entry point of the app for returning users.
- * Outstanding issues: "Forgot password" flow not yet implemented.
+ * If the user is already signed in when this screen opens, they are
+ * redirected to MainActivity immediately without seeing the login form.
+ *
+ * Role in design: Part of the Auth layer. Works alongside RegisterActivity
+ * to control access to the rest of the app. Uses Firebase Auth as the
+ * identity provider — no passwords are stored locally.
+ *
+ * Outstanding issues:
+ * - "Forgot password" / password reset flow not yet implemented.
+ * - No input validation for email format beyond Firebase's own checks.
  *
  * @author Maryam Waseem
  */
@@ -27,6 +36,13 @@ public class LoginActivity extends AppCompatActivity {
     private EditText etEmail, etPassword;
     private FirebaseAuth mAuth;
 
+    /**
+     * Initialises the login screen. If a user is already authenticated,
+     * skips the form and navigates directly to MainActivity.
+     * Otherwise sets up the email/password fields and button listeners.
+     *
+     * @param savedInstanceState previously saved instance state, or null
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,6 +68,11 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Reads the email and password fields, validates they are non-empty,
+     * and attempts sign-in via Firebase Authentication.
+     * Navigates to MainActivity on success; shows a Toast on failure.
+     */
     private void loginUser() {
         String email    = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
