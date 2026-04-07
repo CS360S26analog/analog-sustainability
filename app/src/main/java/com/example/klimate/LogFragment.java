@@ -16,9 +16,15 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.Calendar;
 
 public class LogFragment extends Fragment {
 
@@ -28,6 +34,7 @@ public class LogFragment extends Fragment {
 
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
+    private PointsManager pointsManager;
 
     private final int[] cardIds = {
             R.id.card_cycling, R.id.card_transit, R.id.card_recycling,
@@ -40,6 +47,17 @@ public class LogFragment extends Fragment {
             "Reusable cup", "Composting", "Walked", "Energy saving"
     };
 
+    private static final Map<String, Double> CO2_PER_ACTIVITY = new HashMap<String, Double>() {{
+        put("Cycling", 0.21);
+        put("Walked", 0.10);
+        put("Recycling", 0.15);
+        put("Composting", 0.12);
+        put("Public Transit", 0.08);
+        put("Plant-based meal", 0.50);
+        put("Reusable cup", 0.05);
+        put("Energy saving", 0.18);
+    }};
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -49,6 +67,7 @@ public class LogFragment extends Fragment {
 
         db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        pointsManager = new PointsManager();
 
         LinearLayout[] cards = new LinearLayout[cardIds.length];
         for (int i = 0; i < cardIds.length; i++) {
@@ -95,14 +114,16 @@ public class LogFragment extends Fragment {
         btnLog.setEnabled(false);
         btnLog.setAlpha(0.6f);
 
+        String activityName = selectedActivityName;
+        int basePoints = getBasePoints(activityName);
         String logId = db.collection("activity_logs").document().getId();
 
         Map<String, Object> activityLog = new HashMap<>();
         activityLog.put("logId", logId);
         activityLog.put("userId", currentUser.getUid());
-        activityLog.put("activityType", selectedActivityName);
+        activityLog.put("activityType", activityName);
         activityLog.put("status", "quick");
-        activityLog.put("points", getBasePoints(selectedActivityName));
+        activityLog.put("points", basePoints);
         activityLog.put("bonusPoints", 0);
         activityLog.put("proofUrl", null);
         activityLog.put("voteCount", 0);
@@ -112,7 +133,15 @@ public class LogFragment extends Fragment {
                 .document(logId)
                 .set(activityLog)
                 .addOnSuccessListener(unused -> {
-                    Toast.makeText(getContext(), selectedActivityName + " logged successfully ✅", Toast.LENGTH_SHORT).show();
+                    pointsManager.awardBasePoints(currentUser.getUid(), basePoints);
+                    refreshUserStats();
+
+                    Toast.makeText(
+                            getContext(),
+                            activityName + " logged successfully ✅",
+                            Toast.LENGTH_SHORT
+                    ).show();
+
                     deselectAll(cards);
                     selectedCard = null;
                     selectedActivityName = null;
@@ -128,24 +157,110 @@ public class LogFragment extends Fragment {
                 });
     }
 
+    private void refreshUserStats() {
+        if (currentUser == null) return;
+
+        db.collection("activity_logs")
+                .whereEqualTo("userId", currentUser.getUid())
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    double totalCo2 = 0.0;
+                    Set<String> uniqueDays = new HashSet<>();
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        String activityType = doc.getString("activityType");
+                        if (activityType != null) {
+                            Double co2 = CO2_PER_ACTIVITY.get(activityType);
+                            if (co2 != null) {
+                                totalCo2 += co2;
+                            }
+                        }
+
+                        Timestamp ts = doc.getTimestamp("timestamp");
+                        if (ts != null) {
+                            uniqueDays.add(formatter.format(ts.toDate()));
+                        }
+                    }
+
+                    int streakDays = calculateStreakFromDays(uniqueDays);
+
+                    db.collection("users")
+                            .document(currentUser.getUid())
+                            .update(
+                                    "co2SavedKg", totalCo2,
+                                    "streakDays", streakDays
+                            );
+                });
+    }
+
+    private int calculateStreakFromDays(Set<String> uniqueDays) {
+        if (uniqueDays.isEmpty()) return 0;
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+
+        Calendar today = Calendar.getInstance();
+        resetTime(today);
+
+        Calendar yesterday = Calendar.getInstance();
+        yesterday.add(Calendar.DAY_OF_YEAR, -1);
+        resetTime(yesterday);
+
+        String todayKey = formatter.format(today.getTime());
+        String yesterdayKey = formatter.format(yesterday.getTime());
+
+        if (!uniqueDays.contains(todayKey) && !uniqueDays.contains(yesterdayKey)) {
+            return 0;
+        }
+
+        int streak = 0;
+        Calendar cursor = Calendar.getInstance();
+
+        if (uniqueDays.contains(todayKey)) {
+            resetTime(cursor);
+        } else {
+            cursor.add(Calendar.DAY_OF_YEAR, -1);
+            resetTime(cursor);
+        }
+
+        while (true) {
+            String key = formatter.format(cursor.getTime());
+            if (uniqueDays.contains(key)) {
+                streak++;
+                cursor.add(Calendar.DAY_OF_YEAR, -1);
+            } else {
+                break;
+            }
+        }
+
+        return streak;
+    }
+
+    private void resetTime(Calendar cal) {
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+    }
+
     private int getBasePoints(String activityType) {
         switch (activityType) {
             case "Cycling":
-                return 15;
+                return 30;
             case "Public Transit":
-                return 12;
+                return 20;
             case "Recycling":
-                return 10;
+                return 15;
             case "Plant-based meal":
-                return 10;
+                return 25;
             case "Reusable cup":
-                return 8;
-            case "Composting":
                 return 10;
+            case "Composting":
+                return 20;
             case "Walked":
-                return 12;
+                return 20;
             case "Energy saving":
-                return 9;
+                return 10;
             default:
                 return 5;
         }
