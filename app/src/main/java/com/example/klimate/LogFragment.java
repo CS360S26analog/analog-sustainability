@@ -162,7 +162,7 @@ public class LogFragment extends Fragment {
             return;
         }
 
-        int basePoints = getPointsForActivity(selectedActivityName);
+        int basePoints = getBasePoints(selectedActivityName);
 
         ActivityLog log = new ActivityLog(
                 currentUser.getUid(),
