@@ -559,7 +559,81 @@ Social screen showing a student's friend list ranked by eco points and active st
 
 
 ### Wireframes – Project Part 2
-_Add screenshots or links to wireframe images._
+
+### Friends
+<img src="./screenshots/Friends.png" width="300"/>
+
+Shows the friends list with names, points, and streaks.
+
+### Account 1
+<img src="./screenshots/Account1.png" width="300"/>
+
+Shows the main profile page with user stats, achievements, and rewards.
+
+### Account 2
+<img src="./screenshots/Account2.png" width="300"/>
+
+Shows account options such as settings, privacy, notifications, and support.
+
+### Validation Feed 1
+<img src="./screenshots/ValidationFeed1.png" width="300"/>
+
+Shows the validation feed where users review verified activity submissions.
+
+### Validation Feed 2
+<img src="./screenshots/ValidationFeed2.png" width="300"/>
+
+Shows more validation entries with proof, votes, and review options.
+
+### Leaderboard
+<img src="./screenshots/Leaderboard.png" width="300"/>
+
+Shows user rankings based on points and leaderboard position.
+
+### Verified Log 1
+<img src="./screenshots/VerifiedLog1.png" width="300"/>
+
+Shows a verified log entry with proof photo upload.
+
+### Verified Log 2
+<img src="./screenshots/VerifiedLog2.png" width="300"/>
+
+Shows the verified logging screen with proof photo attached.
+
+### Verified Log 3
+<img src="./screenshots/VerifiedLog3.png" width="300"/>
+
+Shows a verified submission in the review feed with voting options.
+
+### Quick Log
+<img src="./screenshots/QuickLog.png" width="300"/>
+
+Shows quick logging of common sustainable activities.
+
+### About (Logging)
+<img src="./screenshots/About(Logging).png" width="300"/>
+
+Explains what each logging activity means.
+
+### History
+<img src="./screenshots/History.png" width="300"/>
+
+Shows previously logged activities with status, edit, and delete options.
+
+### Dashboard
+<img src="./screenshots/Dashboard.png" width="300"/>
+
+Shows the home dashboard with streak, points, CO₂ saved, and challenges.
+
+### Login
+<img src="./screenshots/Login.png" width="300"/>
+
+Shows the login screen for existing users.
+
+### Sign Up
+<img src="./screenshots/SignUp.png" width="300"/>
+
+Shows the account creation screen for new users.
 
 ---
 ### Acceptance Criteria
