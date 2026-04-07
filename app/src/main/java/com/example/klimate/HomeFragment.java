@@ -1,6 +1,10 @@
 package com.example.klimate;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -296,26 +300,45 @@ public class HomeFragment extends Fragment {
     private void showZeroWasteInfo() {
         if (getContext() == null) return;
 
-        String message =
-                "Zero Waste on campus means reducing what you throw away by choosing reusable, refillable, and low-waste options whenever possible.\n\n" +
-                        "What it can look like:\n" +
-                        "• Bringing a reusable bottle, cup, or food container\n" +
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_info_card, null);
+        TextView tvContent = dialogView.findViewById(R.id.tv_dialog_content);
+
+        SpannableStringBuilder content = new SpannableStringBuilder();
+
+        addSection(content,
+                "What it is",
+                "Zero Waste on campus means reducing what you throw away by choosing reusable, refillable, and low-waste options whenever possible.");
+
+        addSection(content,
+                "What it looks like on campus",
+                "• Bringing a reusable bottle, cup, or food container\n" +
                         "• Refusing single-use plastics and extra packaging\n" +
                         "• Recycling correctly in campus bins\n" +
                         "• Printing less and submitting work digitally when possible\n" +
                         "• Choosing durable items instead of disposable ones\n" +
-                        "• Finishing your food and avoiding waste in cafeterias\n\n" +
-                        "Examples of actions:\n" +
-                        "• Use a reusable tumbler instead of a takeaway cup\n" +
+                        "• Finishing your food and avoiding waste in cafeterias");
+
+        addSection(content,
+                "What you can do",
+                "• Use a reusable tumbler instead of a takeaway cup\n" +
                         "• Carry your own water bottle to refill on campus\n" +
                         "• Recycle paper, cans, and bottles properly\n" +
                         "• Bring your own cutlery or lunchbox\n" +
-                        "• Avoid taking flyers or items you will throw away immediately";
+                        "• Avoid taking flyers or items you will throw away immediately");
+
+        tvContent.setText(content);
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("Zero Waste February")
-                .setMessage(message)
+                .setView(dialogView)
                 .setPositiveButton("Close", null)
                 .show();
     }
+
+    private void addSection(SpannableStringBuilder builder, String heading, String body) {
+        int start = builder.length();
+        builder.append(heading).append("\n");
+        builder.setSpan(new StyleSpan(Typeface.BOLD), start, builder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        builder.append(body).append("\n\n");
+    }
+
 }
