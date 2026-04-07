@@ -1,3 +1,19 @@
+/**
+ * ValidationFeedFragment.java
+ *
+ * Screen for browsing pending verified activity submissions
+ * that are awaiting community review and voting.
+ *
+ * Role in design: Part of the UI layer. Accessible from the
+ * Rankings screen for the half checkpoint.
+ *
+ * Outstanding issues: actual remote proof image loading can be
+ * added later if the project includes an image loading library.
+ *
+ * @author Karar
+ * @author Haroon
+ */
+
 package com.example.klimate;
 
 import android.os.Bundle;
@@ -34,21 +50,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * ValidationFeedFragment.java
- *
- * Screen for browsing pending verified activity submissions
- * that are awaiting community review and voting.
- *
- * Role in design: Part of the UI layer. Accessible from the
- * Rankings screen for the half checkpoint.
- *
- * Outstanding issues: actual remote proof image loading can be
- * added later if the project includes an image loading library.
- *
- * @author Karar
- * @author Haroon
- */
 public class ValidationFeedFragment extends Fragment {
 
     private FirebaseFirestore db;
