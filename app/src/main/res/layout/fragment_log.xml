@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:background="@color/color_cream_bg">
 
-    <!-- ══════════════ GREEN HEADER ══════════════ -->
+    <!-- GREEN HEADER -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,21 +17,47 @@
         android:paddingTop="28dp"
         android:paddingBottom="28dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Log Activity"
-            android:textColor="@color/white"
-            android:textSize="28sp"
-            android:textStyle="bold"/>
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="What did you do today? 🌿"
-            android:textColor="#CCFFFFFF"
-            android:textSize="14sp"/>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Log Activity"
+                    android:textColor="@color/white"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="What did you do today? 🌿"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btn_history"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:padding="8dp"
+                android:background="@drawable/bg_history_button"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="History"
+                android:src="@drawable/ic_history"
+                app:tint="@color/white" />
+        </LinearLayout>
 
         <!-- Quick Log / Verified Log toggle -->
         <LinearLayout
@@ -54,7 +80,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:clickable="true"
-                android:focusable="true"/>
+                android:focusable="true" />
 
             <TextView
                 android:id="@+id/btn_verified_log"
@@ -66,11 +92,11 @@
                 android:textColor="@color/color_text_secondary"
                 android:textSize="14sp"
                 android:clickable="true"
-                android:focusable="true"/>
+                android:focusable="true" />
         </LinearLayout>
     </LinearLayout>
 
-    <!-- ══════════════ ACTIVITY GRID ══════════════ -->
+    <!-- ACTIVITY GRID -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -93,144 +119,324 @@
                 android:textStyle="bold"
                 android:textColor="@color/color_text_secondary"
                 android:letterSpacing="0.1"
-                android:layout_marginBottom="10dp"/>
+                android:layout_marginBottom="10dp" />
 
             <!-- Row 1 -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="110dp"
-                android:orientation="horizontal" android:layout_marginBottom="10dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp">
 
-                <LinearLayout android:id="@+id/card_cycling" android:layout_width="0dp"
-                    android:layout_height="match_parent" android:layout_weight="1"
-                    android:layout_marginEnd="6dp" android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical" android:padding="16dp"
-                    android:clickable="true" android:focusable="true">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="🚲" android:textSize="28sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Cycling" android:textSize="14sp" android:textStyle="bold"
-                        android:textColor="@color/color_text_primary" android:layout_marginTop="6dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="+30 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                <LinearLayout
+                    android:id="@+id/card_cycling"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_activity_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🚲"
+                        android:textSize="28sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cycling"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"
+                        android:layout_marginTop="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+30 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/card_transit" android:layout_width="0dp"
-                    android:layout_height="match_parent" android:layout_weight="1"
-                    android:layout_marginStart="6dp" android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical" android:padding="16dp"
-                    android:clickable="true" android:focusable="true">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="🚌" android:textSize="28sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Public Transit" android:textSize="14sp" android:textStyle="bold"
-                        android:textColor="@color/color_text_primary" android:layout_marginTop="6dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="+20 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                <LinearLayout
+                    android:id="@+id/card_transit"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_activity_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🚌"
+                        android:textSize="28sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Public Transit"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"
+                        android:layout_marginTop="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+20 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text" />
                 </LinearLayout>
             </LinearLayout>
 
             <!-- Row 2 -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="110dp"
-                android:orientation="horizontal" android:layout_marginBottom="10dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp">
 
-                <LinearLayout android:id="@+id/card_recycling" android:layout_width="0dp"
-                    android:layout_height="match_parent" android:layout_weight="1"
-                    android:layout_marginEnd="6dp" android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical" android:padding="16dp"
-                    android:clickable="true" android:focusable="true">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="♻️" android:textSize="28sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Recycling" android:textSize="14sp" android:textStyle="bold"
-                        android:textColor="@color/color_text_primary" android:layout_marginTop="6dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="+15 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                <LinearLayout
+                    android:id="@+id/card_recycling"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_activity_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="♻️"
+                        android:textSize="28sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Recycling"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"
+                        android:layout_marginTop="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+15 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/card_plantbased" android:layout_width="0dp"
-                    android:layout_height="match_parent" android:layout_weight="1"
-                    android:layout_marginStart="6dp" android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical" android:padding="16dp"
-                    android:clickable="true" android:focusable="true">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="🥗" android:textSize="28sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Plant-based meal" android:textSize="14sp" android:textStyle="bold"
-                        android:textColor="@color/color_text_primary" android:layout_marginTop="6dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="+25 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                <LinearLayout
+                    android:id="@+id/card_plantbased"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_activity_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🥗"
+                        android:textSize="28sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Plant-based meal"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"
+                        android:layout_marginTop="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+25 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text" />
                 </LinearLayout>
             </LinearLayout>
 
             <!-- Row 3 -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="110dp"
-                android:orientation="horizontal" android:layout_marginBottom="10dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp">
 
-                <LinearLayout android:id="@+id/card_reusable" android:layout_width="0dp"
-                    android:layout_height="match_parent" android:layout_weight="1"
-                    android:layout_marginEnd="6dp" android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical" android:padding="16dp"
-                    android:clickable="true" android:focusable="true">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="💧" android:textSize="28sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Reusable cup" android:textSize="14sp" android:textStyle="bold"
-                        android:textColor="@color/color_text_primary" android:layout_marginTop="6dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="+10 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                <LinearLayout
+                    android:id="@+id/card_reusable"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_activity_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💧"
+                        android:textSize="28sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Reusable cup"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"
+                        android:layout_marginTop="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+10 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/card_composting" android:layout_width="0dp"
-                    android:layout_height="match_parent" android:layout_weight="1"
-                    android:layout_marginStart="6dp" android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical" android:padding="16dp"
-                    android:clickable="true" android:focusable="true">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="🌱" android:textSize="28sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Composting" android:textSize="14sp" android:textStyle="bold"
-                        android:textColor="@color/color_text_primary" android:layout_marginTop="6dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="+20 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                <LinearLayout
+                    android:id="@+id/card_composting"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_activity_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🌱"
+                        android:textSize="28sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Composting"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"
+                        android:layout_marginTop="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+20 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text" />
                 </LinearLayout>
             </LinearLayout>
 
             <!-- Row 4 -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="110dp"
-                android:orientation="horizontal" android:layout_marginBottom="10dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp">
 
-                <LinearLayout android:id="@+id/card_walked" android:layout_width="0dp"
-                    android:layout_height="match_parent" android:layout_weight="1"
-                    android:layout_marginEnd="6dp" android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical" android:padding="16dp"
-                    android:clickable="true" android:focusable="true">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="👟" android:textSize="28sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Walked" android:textSize="14sp" android:textStyle="bold"
-                        android:textColor="@color/color_text_primary" android:layout_marginTop="6dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="+20 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                <LinearLayout
+                    android:id="@+id/card_walked"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_activity_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="👟"
+                        android:textSize="28sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Walked"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"
+                        android:layout_marginTop="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+20 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/card_energy" android:layout_width="0dp"
-                    android:layout_height="match_parent" android:layout_weight="1"
-                    android:layout_marginStart="6dp" android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical" android:padding="16dp"
-                    android:clickable="true" android:focusable="true">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="💡" android:textSize="28sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="Energy saving" android:textSize="14sp" android:textStyle="bold"
-                        android:textColor="@color/color_text_primary" android:layout_marginTop="6dp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="+10 pts" android:textSize="12sp" android:textColor="@color/color_green_text"/>
+                <LinearLayout
+                    android:id="@+id/card_energy"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_activity_card"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💡"
+                        android:textSize="28sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Energy saving"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary"
+                        android:layout_marginTop="6dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+10 pts"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_green_text" />
                 </LinearLayout>
             </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- ══════════════ LOG BUTTON (sticky) ══════════════ -->
+    <!-- LOG BUTTON -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -251,7 +457,7 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:clickable="true"
-            android:focusable="true"/>
+            android:focusable="true" />
     </LinearLayout>
 
 </LinearLayout>
