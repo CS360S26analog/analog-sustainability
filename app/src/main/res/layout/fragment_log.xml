@@ -34,7 +34,7 @@
                     android:text="Log Activity"
                     android:textColor="@color/white"
                     android:textSize="28sp"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -42,20 +42,42 @@
                     android:layout_marginTop="4dp"
                     android:text="What did you do today? 🌿"
                     android:textColor="#CCFFFFFF"
-                    android:textSize="14sp"/>
+                    android:textSize="14sp" />
             </LinearLayout>
 
-            <ImageView
-                android:id="@+id/btn_history"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:padding="8dp"
-                android:background="@drawable/bg_history_button"
-                android:clickable="true"
-                android:contentDescription="History"
-                android:focusable="true"
-                android:src="@drawable/ic_history"
-                app:tint="@color/white" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btn_log_info"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/bg_history_button"
+                    android:clickable="true"
+                    android:contentDescription="Log activity info"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="i"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/btn_history"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:padding="8dp"
+                    android:background="@drawable/bg_history_button"
+                    android:clickable="true"
+                    android:contentDescription="History"
+                    android:focusable="true"
+                    android:src="@drawable/ic_history"
+                    app:tint="@color/white" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -72,25 +94,25 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/bg_toggle_selected"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
                 android:text="Quick Log"
                 android:textColor="@color/white"
                 android:textSize="14sp"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true"/>
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/btn_verified_log"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
                 android:text="Verified Log"
                 android:textColor="@color/color_text_secondary"
-                android:textSize="14sp"
-                android:clickable="true"
-                android:focusable="true"/>
+                android:textSize="14sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -111,18 +133,18 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="CHOOSE AN ACTIVITY"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:textColor="@color/color_text_secondary"
+                android:layout_marginBottom="10dp"
                 android:letterSpacing="0.1"
-                android:layout_marginBottom="10dp"/>
+                android:text="CHOOSE AN ACTIVITY"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="110dp"
-                android:orientation="horizontal"
-                android:layout_marginBottom="10dp">
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal">
 
                 <LinearLayout
                     android:id="@+id/card_cycling"
@@ -131,32 +153,32 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical"
-                    android:padding="16dp"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🚲"
-                        android:textSize="28sp"/>
+                        android:textSize="28sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
                         android:text="Cycling"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
                         android:textColor="@color/color_text_primary"
-                        android:layout_marginTop="6dp"/>
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="+30 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
+                        android:textColor="@color/color_green_text"
+                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -166,40 +188,40 @@
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical"
-                    android:padding="16dp"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🚌"
-                        android:textSize="28sp"/>
+                        android:textSize="28sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
                         android:text="Public Transit"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
                         android:textColor="@color/color_text_primary"
-                        android:layout_marginTop="6dp"/>
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="+20 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
+                        android:textColor="@color/color_green_text"
+                        android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="110dp"
-                android:orientation="horizontal"
-                android:layout_marginBottom="10dp">
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal">
 
                 <LinearLayout
                     android:id="@+id/card_recycling"
@@ -208,32 +230,32 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical"
-                    android:padding="16dp"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="♻️"
-                        android:textSize="28sp"/>
+                        android:textSize="28sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
                         android:text="Recycling"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
                         android:textColor="@color/color_text_primary"
-                        android:layout_marginTop="6dp"/>
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="+15 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
+                        android:textColor="@color/color_green_text"
+                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -243,40 +265,40 @@
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical"
-                    android:padding="16dp"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🥗"
-                        android:textSize="28sp"/>
+                        android:textSize="28sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
                         android:text="Plant-based meal"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
                         android:textColor="@color/color_text_primary"
-                        android:layout_marginTop="6dp"/>
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="+25 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
+                        android:textColor="@color/color_green_text"
+                        android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="110dp"
-                android:orientation="horizontal"
-                android:layout_marginBottom="10dp">
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal">
 
                 <LinearLayout
                     android:id="@+id/card_reusable"
@@ -285,32 +307,32 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical"
-                    android:padding="16dp"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="💧"
-                        android:textSize="28sp"/>
+                        android:textSize="28sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
                         android:text="Reusable cup"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
                         android:textColor="@color/color_text_primary"
-                        android:layout_marginTop="6dp"/>
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="+10 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
+                        android:textColor="@color/color_green_text"
+                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -320,40 +342,40 @@
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical"
-                    android:padding="16dp"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🌱"
-                        android:textSize="28sp"/>
+                        android:textSize="28sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
                         android:text="Composting"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
                         android:textColor="@color/color_text_primary"
-                        android:layout_marginTop="6dp"/>
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="+20 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
+                        android:textColor="@color/color_green_text"
+                        android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="110dp"
-                android:orientation="horizontal"
-                android:layout_marginBottom="10dp">
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal">
 
                 <LinearLayout
                     android:id="@+id/card_walked"
@@ -362,32 +384,32 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical"
-                    android:padding="16dp"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="👟"
-                        android:textSize="28sp"/>
+                        android:textSize="28sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
                         android:text="Walked"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
                         android:textColor="@color/color_text_primary"
-                        android:layout_marginTop="6dp"/>
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="+20 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
+                        android:textColor="@color/color_green_text"
+                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -397,32 +419,32 @@
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     android:background="@drawable/bg_activity_card"
-                    android:orientation="vertical"
-                    android:padding="16dp"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="💡"
-                        android:textSize="28sp"/>
+                        android:textSize="28sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
                         android:text="Energy saving"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
                         android:textColor="@color/color_text_primary"
-                        android:layout_marginTop="6dp"/>
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="+10 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
+                        android:textColor="@color/color_green_text"
+                        android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -501,13 +523,13 @@
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:background="@drawable/bg_button_amber"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center"
             android:text="Log Activity"
             android:textColor="@color/white"
             android:textSize="16sp"
-            android:textStyle="bold"
-            android:clickable="true"
-            android:focusable="true"/>
+            android:textStyle="bold" />
     </LinearLayout>
 
 </LinearLayout>

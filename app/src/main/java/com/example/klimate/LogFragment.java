@@ -19,8 +19,13 @@ package com.example.klimate;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
+import android.app.AlertDialog;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.StyleSpan;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -98,15 +103,6 @@ public class LogFragment extends Fragment {
                 }
             });
 
-    /**
-     * Inflates the logging screen, initializes Firebase,
-     * and wires activity selection, proof selection, and submission.
-     *
-     * @param inflater the LayoutInflater used to inflate the fragment layout
-     * @param container the parent view group
-     * @param savedInstanceState previously saved fragment state
-     * @return the root view for the logging screen
-     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -127,6 +123,11 @@ public class LogFragment extends Fragment {
                         .addToBackStack(null)
                         .commit();
             });
+        }
+
+        TextView btnLogInfo = view.findViewById(R.id.btn_log_info);
+        if (btnLogInfo != null) {
+            btnLogInfo.setOnClickListener(v -> showLogInfoDialog());
         }
 
         proofSection = view.findViewById(R.id.card_verified_proof_section);
@@ -173,13 +174,6 @@ public class LogFragment extends Fragment {
         return view;
     }
 
-    /**
-     * Marks one tab as visually active and the other as inactive,
-     * animating the text colour on both so the switch feels smooth.
-     *
-     * @param active the tab that should appear selected
-     * @param inactive the tab that should appear unselected
-     */
     private void setActiveTab(View active, View inactive) {
         active.setBackgroundResource(R.drawable.bg_toggle_selected);
         inactive.setBackground(null);
@@ -191,13 +185,6 @@ public class LogFragment extends Fragment {
         animateTextColor((TextView) inactive, white, secondary);
     }
 
-    /**
-     * Smoothly animates a TextView text colour.
-     *
-     * @param tv the text view to animate
-     * @param fromColor the starting color
-     * @param toColor the ending color
-     */
     private void animateTextColor(TextView tv, int fromColor, int toColor) {
         ValueAnimator animator = ValueAnimator.ofObject(new ArgbEvaluator(), fromColor, toColor);
         animator.setDuration(200);
@@ -243,7 +230,7 @@ public class LogFragment extends Fragment {
         }
     }
 
-    private void submitLog(LinearLayout[] cards) {
+    private void submitLog(@NonNull LinearLayout[] cards) {
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
         if (currentUser == null) {
@@ -370,6 +357,76 @@ public class LogFragment extends Fragment {
 
         btnLogActivity.setEnabled(enabled);
         btnLogActivity.setAlpha(enabled ? 1f : 0.6f);
+    }
+
+    private void showLogInfoDialog() {
+        if (getContext() == null) return;
+
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_info_card, null);
+        TextView tvTitle = dialogView.findViewById(R.id.tv_dialog_title);
+        TextView tvContent = dialogView.findViewById(R.id.tv_dialog_content);
+
+        tvTitle.setText("About Log Activities");
+        tvContent.setText(buildLogInfoText());
+
+        new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .setPositiveButton("Got it", null)
+                .show();
+    }
+
+    private CharSequence buildLogInfoText() {
+        String[] headings = {
+                "🚲 Cycling",
+                "🚌 Public Transit",
+                "♻️ Recycling",
+                "🥗 Plant-based meal",
+                "💧 Reusable cup",
+                "🌱 Composting",
+                "👟 Walked",
+                "💡 Energy saving",
+                "How to use it"
+        };
+
+        String[] bodies = {
+                "Log this when you use a bicycle instead of a car or another fuel-based ride for a trip.",
+                "Use this when you travel by bus, train, shuttle, or another shared public transport option.",
+                "Log this when you properly recycle paper, plastic, cans, or other accepted recyclable materials.",
+                "Use this when you choose a vegetarian or vegan meal instead of a meat-based one.",
+                "Log this when you use your own reusable bottle or cup instead of taking a disposable one.",
+                "Use this when food scraps or compostable waste are disposed of through proper composting.",
+                "Log this when you walk instead of using a fuel-based ride for a trip you needed to make.",
+                "Use this when you intentionally reduce electricity use, like switching off lights or unplugging devices.",
+                "Pick an activity card first. Use Quick Log for a simple submission, or Verified Log if you want to attach proof and submit it for verification."
+        };
+
+        StringBuilder fullText = new StringBuilder();
+        int[] headingStarts = new int[headings.length];
+        int[] headingEnds = new int[headings.length];
+
+        for (int i = 0; i < headings.length; i++) {
+            headingStarts[i] = fullText.length();
+            fullText.append(headings[i]);
+            headingEnds[i] = fullText.length();
+            fullText.append("\n");
+            fullText.append(bodies[i]);
+
+            if (i < headings.length - 1) {
+                fullText.append("\n\n");
+            }
+        }
+
+        SpannableString spannable = new SpannableString(fullText.toString());
+        for (int i = 0; i < headings.length; i++) {
+            spannable.setSpan(
+                    new StyleSpan(Typeface.BOLD),
+                    headingStarts[i],
+                    headingEnds[i],
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+        }
+
+        return spannable;
     }
 
     private int getBasePoints(String activityType) {
