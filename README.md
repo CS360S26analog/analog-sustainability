@@ -24,6 +24,8 @@
   - [Wireframes – Project Part 3](#wireframes--project-part-3)
  
 - [Acceptance Criteria](#acceptance-criteria)
+
+- [App Repo Structure - Project Part 3](#klimate-android-app---project-part-3)
 ---
 ## Team Information
 - **Team Name:** Analog
@@ -510,9 +512,6 @@ _Add UML diagrams here or link images from the repository._
 
 ## Wireframes
 
-### Wireframes – Project Part 1
-_Add screenshots or links to wireframe images._
-
 ### Wireframes – Project Part 2
 https://www.figma.com/design/jEozF9kZnQmmX199ftrxQq/Untitled?node-id=0-1&t=ZiAlzJ7MbXtacAX1-1
 ## Screenshots
@@ -818,3 +817,62 @@ _Add screenshots or links to wireframe images._
 - [ ] After voting, the action is marked as done and the student cannot vote on the same submission again
 - [ ] If a submission reaches the required vote threshold after the student's vote, the student sees it marked as verified in the feed
 
+## Klimate Android App - Project Part 3
+### App Structure
+```
+app/src/main/java/com/example/klimate/
+
+model/
+    User.java               Maps to Firestore users/{uid}
+    ActivityLog.java        Maps to Firestore activity_logs/{logId}
+    Vote.java               Maps to Firestore votes/{voteId}
+
+LoginActivity.java          Email and password sign-in screen
+RegisterActivity.java       New user registration screen
+MainActivity.java           Host activity, manages bottom navigation
+
+HomeFragment.java           Dashboard screen with real-time Firestore stats
+LogFragment.java            Log a sustainability activity
+ValidationFeedFragment.java Browse and vote on pending verified logs
+ProfileFragment.java        User profile, points balance, rewards list
+RankingsFragment.java       Campus leaderboard, entry to validation feed
+FriendsFragment.java        Friends list screen
+HistoryFragment.java        Activity history, edit and delete within 24 hours
+DashboardViewModel.java     ViewModel for dashboard, LiveData and Firestore queries
+PointsManager.java          Points calculation and award logic
+
+app/src/test/java/com/example/klimate/
+    UserTest.java               Unit tests for User model
+    ActivityLogTest.java        Unit tests for ActivityLog model
+    PointsManagerTest.java      Unit tests for PointsManager
+
+app/src/androidTest/java/com/example/klimate/
+    AuthUiTest.java             UI tests for Login and Register screens
+    ValidationFeedUiTest.java   UI tests for validation feed navigation
+    LogFragmentUiTest.java      UI tests for activity logging screen
+    BottomNavUiTest.java        UI tests for bottom navigation between all tabs
+```
+### Tech Stack
+
+- Language: Java
+- Platform: Android (minSdk 24, targetSdk 34)
+- Backend: Firebase Authentication, Firestore, Firebase Storage
+- Architecture: MVVM for dashboard (DashboardViewModel and LiveData), MVC elsewhere
+
+### Firestore Collections
+
+| Collection | Purpose |
+|---|---|
+| users/{uid} | User profile, total points, streak, CO2 saved |
+| activity_logs/{logId} | Sustainability activity log entries |
+| votes/{voteId} | Community votes on pending verified logs |
+
+### Running Tests
+
+Unit tests (no emulator required):
+
+    ./gradlew test
+
+UI tests (requires API 34 emulator, user must be signed in first):
+
+    ./gradlew connectedAndroidTest
