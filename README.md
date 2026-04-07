@@ -559,7 +559,7 @@ Social screen showing a student's friend list ranked by eco points and active st
 
 
 
-### Wireframes – Project Part 3
+### Wireframes – Project Part 2
 _Add screenshots or links to wireframe images._
 
 ---
