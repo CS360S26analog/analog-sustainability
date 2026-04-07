@@ -74,8 +74,8 @@ public class HomeFragmentUiTest {
      * Verifies that the points stat card is visible on the dashboard.
      * Satisfies US-07: dashboard must show the user's points balance.
      *
-     * Note: ID updated from tv_points to tv_points_value
-     * to match the actual stat card ID in fragment_home.xml.
+     * Note: ID updated from tv_points to tv_points_value to match
+     * the actual stat card ID in fragment_home.xml.
      */
     @Test
     public void dashboardShowsPointsCard() {
