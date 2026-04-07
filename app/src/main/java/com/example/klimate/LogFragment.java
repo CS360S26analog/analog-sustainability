@@ -1,5 +1,6 @@
 package com.example.klimate;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +27,12 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import android.app.Dialog;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.view.Window;
+import android.view.WindowManager;
 
 public class LogFragment extends Fragment {
 
@@ -70,7 +77,10 @@ public class LogFragment extends Fragment {
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         pointsManager = new PointsManager();
 
+        TextView btnInfo = view.findViewById(R.id.btn_info);
         ImageView btnHistory = view.findViewById(R.id.btn_history);
+
+        btnInfo.setOnClickListener(v -> showActivityInfoDialog());
         btnHistory.setOnClickListener(v -> openHistory());
 
         LinearLayout[] cards = new LinearLayout[cardIds.length];
@@ -84,6 +94,28 @@ public class LogFragment extends Fragment {
         btnLog.setOnClickListener(v -> saveQuickLog(cards, btnLog));
 
         return view;
+    }
+
+    private void showActivityInfoDialog() {
+        if (getContext() == null) return;
+
+        Dialog dialog = new Dialog(requireContext());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_log_info);
+        dialog.setCancelable(true);
+
+        TextView btnClose = dialog.findViewById(R.id.btn_close_log_info);
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(
+                    (int) (getResources().getDisplayMetrics().widthPixels * 0.92),
+                    WindowManager.LayoutParams.WRAP_CONTENT
+            );
+        }
+
+        dialog.show();
     }
 
     private void openHistory() {
