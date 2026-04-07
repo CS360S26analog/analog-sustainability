@@ -150,7 +150,7 @@
             android:paddingEnd="16dp"
             android:paddingBottom="16dp">
 
-            <!-- Recent activity cards -->
+            <!-- Activity cards -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="185dp"
@@ -172,18 +172,18 @@
                         android:id="@+id/tv_recent_1_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:letterSpacing="0.08"
-                        android:text="RECENT ACTIVITY"
+                        android:maxLines="2"
+                        android:text="MOST FREQUENT"
                         android:textColor="@color/white"
-                        android:textSize="15sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_recent_1_subtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:text="Log to see activity here"
+                        android:layout_marginTop="6dp"
+                        android:text="Your most frequent activity will appear here. Try logging something."
                         android:textColor="#CCFFFFFF"
                         android:textSize="12sp" />
 
@@ -192,19 +192,34 @@
                         android:layout_height="0dp"
                         android:layout_weight="1" />
 
-                    <TextView
-                        android:id="@+id/btn_recent_1"
+                    <LinearLayout
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:background="@drawable/bg_button_log_it"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:paddingStart="18dp"
-                        android:paddingEnd="18dp"
-                        android:text="Log now →"
-                        android:textColor="@color/white"
-                        android:textSize="12sp" />
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tv_recent_1_icon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="10dp"
+                            android:text="🌿"
+                            android:textSize="24sp" />
+
+                        <TextView
+                            android:id="@+id/btn_recent_1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_button_log_it"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:paddingStart="18dp"
+                            android:paddingEnd="18dp"
+                            android:text="Log now →"
+                            android:textColor="@color/white"
+                            android:textSize="12sp" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout
@@ -223,18 +238,18 @@
                         android:id="@+id/tv_recent_2_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:letterSpacing="0.08"
+                        android:maxLines="2"
                         android:text="RECENT ACTIVITY"
                         android:textColor="@color/white"
-                        android:textSize="15sp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_recent_2_subtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:text="Log to see activity here"
+                        android:layout_marginTop="6dp"
+                        android:text="Your latest activity will appear here once you log one."
                         android:textColor="#CCFFFFFF"
                         android:textSize="12sp" />
 
@@ -243,19 +258,34 @@
                         android:layout_height="0dp"
                         android:layout_weight="1" />
 
-                    <TextView
-                        android:id="@+id/btn_recent_2"
+                    <LinearLayout
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:background="@drawable/bg_button_log_it"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:paddingStart="18dp"
-                        android:paddingEnd="18dp"
-                        android:text="Log now →"
-                        android:textColor="@color/white"
-                        android:textSize="12sp" />
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tv_recent_2_icon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="10dp"
+                            android:text="🌿"
+                            android:textSize="24sp" />
+
+                        <TextView
+                            android:id="@+id/btn_recent_2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_button_log_it"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:paddingStart="18dp"
+                            android:paddingEnd="18dp"
+                            android:text="Log now →"
+                            android:textColor="@color/white"
+                            android:textSize="12sp" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
 
@@ -289,10 +319,11 @@
                             android:textSize="26sp" />
 
                         <TextView
+                            android:id="@+id/tv_bottom_streak_days"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="5dp"
-                            android:text="0 days"
+                            android:text="0"
                             android:textColor="@color/color_text_primary"
                             android:textSize="13sp"
                             android:textStyle="bold" />
@@ -300,7 +331,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Streak"
+                            android:text="days Streak"
                             android:textColor="@color/color_text_secondary"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -330,6 +361,7 @@
                             android:textSize="26sp" />
 
                         <TextView
+                            android:id="@+id/tv_co2_saved"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="5dp"
@@ -370,6 +402,7 @@
                             android:textSize="26sp" />
 
                         <TextView
+                            android:id="@+id/tv_points_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="5dp"
