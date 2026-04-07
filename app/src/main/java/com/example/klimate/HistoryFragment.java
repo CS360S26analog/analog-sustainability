@@ -50,6 +50,35 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * HistoryFragment displays the user's past sustainability logs.
+ * It allows users to review, edit, and delete recent logs.
+ *
+ * Role in design: UI layer Fragment that reads from Firestore and updates
+ * user statistics after log changes.
+ *
+ * Outstanding issues:
+ * - Logs are currently fetched all at once instead of paginated.
+ * - Editing is limited to activity type only.
+ */
+
+/**
+ * Fragment responsible for displaying the user's activity history.
+ *
+ * <p>This fragment retrieves activity logs from Firebase Firestore and displays them
+ * in a scrollable list. Users can view, edit, or delete logs within a 24-hour window.
+ * It also recalculates and updates user statistics such as total points, CO₂ saved,
+ * and activity streak when logs are modified.</p>
+ *
+ * <p>Part of the UI layer (MVC/MVVM). Interacts with Firestore collections:
+ * <ul>
+ *     <li>"activity_logs" – stores user activity logs</li>
+ *     <li>"users" – stores aggregated user statistics</li>
+ * </ul>
+ * </p>
+ * @author izza
+ */
+
 public class HistoryFragment extends Fragment {
 
     private FirebaseFirestore db;
@@ -82,6 +111,15 @@ public class HistoryFragment extends Fragment {
         put("Energy saving", 0.18);
     }};
 
+    /**
+     * Inflates the layout and initializes Firebase instances and UI components.
+     *
+     * @param inflater the LayoutInflater object
+     * @param container the parent view
+     * @param savedInstanceState previous saved state
+     * @return the inflated view for this fragment
+     */
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -105,6 +143,14 @@ public class HistoryFragment extends Fragment {
         loadHistory();
         return view;
     }
+
+    /**
+     * Loads the user's activity history from Firestore.
+     *
+     * <p>Fetches all logs belonging to the current user, sorts them by timestamp
+     * (most recent first), and displays them as cards. If no logs exist or an error
+     * occurs, an appropriate message is shown.</p>
+     */
 
     private void loadHistory() {
         if (currentUser == null) {
@@ -150,6 +196,15 @@ public class HistoryFragment extends Fragment {
                     tvEmptyState.setText("Could not load history.");
                 });
     }
+
+    /**
+     * Creates and populates a UI card for a single activity log.
+     *
+     * <p>Displays activity type, timestamp, points, status, and allows editing or
+     * deletion if within the allowed time window.</p>
+     *
+     * @param doc Firestore document representing an activity log
+     */
 
     private void addHistoryCard(QueryDocumentSnapshot doc) {
         if (getContext() == null) return;
@@ -220,6 +275,16 @@ public class HistoryFragment extends Fragment {
         historyContainer.addView(card);
     }
 
+    /**
+     * Displays a dialog allowing the user to edit an existing activity log.
+     *
+     * <p>The user can select a new activity type from predefined options.
+     * Updates Firestore and recalculates user statistics on success.</p>
+     *
+     * @param logId the ID of the log to edit
+     * @param currentActivity the current activity type of the log
+     */
+
     private void showEditDialog(String logId, String currentActivity) {
         if (getContext() == null) return;
 
@@ -285,6 +350,14 @@ public class HistoryFragment extends Fragment {
         dialog.show();
     }
 
+    /**
+     * Displays a confirmation dialog to delete a log.
+     *
+     * <p>If confirmed, deletes the log from Firestore and updates user statistics.</p>
+     *
+     * @param logId the ID of the log to delete
+     */
+
     private void showDeleteDialog(String logId) {
         if (getContext() == null) return;
 
@@ -307,6 +380,18 @@ public class HistoryFragment extends Fragment {
                 })
                 .show();
     }
+
+    /**
+     * Recalculates and updates user statistics based on all activity logs.
+     *
+     * <p>Computes:
+     * <ul>
+     *     <li>Total CO₂ saved</li>
+     *     <li>Total points (including bonus points)</li>
+     *     <li>Current activity streak</li>
+     * </ul>
+     * Updates the "users" collection in Firestore.</p>
+     */
 
     private void recalculateUserStats() {
         if (currentUser == null) return;
@@ -353,6 +438,13 @@ public class HistoryFragment extends Fragment {
                 });
     }
 
+    /**
+     * Checks whether the given activity is a valid predefined option.
+     *
+     * @param activity the activity to validate
+     * @return true if valid, false otherwise
+     */
+
     private boolean isValidActivity(String activity) {
         if (activity == null) return false;
 
@@ -363,6 +455,16 @@ public class HistoryFragment extends Fragment {
         }
         return false;
     }
+
+    /**
+     * Calculates the user's current activity streak based on unique active days.
+     *
+     * <p>The streak counts consecutive days (including today or yesterday)
+     * where the user has logged at least one activity.</p>
+     *
+     * @param uniqueDays set of dates (formatted as yyyyMMdd) with activity logs
+     * @return the number of consecutive days in the streak
+     */
 
     private int calculateCurrentStreakFromDays(Set<String> uniqueDays) {
         if (uniqueDays.isEmpty()) return 0;
@@ -406,6 +508,13 @@ public class HistoryFragment extends Fragment {
         return streak;
     }
 
+    /**
+     * Determines whether a log is within the editable 24-hour window.
+     *
+     * @param timestamp the timestamp of the log
+     * @return true if within 24 hours, false otherwise
+     */
+
     private boolean isWithin24Hours(Timestamp timestamp) {
         if (timestamp == null) return false;
 
@@ -414,11 +523,25 @@ public class HistoryFragment extends Fragment {
         return (now - loggedAt) <= EDIT_WINDOW_MILLIS;
     }
 
+    /**
+     * Formats a Firestore timestamp into a readable date string.
+     *
+     * @param timestamp the timestamp to format
+     * @return formatted date string or "Unknown time" if null
+     */
+
     private String formatTimestamp(Timestamp timestamp) {
         if (timestamp == null) return "Unknown time";
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault());
         return sdf.format(timestamp.toDate());
     }
+
+    /**
+     * Returns an emoji representation for a given activity type.
+     *
+     * @param activityType the activity type
+     * @return corresponding emoji string
+     */
 
     private String getActivityEmoji(String activityType) {
         if (activityType == null) return "🌿";
@@ -445,6 +568,13 @@ public class HistoryFragment extends Fragment {
         }
     }
 
+    /**
+     * Returns the base point value associated with an activity type.
+     *
+     * @param activityType the activity type
+     * @return the number of points assigned to the activity
+     */
+
     private int getBasePoints(String activityType) {
         switch (activityType) {
             case "Cycling":
@@ -467,6 +597,12 @@ public class HistoryFragment extends Fragment {
                 return 5;
         }
     }
+
+    /**
+     * Resets the time components of a Calendar object to midnight.
+     *
+     * @param cal the Calendar instance to reset
+     */
 
     private void resetTime(Calendar cal) {
         cal.set(Calendar.HOUR_OF_DAY, 0);
