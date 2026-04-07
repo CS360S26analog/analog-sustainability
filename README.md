@@ -237,6 +237,24 @@ _Content to be added._
 <img src="./screenshots/UML_class_diagram.png" width="800"/>
 
 Shows the overall structure of the application, including key classes such as users, activities, logs, and validation system. It illustrates how different components interact, including relationships between models, repositories, and UI layers.
+
+The UML class diagram represents the core architecture of the application and how different components interact.
+
+- **User** is the central entity, storing profile data, points, streaks, and activity history.
+- **Activity** defines different sustainable actions (e.g., cycling, recycling) with associated points.
+- **ActivityLog** records each user action, including type, timestamp, and whether it is quick or verified.
+- **VerifiedLog / Validation** handles logs that require proof and community voting.
+- **Vote** represents user validation actions (upvote/downvote) on verified logs.
+- **Reward** and **Badge** represent incentives earned through points and milestones.
+- **Leaderboard** aggregates user rankings based on points.
+- **Challenge** tracks monthly or campus-wide goals and user participation.
+- **Repository / Manager classes** act as intermediaries between data and UI, handling storage and logic.
+
+Overall, the diagram shows a layered structure where:
+- Models represent data (User, Activity, Log)
+- Logic/Managers handle processing (Validation, Leaderboard)
+- UI components interact with these layers to display information
+  
 ---
 
 ## Klimate Android App - Project Part 3
@@ -565,8 +583,35 @@ UI tests (requires API 34 emulator, user must be signed in first):
 ---
 
 ### Product Backlog – Project Part 2
-| ID | User Story | Priority | Status |
-|----|------------|----------|--------|
+
+| ID  | User Story | Priority | Status | Progress | Story Points | Risk | Checkpoint |
+|-----|------------|----------|--------|----------|--------------|------|------------|
+| US-01 | Register account | High | Backlog | Done | 5 | Medium | Half |
+| US-02 | Log activity | High | Backlog | Done | 5 | Low | Half |
+| US-03 | Frequent activities | Medium | Backlog | Done | 3 | Low | Full |
+| US-04 | Mark quick/verified logs | High | Backlog | Done | 3 | Low | Half |
+| US-05 | Attach proof for verification | High | Backlog | Done | 8 | High | Full |
+| US-06 | Edit log entry | Medium | Backlog | Done | 3 | Low | Full |
+| US-07 | Dashboard overview | High | Backlog | Done | 8 | Medium | Half |
+| US-08 | CO₂ & waste tracking | High | Backlog | Done | 5 | Medium | Half |
+| US-09 | Streak tracking | Medium | Backlog | Done | 3 | Low | Full |
+| US-10 | Monthly goals | Low | Backlog | Not Started | 3 | Low | Full |
+| US-11 | Campus impact summary | Medium | Backlog | Not Started | 5 | Medium | Full |
+| US-12 | Create challenges (admin) | High | Backlog | Not Started | 8 | Medium | Full |
+| US-13 | Publish tips/articles | Medium | Backlog | Not Started | 5 | Low | Full |
+| US-14 | Join challenges | High | Backlog | Done | 5 | Medium | Full |
+| US-15 | Points from votes | High | Backlog | Done | 5 | High | Full |
+| US-16 | View points & rewards | High | Backlog | Done | 3 | Low | Half |
+| US-17 | Redeem rewards | High | Backlog | In Progress | 5 | Medium | Full |
+| US-18 | Earn badges | Medium | Backlog | In Progress | 3 | Medium | Full |
+| US-19 | View badges | Medium | Backlog | In Progress | 3 | Low | Full |
+| US-20 | Team participation | Medium | Backlog | Not Started | 5 | Medium | Full |
+| US-21 | Team progress tracking | Medium | Backlog | Not Started | 5 | Medium | Full |
+| US-22 | Leaderboard | Medium | Backlog | Done | 5 | Medium | Full |
+| US-23 | Reminder notifications | Low | Backlog | Not Started | 3 | Medium | Full |
+| US-24 | CO₂ equivalence display | Low | Backlog | Not Started | 2 | Low | Full |
+| US-25 | Validation feed | High | Backlog | Done | 5 | High | Half |
+| US-26 | Voting on logs | High | Backlog | Done | 3 | High | Half |
 
 ### Product Backlog – Project Part 3
 | ID | User Story | Priority | Status |
