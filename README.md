@@ -177,8 +177,13 @@ Friday, February 27, 2026
 #### Date
 Sunday, March 8, 2026
 #### Attendance
-_Content to be added._
+- Izza Shahid   
+- Karar Haider 
+- Maryam Waseem 
+- Maryam Ali
+- Haroon Ahmad
 ---
+
 #### Key Takeaways
 - User stories need 2–3 activity examples; no limit on the number of stories.
 - Not everything in the user stories needs to be implemented, but most details should be finalized by the halfway checkpoint.
@@ -228,14 +233,249 @@ _Content to be added._
 - Create a 5–6 frame storyboard including the login/dashboard page.
 ---
 
-### Meeting – TBD
-_Content to be added._
+### Meeting – March 17, 2026
+#### Date
+Tuesday, March 17, 2026
+
+#### Attendance
+- Izza Shahid   
+- Karar Haider 
+- Maryam Waseem 
+- Maryam Ali
+- Haroon Ahmad
+---
+
+#### Key Takeaways
+- Use a separate **Authorization class** to handle authentication logic and interaction with backend (e.g., Firebase).
+- Finalize and use a consistent **app name** across the project.
+- Track all tasks, bugs, and features using **GitHub Issues**.
+- Reviewed and evaluated the **first deliverable**.
+
+---
+#### Notes
+- Authorization should not be mixed with UI logic — keep it modular.
+- Issues should reflect actual development progress and features.
+
+#### Action Items
+- Implement a separate Authorization/Auth manager class.
+- Ensure app naming is consistent across UI and documentation.
+- Move all development tracking to GitHub Issues.
+
+---
+
+### Meeting – March 30, 2026
+#### Date
+Monday, March 30, 2026
+
+#### Attendance
+- Izza Shahid   
+- Karar Haider 
+- Maryam Waseem 
+- Maryam Ali
+- Haroon Ahmad
+---
+
+#### Key Takeaways
+- Presented a working **app demo**.
+- Demonstrated:
+  - **US-01 (User Registration/Login)**
+  - **US-05 (Verified logging with proof)**
+- Showed **Firebase integration** (authentication + data handling).
+- No major feedback was given.
+
+---
+#### Notes
+- Core features are functional and connected to backend.
+- Validation and logging flow demonstrated successfully.
+
+---
+#### Action Items
+- Continue building remaining features.
+- Improve UI/UX and complete pending user stories.
 
 ---
 
 ## UML Diagrams
-_Add UML diagrams here or link images from the repository._
+<img src="./screenshots/UML_class_diagram.png" width="800"/>
 
+Shows the overall structure of the application, including key classes such as users, activities, logs, and validation system. It illustrates how different components interact, including relationships between models, repositories, and UI layers.
+
+The UML class diagram represents the core architecture of the application and how different components interact.
+
+- **User** is the central entity, storing profile data, points, streaks, and activity history.
+- **Activity** defines different sustainable actions (e.g., cycling, recycling) with associated points.
+- **ActivityLog** records each user action, including type, timestamp, and whether it is quick or verified.
+- **VerifiedLog / Validation** handles logs that require proof and community voting.
+- **Vote** represents user validation actions (upvote/downvote) on verified logs.
+- **Reward** and **Badge** represent incentives earned through points and milestones.
+- **Leaderboard** aggregates user rankings based on points.
+- **Challenge** tracks monthly or campus-wide goals and user participation.
+- **Repository / Manager classes** act as intermediaries between data and UI, handling storage and logic.
+
+Overall, the diagram shows a layered structure where:
+- Models represent data (User, Activity, Log)
+- Logic/Managers handle processing (Validation, Leaderboard)
+- UI components interact with these layers to display information
+  
+---
+
+## Klimate Android App - Project Part 3
+### Repository Structure
+
+```
+app/src/main/java/com/example/klimate/
+
+model/
+    User.java               Maps to Firestore users/{uid}
+    ActivityLog.java        Maps to Firestore activity_logs/{logId}
+    Vote.java               Maps to Firestore votes/{voteId}
+
+LoginActivity.java          Email and password sign-in screen
+RegisterActivity.java       New user registration screen
+MainActivity.java           Host activity, manages bottom navigation
+
+HomeFragment.java           Dashboard screen with real-time Firestore stats
+LogFragment.java            Log a sustainability activity
+ValidationFeedFragment.java Browse and vote on pending verified logs
+ProfileFragment.java        User profile, points balance, rewards list
+RankingsFragment.java       Campus leaderboard, entry to validation feed
+FriendsFragment.java        Friends list screen
+HistoryFragment.java        Activity history, edit and delete within 24 hours
+DashboardViewModel.java     ViewModel for dashboard, LiveData and Firestore queries
+PointsManager.java          Points calculation and award logic
+
+app/src/test/java/com/example/klimate/
+    UserTest.java                   Unit tests for User model
+    ActivityLogTest.java            Unit tests for ActivityLog model
+    VoteTest.java                   Unit tests for Vote model
+    PointsManagerTest.java          Unit tests for PointsManager
+    DashboardViewModelTest.java     Unit tests for DashboardViewModel
+
+app/src/androidTest/java/com/example/klimate/
+    AuthUiTest.java             UI tests for Login and Register screens
+    HomeFragmentUiTest.java     UI tests for home dashboard screen
+    LogFragmentUiTest.java      UI tests for activity logging screen
+    BottomNavUiTest.java        UI tests for bottom navigation between all tabs
+    ValidationFeedUiTest.java   UI tests for validation feed navigation
+```
+### Tech Stack
+
+- Language: Java
+- Platform: Android (minSdk 24, targetSdk 34)
+- Backend: Firebase Authentication, Firestore, Firebase Storage
+- Architecture: MVVM for dashboard (DashboardViewModel and LiveData), MVC elsewhere
+
+### Firestore Collections
+
+| Collection | Purpose |
+|---|---|
+| users/{uid} | User profile, total points, streak, CO2 saved |
+| activity_logs/{logId} | Sustainability activity log entries |
+| votes/{voteId} | Community votes on pending verified logs |
+
+### Running Tests
+
+Unit tests (no emulator required):
+
+    ./gradlew test
+
+UI tests (requires API 34 emulator, user must be signed in first):
+
+    ./gradlew connectedAndroidTest
+
+
+---
+# Sprint Planning and Reviews
+
+### Sprint 1 — March 23 to March 30
+
+#### Sprint Planning (March 23)
+
+**Goal:**  
+Set up Firebase, establish the shared project structure, and begin work on all half-checkpoint stories.
+
+**Planned User Stories & Owners**
+
+| User Story | Owner | Plan |
+|-----------|------|------|
+| US-01 — Register/Login | Maryam W | Set up Firebase Auth, RegisterActivity, LoginActivity, and user storage |
+| US-02 — Log Activity | Izza | Start LogFragment flow and ActivityLog model |
+| US-04 — Quick/Verified logs | Izza | Add status handling for quick vs verified logs |
+| US-07 — Dashboard | Maryam A | Start HomeFragment / dashboard data flow |
+| US-08 — CO₂ tracking | Maryam A | Define CO₂ mapping and dashboard calculations |
+| US-05 — Proof upload | Haroon | Start verified logging proof upload flow |
+| US-15 — Points system | Haroon | Start points calculation structure |
+| US-16 — Rewards/Profile | Haroon | Begin profile points and rewards section |
+| US-25 — Validation feed | Karar | Start pending logs feed |
+| US-26 — Voting system | Karar | Start vote model and voting flow |
+
+---
+
+#### Sprint Review (March 30)
+
+**Summary:**  
+Firebase setup and authentication were completed early. Most remaining half-checkpoint stories were started and carried into Sprint 2. The team also demoed core progress to the TA during lab.
+
+**Progress by end of Sprint 1**
+- **Done:** US-01 (Register/Login)
+- **In Progress:** US-02, US-04, US-05, US-07, US-08, US-15, US-16, US-25, US-26
+
+**Additional Contributions**
+- Izza implemented the **History** screen and **About/Info (Logging)** feature.
+- Maryam W contributed to authentication testing and documentation.
+
+---
+
+### Sprint 2 — March 30 to April 6
+
+#### Sprint Planning (March 30)
+
+**Goal:**  
+Finish all half-checkpoint stories, integrate branches into `main`, complete testing/documentation, and polish the app for demo.
+
+**More Specific Sprint 2 Plan**
+
+| Area | Owner | Specific planned work |
+|------|-------|------------------------|
+| Auth + docs/tests | Maryam W | Finalize auth flow, add comments/Javadoc, complete `UserTest` and `AuthUiTest`, update README and backlog |
+| Logging | Izza | Complete Firestore logging, quick/verified status, fix UI issues, add **History** and **About (Logging)**, merge changes |
+| Dashboard / stats | Maryam A | Finalize dashboard integration, connect streak/points/CO₂ to UI |
+| Validation feed / voting | Karar | Complete validation feed, voting logic, and double-vote prevention |
+| Proof upload / profile / points | Haroon | Complete photo upload, quick log, verified log, points updates, and profile integration |
+
+**Planned integration tasks**
+- Merge dashboard with logging flow  
+- Fix HomeFragment and UI issues  
+- Finalize monthly challenge UI  
+- Add missing comments and Javadoc  
+- Update README and documentation  
+- Merge all branches into `main` via PRs  
+
+---
+
+#### Sprint Review (April 6 / Final Merge on April 7)
+
+**Summary:**  
+All half-checkpoint stories were completed. Final commits focused on fixing UI issues, merging branches, adding documentation, and polishing the app.
+
+**What was completed in Sprint 2**
+- Authentication (Login/Register)
+- Activity logging (Quick + Verified)
+- Proof upload (Firebase Storage)
+- Dashboard with real data (points, streak, CO₂)
+- Validation feed and voting system
+- Profile with rewards
+- History screen
+- About/Info logging feature
+- Documentation, comments, and README updates
+
+---
+
+### Key Observations
+
+- Sprint 1 focused on setup and initial implementation.  
+- Sprint 2 focused on integration, fixing bugs, merging work, and documentation.  
+- Final week involved significant UI fixes, feature completion, and polishing before submission.
 ---
 
 ## CRC Cards
@@ -501,8 +741,35 @@ _Add UML diagrams here or link images from the repository._
 ---
 
 ### Product Backlog – Project Part 2
-| ID | User Story | Priority | Status |
-|----|------------|----------|--------|
+
+| ID  | User Story | Priority | Status | Progress | Story Points | Risk | Checkpoint |
+|-----|------------|----------|--------|----------|--------------|------|------------|
+| US-01 | Register account | High | Backlog | Done | 5 | Medium | Half |
+| US-02 | Log activity | High | Backlog | Done | 5 | Low | Half |
+| US-03 | Frequent activities | Medium | Backlog | Done | 3 | Low | Full |
+| US-04 | Mark quick/verified logs | High | Backlog | Done | 3 | Low | Half |
+| US-05 | Attach proof for verification | High | Backlog | Done | 8 | High | Full |
+| US-06 | Edit log entry | Medium | Backlog | Done | 3 | Low | Full |
+| US-07 | Dashboard overview | High | Backlog | Done | 8 | Medium | Half |
+| US-08 | CO₂ & waste tracking | High | Backlog | Done | 5 | Medium | Half |
+| US-09 | Streak tracking | Medium | Backlog | Done | 3 | Low | Full |
+| US-10 | Monthly goals | Low | Backlog | Not Started | 3 | Low | Full |
+| US-11 | Campus impact summary | Medium | Backlog | Not Started | 5 | Medium | Full |
+| US-12 | Create challenges (admin) | High | Backlog | Not Started | 8 | Medium | Full |
+| US-13 | Publish tips/articles | Medium | Backlog | Not Started | 5 | Low | Full |
+| US-14 | Join challenges | High | Backlog | Done | 5 | Medium | Full |
+| US-15 | Points from votes | High | Backlog | Done | 5 | High | Full |
+| US-16 | View points & rewards | High | Backlog | Done | 3 | Low | Half |
+| US-17 | Redeem rewards | High | Backlog | In Progress | 5 | Medium | Full |
+| US-18 | Earn badges | Medium | Backlog | In Progress | 3 | Medium | Full |
+| US-19 | View badges | Medium | Backlog | In Progress | 3 | Low | Full |
+| US-20 | Team participation | Medium | Backlog | Not Started | 5 | Medium | Full |
+| US-21 | Team progress tracking | Medium | Backlog | Not Started | 5 | Medium | Full |
+| US-22 | Leaderboard | Medium | Backlog | Done | 5 | Medium | Full |
+| US-23 | Reminder notifications | Low | Backlog | Not Started | 3 | Medium | Full |
+| US-24 | CO₂ equivalence display | Low | Backlog | Not Started | 2 | Low | Full |
+| US-25 | Validation feed | High | Backlog | Done | 5 | High | Half |
+| US-26 | Voting on logs | High | Backlog | Done | 3 | High | Half |
 
 ### Product Backlog – Project Part 3
 | ID | User Story | Priority | Status |
@@ -559,7 +826,81 @@ Social screen showing a student's friend list ranked by eco points and active st
 
 
 ### Wireframes – Project Part 2
-_Add screenshots or links to wireframe images._
+
+### Friends
+<img src="./screenshots/Friends.png" width="300"/>
+
+Shows the friends list with names, points, and streaks.
+
+### Account 1
+<img src="./screenshots/Account1.png" width="300"/>
+
+Shows the main profile page with user stats, achievements, and rewards.
+
+### Account 2
+<img src="./screenshots/Account2.png" width="300"/>
+
+Shows account options such as settings, privacy, notifications, and support.
+
+### Validation Feed 1
+<img src="./screenshots/ValidationFeed1.png" width="300"/>
+
+Shows the validation feed where users review verified activity submissions.
+
+### Validation Feed 2
+<img src="./screenshots/ValidationFeed2.png" width="300"/>
+
+Shows more validation entries with proof, votes, and review options.
+
+### Leaderboard
+<img src="./screenshots/Leaderboard.png" width="300"/>
+
+Shows user rankings based on points and leaderboard position.
+
+### Verified Log 1
+<img src="./screenshots/VerifiedLog1.png" width="300"/>
+
+Shows a verified log entry with proof photo upload.
+
+### Verified Log 2
+<img src="./screenshots/VerifiedLog2.png" width="300"/>
+
+Shows the verified logging screen with proof photo attached.
+
+### Verified Log 3
+<img src="./screenshots/VerifiedLog3.png" width="300"/>
+
+Shows a verified submission in the review feed with voting options.
+
+### Quick Log
+<img src="./screenshots/QuickLog.png" width="300"/>
+
+Shows quick logging of common sustainable activities.
+
+### About (Logging)
+<img src="./screenshots/About(Logging).png" width="300"/>
+
+Explains what each logging activity means.
+
+### History
+<img src="./screenshots/History.png" width="300"/>
+
+Shows previously logged activities with status, edit, and delete options.
+
+### Dashboard
+<img src="./screenshots/Dashboard.png" width="300"/>
+
+Shows the home dashboard with streak, points, CO₂ saved, and challenges.
+
+### Login
+<img src="./screenshots/Login.png" width="300"/>
+
+Shows the login screen for existing users.
+
+### Sign Up
+<img src="./screenshots/SignUp.png" width="300"/>
+
+Shows the account creation screen for new users.
 
 ---
 ### Acceptance Criteria
@@ -817,62 +1158,3 @@ _Add screenshots or links to wireframe images._
 - [ ] After voting, the action is marked as done and the student cannot vote on the same submission again
 - [ ] If a submission reaches the required vote threshold after the student's vote, the student sees it marked as verified in the feed
 
-## Klimate Android App - Project Part 3
-### App Structure
-```
-app/src/main/java/com/example/klimate/
-
-model/
-    User.java               Maps to Firestore users/{uid}
-    ActivityLog.java        Maps to Firestore activity_logs/{logId}
-    Vote.java               Maps to Firestore votes/{voteId}
-
-LoginActivity.java          Email and password sign-in screen
-RegisterActivity.java       New user registration screen
-MainActivity.java           Host activity, manages bottom navigation
-
-HomeFragment.java           Dashboard screen with real-time Firestore stats
-LogFragment.java            Log a sustainability activity
-ValidationFeedFragment.java Browse and vote on pending verified logs
-ProfileFragment.java        User profile, points balance, rewards list
-RankingsFragment.java       Campus leaderboard, entry to validation feed
-FriendsFragment.java        Friends list screen
-HistoryFragment.java        Activity history, edit and delete within 24 hours
-DashboardViewModel.java     ViewModel for dashboard, LiveData and Firestore queries
-PointsManager.java          Points calculation and award logic
-
-app/src/test/java/com/example/klimate/
-    UserTest.java               Unit tests for User model
-    ActivityLogTest.java        Unit tests for ActivityLog model
-    PointsManagerTest.java      Unit tests for PointsManager
-
-app/src/androidTest/java/com/example/klimate/
-    AuthUiTest.java             UI tests for Login and Register screens
-    ValidationFeedUiTest.java   UI tests for validation feed navigation
-    LogFragmentUiTest.java      UI tests for activity logging screen
-    BottomNavUiTest.java        UI tests for bottom navigation between all tabs
-```
-### Tech Stack
-
-- Language: Java
-- Platform: Android (minSdk 24, targetSdk 34)
-- Backend: Firebase Authentication, Firestore, Firebase Storage
-- Architecture: MVVM for dashboard (DashboardViewModel and LiveData), MVC elsewhere
-
-### Firestore Collections
-
-| Collection | Purpose |
-|---|---|
-| users/{uid} | User profile, total points, streak, CO2 saved |
-| activity_logs/{logId} | Sustainability activity log entries |
-| votes/{voteId} | Community votes on pending verified logs |
-
-### Running Tests
-
-Unit tests (no emulator required):
-
-    ./gradlew test
-
-UI tests (requires API 34 emulator, user must be signed in first):
-
-    ./gradlew connectedAndroidTest
