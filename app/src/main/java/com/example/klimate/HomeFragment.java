@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -22,9 +23,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Random;
-import androidx.appcompat.app.AlertDialog;
 
 public class HomeFragment extends Fragment {
 
@@ -58,20 +57,20 @@ public class HomeFragment extends Fragment {
         TextView btnRecent1 = view.findViewById(R.id.btn_recent_1);
         TextView btnRecent2 = view.findViewById(R.id.btn_recent_2);
 
+        TextView tvChallengeHelp = view.findViewById(R.id.tv_challenge_help);
+        TextView btnChallengeInfo = view.findViewById(R.id.btn_challenge_info);
         TextView tvChallengeTitle = view.findViewById(R.id.tv_challenge_title);
         ProgressBar progressChallenge = view.findViewById(R.id.progress_challenge);
         TextView tvChallengeDays = view.findViewById(R.id.tv_challenge_days);
         TextView tvChallengePercent = view.findViewById(R.id.tv_challenge_percent);
-
-        TextView btnChallengeInfo = view.findViewById(R.id.btn_challenge_info);
-        TextView tvChallengeNote = view.findViewById(R.id.tv_challenge_note);
 
         setRandomGreeting(tvGreetingMessage);
 
         profileAvatarContainer.setOnClickListener(v -> navigateToProfile());
         btnRecent1.setOnClickListener(v -> navigateToLog());
         btnRecent2.setOnClickListener(v -> navigateToLog());
-        btnChallengeInfo.setOnClickListener(v -> showChallengeInfo());
+        tvChallengeHelp.setOnClickListener(v -> showMonthlyChallengesHelp());
+        btnChallengeInfo.setOnClickListener(v -> showZeroWasteInfo());
 
         setDefaultDashboard(
                 tvStreakNumber, tvStreakMessage, tvStreakPercent, progressStreak,
@@ -284,13 +283,39 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void showChallengeInfo() {
+    private void showMonthlyChallengesHelp() {
         if (getContext() == null) return;
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("About this challenge")
+                .setTitle("About Monthly Challenges")
                 .setMessage("Campus sustainability challenges are created by staff to encourage simple, shared habits across the community. Your progress updates as you log activities in the app.")
                 .setPositiveButton("Got it", null)
+                .show();
+    }
+
+    private void showZeroWasteInfo() {
+        if (getContext() == null) return;
+
+        String message =
+                "Zero Waste on campus means reducing what you throw away by choosing reusable, refillable, and low-waste options whenever possible.\n\n" +
+                        "What it can look like:\n" +
+                        "• Bringing a reusable bottle, cup, or food container\n" +
+                        "• Refusing single-use plastics and extra packaging\n" +
+                        "• Recycling correctly in campus bins\n" +
+                        "• Printing less and submitting work digitally when possible\n" +
+                        "• Choosing durable items instead of disposable ones\n" +
+                        "• Finishing your food and avoiding waste in cafeterias\n\n" +
+                        "Examples of actions:\n" +
+                        "• Use a reusable tumbler instead of a takeaway cup\n" +
+                        "• Carry your own water bottle to refill on campus\n" +
+                        "• Recycle paper, cans, and bottles properly\n" +
+                        "• Bring your own cutlery or lunchbox\n" +
+                        "• Avoid taking flyers or items you will throw away immediately";
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Zero Waste February")
+                .setMessage(message)
+                .setPositiveButton("Close", null)
                 .show();
     }
 }
