@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -69,6 +70,9 @@ public class LogFragment extends Fragment {
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         pointsManager = new PointsManager();
 
+        ImageView btnHistory = view.findViewById(R.id.btn_history);
+        btnHistory.setOnClickListener(v -> openHistory());
+
         LinearLayout[] cards = new LinearLayout[cardIds.length];
         for (int i = 0; i < cardIds.length; i++) {
             final int index = i;
@@ -80,6 +84,16 @@ public class LogFragment extends Fragment {
         btnLog.setOnClickListener(v -> saveQuickLog(cards, btnLog));
 
         return view;
+    }
+
+    private void openHistory() {
+        if (getActivity() == null) return;
+
+        getParentFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, new HistoryFragment())
+                .addToBackStack(null)
+                .commit();
     }
 
     private void selectCard(LinearLayout[] cards, LinearLayout card, String name) {
@@ -243,15 +257,24 @@ public class LogFragment extends Fragment {
 
     private int getBasePoints(String activityType) {
         switch (activityType) {
-            case "Cycling": return 30;
-            case "Public Transit": return 20;
-            case "Recycling": return 15;
-            case "Plant-based meal": return 25;
-            case "Reusable cup": return 10;
-            case "Composting": return 20;
-            case "Walked": return 20;
-            case "Energy saving": return 10;
-            default: return 5;
+            case "Cycling":
+                return 30;
+            case "Public Transit":
+                return 20;
+            case "Recycling":
+                return 15;
+            case "Plant-based meal":
+                return 25;
+            case "Reusable cup":
+                return 10;
+            case "Composting":
+                return 20;
+            case "Walked":
+                return 20;
+            case "Energy saving":
+                return 10;
+            default:
+                return 5;
         }
     }
 }
