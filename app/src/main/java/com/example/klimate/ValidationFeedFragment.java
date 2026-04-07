@@ -56,6 +56,16 @@ public class ValidationFeedFragment extends Fragment {
     private LinearLayout validationFeedContainer;
     private View emptyStateCard;
 
+    /**
+     * Inflates the validation feed screen, initializes Firebase,
+     * loads pending verified activity submissions, and wires the
+     * back button for returning to the previous screen.
+     *
+     * @param inflater the LayoutInflater used to inflate the fragment layout
+     * @param container the parent view group for this fragment
+     * @param savedInstanceState previously saved fragment state if available
+     * @return the root view for the validation feed screen
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
