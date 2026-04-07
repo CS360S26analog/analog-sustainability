@@ -177,8 +177,13 @@ Friday, February 27, 2026
 #### Date
 Sunday, March 8, 2026
 #### Attendance
-_Content to be added._
+- Izza Shahid   
+- Karar Haider 
+- Maryam Waseem 
+- Maryam Ali
+- Haroon Ahmad
 ---
+
 #### Key Takeaways
 - User stories need 2–3 activity examples; no limit on the number of stories.
 - Not everything in the user stories needs to be implemented, but most details should be finalized by the halfway checkpoint.
@@ -228,8 +233,65 @@ _Content to be added._
 - Create a 5–6 frame storyboard including the login/dashboard page.
 ---
 
-### Meeting – TBD
-_Content to be added._
+### Meeting – March 17, 2026
+#### Date
+Tuesday, March 17, 2026
+
+#### Attendance
+- Izza Shahid   
+- Karar Haider 
+- Maryam Waseem 
+- Maryam Ali
+- Haroon Ahmad
+---
+
+#### Key Takeaways
+- Use a separate **Authorization class** to handle authentication logic and interaction with backend (e.g., Firebase).
+- Finalize and use a consistent **app name** across the project.
+- Track all tasks, bugs, and features using **GitHub Issues**.
+- Reviewed and evaluated the **first deliverable**.
+
+---
+#### Notes
+- Authorization should not be mixed with UI logic — keep it modular.
+- Issues should reflect actual development progress and features.
+
+#### Action Items
+- Implement a separate Authorization/Auth manager class.
+- Ensure app naming is consistent across UI and documentation.
+- Move all development tracking to GitHub Issues.
+
+---
+
+### Meeting – March 30, 2026
+#### Date
+Monday, March 30, 2026
+
+#### Attendance
+- Izza Shahid   
+- Karar Haider 
+- Maryam Waseem 
+- Maryam Ali
+- Haroon Ahmad
+---
+
+#### Key Takeaways
+- Presented a working **app demo**.
+- Demonstrated:
+  - **US-01 (User Registration/Login)**
+  - **US-05 (Verified logging with proof)**
+- Showed **Firebase integration** (authentication + data handling).
+- No major feedback was given.
+
+---
+#### Notes
+- Core features are functional and connected to backend.
+- Validation and logging flow demonstrated successfully.
+
+---
+#### Action Items
+- Continue building remaining features.
+- Improve UI/UX and complete pending user stories.
 
 ---
 
@@ -318,6 +380,98 @@ UI tests (requires API 34 emulator, user must be signed in first):
     ./gradlew connectedAndroidTest
 
 
+---
+# Sprint Planning and Reviews
+
+### Sprint 1 — March 23 to March 30
+
+#### Sprint Planning (March 23)
+
+**Goal:**  
+Set up Firebase, establish the shared project structure, and begin work on all half-checkpoint stories.
+
+**Planned User Stories & Owners**
+
+| User Story | Owner | Plan |
+|-----------|------|------|
+| US-01 — Register/Login | Maryam W | Set up Firebase Auth, RegisterActivity, LoginActivity, and user storage |
+| US-02 — Log Activity | Izza | Start LogFragment flow and ActivityLog model |
+| US-04 — Quick/Verified logs | Izza | Add status handling for quick vs verified logs |
+| US-07 — Dashboard | Maryam A | Start HomeFragment / dashboard data flow |
+| US-08 — CO₂ tracking | Maryam A | Define CO₂ mapping and dashboard calculations |
+| US-05 — Proof upload | Haroon | Start verified logging proof upload flow |
+| US-15 — Points system | Haroon | Start points calculation structure |
+| US-16 — Rewards/Profile | Haroon | Begin profile points and rewards section |
+| US-25 — Validation feed | Karar | Start pending logs feed |
+| US-26 — Voting system | Karar | Start vote model and voting flow |
+
+---
+
+#### Sprint Review (March 30)
+
+**Summary:**  
+Firebase setup and authentication were completed early. Most remaining half-checkpoint stories were started and carried into Sprint 2. The team also demoed core progress to the TA during lab.
+
+**Progress by end of Sprint 1**
+- **Done:** US-01 (Register/Login)
+- **In Progress:** US-02, US-04, US-05, US-07, US-08, US-15, US-16, US-25, US-26
+
+**Additional Contributions**
+- Izza implemented the **History** screen and **About/Info (Logging)** feature.
+- Maryam W contributed to authentication testing and documentation.
+
+---
+
+### Sprint 2 — March 30 to April 6
+
+#### Sprint Planning (March 30)
+
+**Goal:**  
+Finish all half-checkpoint stories, integrate branches into `main`, complete testing/documentation, and polish the app for demo.
+
+**More Specific Sprint 2 Plan**
+
+| Area | Owner | Specific planned work |
+|------|-------|------------------------|
+| Auth + docs/tests | Maryam W | Finalize auth flow, add comments/Javadoc, complete `UserTest` and `AuthUiTest`, update README and backlog |
+| Logging | Izza | Complete Firestore logging, quick/verified status, fix UI issues, add **History** and **About (Logging)**, merge changes |
+| Dashboard / stats | Maryam A | Finalize dashboard integration, connect streak/points/CO₂ to UI |
+| Validation feed / voting | Karar | Complete validation feed, voting logic, and double-vote prevention |
+| Proof upload / profile / points | Haroon | Complete photo upload, quick log, verified log, points updates, and profile integration |
+
+**Planned integration tasks**
+- Merge dashboard with logging flow  
+- Fix HomeFragment and UI issues  
+- Finalize monthly challenge UI  
+- Add missing comments and Javadoc  
+- Update README and documentation  
+- Merge all branches into `main` via PRs  
+
+---
+
+#### Sprint Review (April 6 / Final Merge on April 7)
+
+**Summary:**  
+All half-checkpoint stories were completed. Final commits focused on fixing UI issues, merging branches, adding documentation, and polishing the app.
+
+**What was completed in Sprint 2**
+- Authentication (Login/Register)
+- Activity logging (Quick + Verified)
+- Proof upload (Firebase Storage)
+- Dashboard with real data (points, streak, CO₂)
+- Validation feed and voting system
+- Profile with rewards
+- History screen
+- About/Info logging feature
+- Documentation, comments, and README updates
+
+---
+
+### Key Observations
+
+- Sprint 1 focused on setup and initial implementation.  
+- Sprint 2 focused on integration, fixing bugs, merging work, and documentation.  
+- Final week involved significant UI fixes, feature completion, and polishing before submission.
 ---
 
 ## CRC Cards
