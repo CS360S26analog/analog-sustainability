@@ -28,6 +28,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,8 +36,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -89,6 +92,9 @@ public class HomeFragment extends Fragment {
         TextView btnRecent1 = view.findViewById(R.id.btn_recent_1);
         TextView btnRecent2 = view.findViewById(R.id.btn_recent_2);
 
+        View cardRecent1 = view.findViewById(R.id.card_recent_1);
+        View cardRecent2 = view.findViewById(R.id.card_recent_2);
+
         TextView tvChallengeHelp = view.findViewById(R.id.tv_challenge_help);
         TextView btnChallengeInfo = view.findViewById(R.id.btn_challenge_info);
         TextView tvChallengeTitle = view.findViewById(R.id.tv_challenge_title);
@@ -99,8 +105,18 @@ public class HomeFragment extends Fragment {
         setRandomGreeting(tvGreetingMessage);
 
         profileAvatarContainer.setOnClickListener(v -> navigateToProfile());
-        btnRecent1.setOnClickListener(v -> navigateToLog());
-        btnRecent2.setOnClickListener(v -> navigateToLog());
+
+        btnRecent1.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent1Title.getText().toString()));
+        btnRecent2.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent2Title.getText().toString()));
+
+        if (cardRecent1 != null) {
+            cardRecent1.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent1Title.getText().toString()));
+        }
+
+        if (cardRecent2 != null) {
+            cardRecent2.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent2Title.getText().toString()));
+        }
+
         tvChallengeHelp.setOnClickListener(v -> showMonthlyChallengesHelp());
         btnChallengeInfo.setOnClickListener(v -> showZeroWasteInfo());
 
@@ -590,6 +606,137 @@ public class HomeFragment extends Fragment {
         progressChallenge.setProgress(0);
         tvChallengeDays.setText("0 / 20 logs");
         tvChallengePercent.setText("Start logging to make progress");
+    }
+
+    private void showHomeLogChoiceDialog(String activityName) {
+        if (getContext() == null) return;
+
+        if (!isValidLoggableActivity(activityName)) {
+            Toast.makeText(getContext(), "This activity cannot be logged right now", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle(activityName)
+                .setMessage("How would you like to log this activity?")
+                .setPositiveButton("Quick Log", (dialog, which) -> quickLogActivityFromHome(activityName))
+                .setNegativeButton("Verified Log", (dialog, which) -> openVerifiedLogFromHome(activityName))
+                .setNeutralButton("Cancel", null)
+                .show();
+    }
+
+    private boolean isValidLoggableActivity(String activityName) {
+        return activityName != null &&
+                (activityName.equals("Cycling")
+                        || activityName.equals("Public Transit")
+                        || activityName.equals("Recycling")
+                        || activityName.equals("Plant-based meal")
+                        || activityName.equals("Reusable cup")
+                        || activityName.equals("Composting")
+                        || activityName.equals("Walked")
+                        || activityName.equals("Energy saving"));
+    }
+
+    private void quickLogActivityFromHome(String activityName) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (user == null) {
+            Toast.makeText(getContext(), "You must be logged in to submit a log", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int basePoints = getBasePoints(activityName);
+        if (basePoints <= 0) {
+            Toast.makeText(getContext(), "Invalid activity selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        DocumentReference docRef = db.collection("activity_logs").document();
+
+        HashMap<String, Object> logData = new HashMap<>();
+        logData.put("logId", docRef.getId());
+        logData.put("userId", user.getUid());
+        logData.put("activityType", activityName);
+        logData.put("status", "quick");
+        logData.put("points", basePoints);
+        logData.put("bonusPoints", 0);
+        logData.put("proofUrl", null);
+        logData.put("voteCount", 0);
+        logData.put("timestamp", Timestamp.now());
+
+        docRef.set(logData)
+                .addOnSuccessListener(unused -> {
+                    new PointsManager().awardBasePoints(user.getUid(), basePoints);
+                    Toast.makeText(getContext(), activityName + " logged successfully ✅", Toast.LENGTH_SHORT).show();
+                    View view = getView();
+                    if (view != null) {
+                        loadOptionalStats(view);
+
+                        TextView tvStreakNumber = view.findViewById(R.id.tv_streak_number);
+                        TextView tvStreakMessage = view.findViewById(R.id.tv_streak_message);
+                        TextView tvStreakPercent = view.findViewById(R.id.tv_streak_percent);
+                        ProgressBar progressStreak = view.findViewById(R.id.progress_streak);
+                        TextView tvBottomStreakDays = view.findViewById(R.id.tv_bottom_streak_days);
+
+                        TextView tvRecent1Icon = view.findViewById(R.id.tv_recent_1_icon);
+                        TextView tvRecent1Title = view.findViewById(R.id.tv_recent_1_title);
+                        TextView tvRecent1Subtitle = view.findViewById(R.id.tv_recent_1_subtitle);
+
+                        TextView tvRecent2Icon = view.findViewById(R.id.tv_recent_2_icon);
+                        TextView tvRecent2Title = view.findViewById(R.id.tv_recent_2_title);
+                        TextView tvRecent2Subtitle = view.findViewById(R.id.tv_recent_2_subtitle);
+
+                        TextView tvChallengeTitle = view.findViewById(R.id.tv_challenge_title);
+                        ProgressBar progressChallenge = view.findViewById(R.id.progress_challenge);
+                        TextView tvChallengeDays = view.findViewById(R.id.tv_challenge_days);
+                        TextView tvChallengePercent = view.findViewById(R.id.tv_challenge_percent);
+
+                        loadUserStreakFromLogs(
+                                tvStreakNumber,
+                                tvStreakMessage,
+                                tvStreakPercent,
+                                progressStreak,
+                                tvBottomStreakDays
+                        );
+                        loadActivityCards(
+                                tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
+                                tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
+                        );
+                        loadMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Failed to save log: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                );
+    }
+
+    private void openVerifiedLogFromHome(String activityName) {
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).navigateToLog(activityName, true, true);
+        }
+    }
+
+    private int getBasePoints(String activityType) {
+        switch (activityType) {
+            case "Cycling":
+                return 30;
+            case "Public Transit":
+                return 20;
+            case "Recycling":
+                return 15;
+            case "Plant-based meal":
+                return 25;
+            case "Reusable cup":
+                return 10;
+            case "Composting":
+                return 20;
+            case "Walked":
+                return 20;
+            case "Energy saving":
+                return 10;
+            default:
+                return 0;
+        }
     }
 
     private void navigateToLog() {

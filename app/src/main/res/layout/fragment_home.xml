@@ -216,7 +216,7 @@
                             android:gravity="center"
                             android:paddingStart="18dp"
                             android:paddingEnd="18dp"
-                            android:text="Log now →"
+                            android:text="Log now"
                             android:textColor="@color/white"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -282,7 +282,7 @@
                             android:gravity="center"
                             android:paddingStart="18dp"
                             android:paddingEnd="18dp"
-                            android:text="Log now →"
+                            android:text="Log now"
                             android:textColor="@color/white"
                             android:textSize="12sp" />
                     </LinearLayout>

@@ -38,6 +38,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
 import com.google.firebase.Timestamp;
@@ -69,6 +70,9 @@ public class LogFragment extends Fragment {
     private TextView btnLogActivity;
     private View quickTab;
     private View verifiedTab;
+    private NestedScrollView logScrollView;
+
+    private boolean shouldAutoOpenProofPicker = false;
 
     private final int[] cardIds = {
             R.id.card_cycling, R.id.card_transit, R.id.card_recycling,
@@ -137,6 +141,7 @@ public class LogFragment extends Fragment {
         btnLogActivity = view.findViewById(R.id.btn_log_activity);
         quickTab = view.findViewById(R.id.btn_quick_log);
         verifiedTab = view.findViewById(R.id.btn_verified_log);
+        logScrollView = view.findViewById(R.id.log_scroll_view);
 
         LinearLayout[] cards = new LinearLayout[cardIds.length];
         for (int i = 0; i < cardIds.length; i++) {
@@ -156,6 +161,7 @@ public class LogFragment extends Fragment {
                 selectedStatus = "pending_verification";
                 setActiveTab(verifiedTab, quickTab);
                 updateProofSection();
+                scrollToProofSection(false);
             });
 
             setActiveTab(quickTab, verifiedTab);
@@ -171,7 +177,51 @@ public class LogFragment extends Fragment {
             btnLogActivity.setOnClickListener(v -> submitLog(cards));
         }
 
+        applyIncomingArguments(cards);
+
         return view;
+    }
+
+    private void applyIncomingArguments(@NonNull LinearLayout[] cards) {
+        Bundle args = getArguments();
+        if (args == null) {
+            return;
+        }
+
+        String preselectedActivity = args.getString("preselected_activity");
+        boolean openVerifiedFlow = args.getBoolean("open_verified_flow", false);
+        shouldAutoOpenProofPicker = args.getBoolean("open_proof_picker", false);
+
+        if (preselectedActivity != null) {
+            for (int i = 0; i < activityNames.length; i++) {
+                if (activityNames[i].equals(preselectedActivity)) {
+                    selectCard(cards, cards[i], activityNames[i]);
+                    break;
+                }
+            }
+        }
+
+        if (openVerifiedFlow && quickTab != null && verifiedTab != null) {
+            selectedStatus = "pending_verification";
+            setActiveTab(verifiedTab, quickTab);
+            updateProofSection();
+            scrollToProofSection(shouldAutoOpenProofPicker);
+        }
+    }
+
+    private void scrollToProofSection(boolean openPickerAfterScroll) {
+        if (logScrollView == null || proofSection == null) {
+            return;
+        }
+
+        logScrollView.post(() -> {
+            logScrollView.smoothScrollTo(0, proofSection.getTop());
+
+            if (openPickerAfterScroll && shouldAutoOpenProofPicker) {
+                shouldAutoOpenProofPicker = false;
+                pickImageLauncher.launch("image/*");
+            }
+        });
     }
 
     private void setActiveTab(View active, View inactive) {
@@ -342,6 +392,7 @@ public class LogFragment extends Fragment {
         selectedActivityName = null;
         selectedProofUri = null;
         selectedStatus = "quick";
+        shouldAutoOpenProofPicker = false;
 
         if (quickTab != null && verifiedTab != null) {
             setActiveTab(quickTab, verifiedTab);
