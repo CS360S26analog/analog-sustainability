@@ -60,6 +60,15 @@ public class LogFragment extends Fragment {
             "Reusable cup", "Composting", "Walked", "Energy saving"
     };
 
+    /**
+     * Inflates the logging screen, initializes Firebase,
+     * wires activity cards and log submission actions.
+     *
+     * @param inflater the LayoutInflater used to inflate the fragment layout
+     * @param container the parent view group
+     * @param savedInstanceState previously saved fragment state
+     * @return the root view for the logging screen
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
