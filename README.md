@@ -321,6 +321,7 @@ Overall, the diagram shows a layered structure where:
 
 ## Klimate Android App - Project Part 3
 ### Repository Structure
+
 ```
 app/src/main/java/com/example/klimate/
 
@@ -344,15 +345,18 @@ DashboardViewModel.java     ViewModel for dashboard, LiveData and Firestore quer
 PointsManager.java          Points calculation and award logic
 
 app/src/test/java/com/example/klimate/
-    UserTest.java               Unit tests for User model
-    ActivityLogTest.java        Unit tests for ActivityLog model
-    PointsManagerTest.java      Unit tests for PointsManager
+    UserTest.java                   Unit tests for User model
+    ActivityLogTest.java            Unit tests for ActivityLog model
+    VoteTest.java                   Unit tests for Vote model
+    PointsManagerTest.java          Unit tests for PointsManager
+    DashboardViewModelTest.java     Unit tests for DashboardViewModel
 
 app/src/androidTest/java/com/example/klimate/
     AuthUiTest.java             UI tests for Login and Register screens
-    ValidationFeedUiTest.java   UI tests for validation feed navigation
+    HomeFragmentUiTest.java     UI tests for home dashboard screen
     LogFragmentUiTest.java      UI tests for activity logging screen
     BottomNavUiTest.java        UI tests for bottom navigation between all tabs
+    ValidationFeedUiTest.java   UI tests for validation feed navigation
 ```
 ### Tech Stack
 
