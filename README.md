@@ -638,33 +638,32 @@ Social screen showing a student's friend list ranked by eco points and active st
 
 </details>
 
-<details>
-<summary><strong>Wireframe Screenshots</strong></summary>
-
-| Screen | Preview |
-|--------|---------|
-| Dashboard | <img src="./screenshots/Dashboard.png" width="250"/> |
-| Login | <img src="./screenshots/Login.png" width="250"/> |
-| Sign Up | <img src="./screenshots/SignUp.png" width="250"/> |
-| Log Activity (Quick) | <img src="./screenshots/QuickLog.png" width="250"/> |
-| Log Activity (Verified 1) | <img src="./screenshots/VerifiedLog1.png" width="250"/> |
-| Log Activity (Verified 2) | <img src="./screenshots/VerifiedLog2.png" width="250"/> |
-| Log Activity (Verified 3) | <img src="./screenshots/VerifiedLog3.png" width="250"/> |
-| About (Logging) | <img src="./screenshots/About(Logging).png" width="250"/> |
-| History | <img src="./screenshots/History.png" width="250"/> |
-| Leaderboard | <img src="./screenshots/Leaderboard.png" width="250"/> |
-| Validation Feed 1 | <img src="./screenshots/ValidationFeed1.png" width="250"/> |
-| Validation Feed 2 | <img src="./screenshots/ValidationFeed2.png" width="250"/> |
-| Account (Main) | <img src="./screenshots/Account1.png" width="250"/> |
-| Account (Options) | <img src="./screenshots/Account2.png" width="250"/> |
-| Friends | <img src="./screenshots/Friends.png" width="250"/> |
-
-</details>
-
 ---
 
 ### Wireframes – Project Part 3
-*(To be added)*
+
+<details>
+<summary><strong>App Screenshots</strong></summary>
+
+| Screen | Preview | Description |
+|--------|---------|-------------|
+| Dashboard | <img src="./screenshots/Dashboard.png" width="250"/> | Home dashboard with streak, points, CO₂ saved, and challenges. |
+| Login | <img src="./screenshots/Login.png" width="250"/> | Login screen for existing users. |
+| Sign Up | <img src="./screenshots/SignUp.png" width="250"/> | Account creation screen for new users. |
+| Log Activity (Quick) | <img src="./screenshots/QuickLog.png" width="250"/> | Quick logging of common sustainable activities. |
+| Log Activity (Verified 1) | <img src="./screenshots/VerifiedLog1.png" width="250"/> | Verified log entry with proof photo upload. |
+| Log Activity (Verified 2) | <img src="./screenshots/VerifiedLog2.png" width="250"/> | Verified logging screen with proof photo attached. |
+| Log Activity (Verified 3) | <img src="./screenshots/VerifiedLog3.png" width="250"/> | Verified submission in the review feed with voting options. |
+| About (Logging) | <img src="./screenshots/About(Logging).png" width="250"/> | Explains what each logging activity means. |
+| History | <img src="./screenshots/History.png" width="250"/> | Previously logged activities with status, edit, and delete options. |
+| Leaderboard | <img src="./screenshots/Leaderboard.png" width="250"/> | User rankings based on points and leaderboard position. |
+| Validation Feed 1 | <img src="./screenshots/ValidationFeed1.png" width="250"/> | Validation feed where users review verified activity submissions. |
+| Validation Feed 2 | <img src="./screenshots/ValidationFeed2.png" width="250"/> | More validation entries with proof, votes, and review options. |
+| Account (Main) | <img src="./screenshots/Account1.png" width="250"/> | Main profile page with user stats, achievements, and rewards. |
+| Account (Options) | <img src="./screenshots/Account2.png" width="250"/> | Account options such as settings, privacy, notifications, and support. |
+| Friends | <img src="./screenshots/Friends.png" width="250"/> | Friends list with names, points, and streaks. |
+
+</details>
 
 ---
 
