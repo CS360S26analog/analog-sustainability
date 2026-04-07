@@ -118,6 +118,17 @@ public class LogFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         storage = FirebaseStorage.getInstance();
 
+        ImageView btnHistory = view.findViewById(R.id.btn_history);
+        if (btnHistory != null) {
+            btnHistory.setOnClickListener(v -> {
+                getParentFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, new HistoryFragment())
+                        .addToBackStack(null)
+                        .commit();
+            });
+        }
+
         proofSection = view.findViewById(R.id.card_verified_proof_section);
         imageProofPreview = view.findViewById(R.id.image_verified_proof_preview);
         textProofStatus = view.findViewById(R.id.text_verified_proof_status);

@@ -6,7 +6,6 @@
     android:orientation="vertical"
     android:background="@color/color_cream_bg">
 
-    <!-- ══════════════ GREEN HEADER ══════════════ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,23 +16,48 @@
         android:paddingTop="28dp"
         android:paddingBottom="28dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Log Activity"
-            android:textColor="@color/white"
-            android:textSize="28sp"
-            android:textStyle="bold"/>
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="What did you do today? 🌿"
-            android:textColor="#CCFFFFFF"
-            android:textSize="14sp"/>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-        <!-- Quick Log / Verified Log toggle -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Log Activity"
+                    android:textColor="@color/white"
+                    android:textSize="28sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="What did you do today? 🌿"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="14sp"/>
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btn_history"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:padding="8dp"
+                android:background="@drawable/bg_history_button"
+                android:clickable="true"
+                android:contentDescription="History"
+                android:focusable="true"
+                android:src="@drawable/ic_history"
+                app:tint="@color/white" />
+        </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="52dp"
@@ -94,7 +118,6 @@
                 android:letterSpacing="0.1"
                 android:layout_marginBottom="10dp"/>
 
-            <!-- Row 1 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="110dp"
@@ -172,7 +195,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Row 2 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="110dp"
@@ -250,7 +272,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Row 3 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="110dp"
@@ -328,7 +349,6 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Row 4 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="110dp"
@@ -467,7 +487,6 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- ══════════════ LOG BUTTON (sticky) ══════════════ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
