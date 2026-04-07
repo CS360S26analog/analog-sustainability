@@ -1,14 +1,3 @@
-package com.example.klimate;
-
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-
 /**
  * RankingsFragment.java
  *
@@ -21,6 +10,18 @@ import androidx.fragment.app.Fragment;
  * Outstanding issues: leaderboard data is currently static.
  * @author Karar
  */
+
+package com.example.klimate;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 public class RankingsFragment extends Fragment {
 
     /**

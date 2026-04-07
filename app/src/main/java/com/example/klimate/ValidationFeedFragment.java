@@ -1,30 +1,3 @@
-package com.example.klimate;
-
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-
-import com.google.firebase.Timestamp;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-
-import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-
 /**
  * ValidationFeedFragment.java
  *
@@ -40,6 +13,43 @@ import java.util.Map;
  * @author Karar
  * @author Haroon
  */
+
+package com.example.klimate;
+
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.view.ViewGroup;
+
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import com.bumptech.glide.Glide;
+import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
 public class ValidationFeedFragment extends Fragment {
 
     private FirebaseFirestore db;
@@ -47,11 +57,13 @@ public class ValidationFeedFragment extends Fragment {
     private View emptyStateCard;
 
     /**
-     * Inflates the validation feed layout and loads pending submissions.
+     * Inflates the validation feed screen, initializes Firebase,
+     * loads pending verified activity submissions, and wires the
+     * back button for returning to the previous screen.
      *
-     * @param inflater           the LayoutInflater used to inflate views
-     * @param container          the parent view group
-     * @param savedInstanceState previously saved fragment state
+     * @param inflater the LayoutInflater used to inflate the fragment layout
+     * @param container the parent view group for this fragment
+     * @param savedInstanceState previously saved fragment state if available
      * @return the root view for the validation feed screen
      */
     @Nullable
@@ -119,24 +131,29 @@ public class ValidationFeedFragment extends Fragment {
     }
 
     private void bindLogCard(@NonNull View cardView, @NonNull DocumentSnapshot document) {
-        TextView textInitials    = cardView.findViewById(R.id.text_submitter_initials);
-        TextView textName        = cardView.findViewById(R.id.text_submitter_name);
-        TextView textActivity    = cardView.findViewById(R.id.text_activity_type);
-        TextView textTimestamp   = cardView.findViewById(R.id.text_timestamp);
+
+        TextView textInitials = cardView.findViewById(R.id.text_submitter_initials);
+        TextView textName = cardView.findViewById(R.id.text_submitter_name);
+        TextView textActivity = cardView.findViewById(R.id.text_activity_type);
+        TextView textTimestamp = cardView.findViewById(R.id.text_timestamp);
         TextView textProofStatus = cardView.findViewById(R.id.text_proof_status);
         TextView textUpvoteCount = cardView.findViewById(R.id.text_upvote_count);
-        TextView btnUpvote       = cardView.findViewById(R.id.btn_upvote);
-        TextView btnDownvote     = cardView.findViewById(R.id.btn_downvote);
+        TextView btnUpvote = cardView.findViewById(R.id.btn_upvote);
+        TextView btnDownvote = cardView.findViewById(R.id.btn_downvote);
+
+        FrameLayout proofImageContainer = cardView.findViewById(R.id.proof_image_container);
+        TextView textProofOverlay = cardView.findViewById(R.id.text_proof_overlay);
+        ImageView imageProof = cardView.findViewById(R.id.image_proof);
 
         String logId = document.getString("logId");
         if (TextUtils.isEmpty(logId)) {
             logId = document.getId();
         }
 
-        String documentId  = document.getId();
-        String userId      = document.getString("userId");
+        String documentId = document.getId();
+        String userId = document.getString("userId");
         String activityType = document.getString("activityType");
-        String proofUrl    = document.getString("proofUrl");
+        String proofUrl = document.getString("proofUrl");
         Timestamp timestamp = document.getTimestamp("timestamp");
 
         textName.setText("Student");
@@ -147,13 +164,64 @@ public class ValidationFeedFragment extends Fragment {
 
         if (TextUtils.isEmpty(proofUrl)) {
             textProofStatus.setText("No proof uploaded");
+            proofImageContainer.setVisibility(View.GONE);
         } else {
             textProofStatus.setText("Proof attached");
+            proofImageContainer.setVisibility(View.VISIBLE);
+            imageProof.setVisibility(View.VISIBLE);
+            textProofOverlay.setVisibility(View.GONE);
+
+            Glide.with(cardView.getContext())
+                    .asBitmap()
+                    .load(proofUrl)
+                    .into(new CustomTarget<Bitmap>() {
+                        @Override
+                        public void onResourceReady(@NonNull Bitmap resource,
+                                                    @Nullable Transition<? super Bitmap> transition) {
+
+                            imageProof.setImageBitmap(resource);
+
+                            int imgWidth = resource.getWidth();
+                            int imgHeight = resource.getHeight();
+
+                            float aspectRatio = (float) imgHeight / imgWidth;
+
+                            // Get container width (more accurate than full screen)
+                            int containerWidth = cardView.getWidth();
+                            if (containerWidth == 0) {
+                                containerWidth = cardView.getResources()
+                                        .getDisplayMetrics().widthPixels;
+                            }
+
+                            float maxRatio = 5f / 4f;  // Instagram portrait cap
+                            float minRatio = 1f;       // square baseline
+
+                            ViewGroup.LayoutParams params = imageProof.getLayoutParams();
+
+                            if (aspectRatio > maxRatio) {
+                                // Too tall → crop to 4:5
+                                params.height = (int) (containerWidth * maxRatio);
+                            } else if (aspectRatio < minRatio) {
+                                // Too wide → keep square-ish
+                                params.height = (int) (containerWidth * minRatio);
+                            } else {
+                                // Normal → preserve ratio
+                                params.height = (int) (containerWidth * aspectRatio);
+                            }
+
+                            imageProof.setLayoutParams(params);
+                        }
+
+                        @Override
+                        public void onLoadCleared(@Nullable Drawable placeholder) {
+                            // No-op
+                        }
+                    });
         }
 
         loadSubmitterName(userId, textName, textInitials);
 
-        final String finalLogId      = logId;
+        final String finalLogId = logId;
         final String finalDocumentId = documentId;
 
         refreshVoteState(finalLogId, finalDocumentId, textUpvoteCount, btnUpvote, btnDownvote);
@@ -297,7 +365,6 @@ public class ValidationFeedFragment extends Fragment {
                             .document(voteId)
                             .set(voteData)
                             .addOnSuccessListener(unused -> {
-                                // Recalculate and award bonus points to the log owner
                                 db.collection("activity_logs")
                                         .document(activityLogDocumentId)
                                         .get()
@@ -305,7 +372,7 @@ public class ValidationFeedFragment extends Fragment {
                                             if (!logDoc.exists()) return;
 
                                             String logOwnerId = logDoc.getString("userId");
-                                            Long prevBonus    = logDoc.getLong("bonusPoints");
+                                            Long prevBonus = logDoc.getLong("bonusPoints");
                                             int previousBonus = (prevBonus != null) ? prevBonus.intValue() : 0;
 
                                             if (logOwnerId != null) {
@@ -363,7 +430,7 @@ public class ValidationFeedFragment extends Fragment {
             return first.substring(0, Math.min(2, first.length())).toUpperCase(Locale.getDefault());
         }
 
-        String firstLetter  = parts[0].substring(0, 1);
+        String firstLetter = parts[0].substring(0, 1);
         String secondLetter = parts[1].substring(0, 1);
         return (firstLetter + secondLetter).toUpperCase(Locale.getDefault());
     }

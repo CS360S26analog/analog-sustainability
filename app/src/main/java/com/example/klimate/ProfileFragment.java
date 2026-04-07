@@ -66,6 +66,16 @@ public class ProfileFragment extends Fragment {
             new Reward("🍃", "Campus Meal Discount", 1500),
     };
 
+    /**
+     * Inflates the profile screen, loads the logged-in user's profile data
+     * from Firestore, displays points, streak, CO₂ saved, and rewards,
+     * and wires profile row actions such as logout.
+     *
+     * @param inflater the LayoutInflater used to inflate the fragment layout
+     * @param container the parent view group for this fragment
+     * @param savedInstanceState previously saved fragment state if available
+     * @return the root view for the profile screen
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,

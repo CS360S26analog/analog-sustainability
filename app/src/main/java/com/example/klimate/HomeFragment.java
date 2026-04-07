@@ -58,6 +58,7 @@ public class HomeFragment extends Fragment {
         TextView tvStreakMessage = view.findViewById(R.id.tv_streak_message);
         TextView tvStreakPercent = view.findViewById(R.id.tv_streak_percent);
         ProgressBar progressStreak = view.findViewById(R.id.progress_streak);
+
         TextView tvBottomStreakDays = view.findViewById(R.id.tv_bottom_streak_days);
 
         TextView tvRecent1Icon = view.findViewById(R.id.tv_recent_1_icon);
@@ -87,15 +88,32 @@ public class HomeFragment extends Fragment {
         btnChallengeInfo.setOnClickListener(v -> showZeroWasteInfo());
 
         setDefaultDashboard(
-                tvStreakNumber, tvStreakMessage, tvStreakPercent, progressStreak, tvBottomStreakDays,
-                tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
-                tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle,
-                tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent
+                tvStreakNumber,
+                tvStreakMessage,
+                tvStreakPercent,
+                progressStreak,
+                tvBottomStreakDays,
+                tvRecent1Icon,
+                tvRecent1Title,
+                tvRecent1Subtitle,
+                tvRecent2Icon,
+                tvRecent2Title,
+                tvRecent2Subtitle,
+                tvChallengeTitle,
+                progressChallenge,
+                tvChallengeDays,
+                tvChallengePercent
         );
 
         if (currentUser != null) {
             loadUserHeader(tvUserName, tvProfileInitial);
-            loadUserStreakFromLogs(tvStreakNumber, tvStreakMessage, tvStreakPercent, progressStreak, tvBottomStreakDays);
+            loadUserStreakFromLogs(
+                    tvStreakNumber,
+                    tvStreakMessage,
+                    tvStreakPercent,
+                    progressStreak,
+                    tvBottomStreakDays
+            );
             loadActivityCards(
                     tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
                     tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
@@ -137,7 +155,13 @@ public class HomeFragment extends Fragment {
         TextView tvChallengePercent = view.findViewById(R.id.tv_challenge_percent);
 
         loadUserHeader(tvUserName, tvProfileInitial);
-        loadUserStreakFromLogs(tvStreakNumber, tvStreakMessage, tvStreakPercent, progressStreak, tvBottomStreakDays);
+        loadUserStreakFromLogs(
+                tvStreakNumber,
+                tvStreakMessage,
+                tvStreakPercent,
+                progressStreak,
+                tvBottomStreakDays
+        );
         loadActivityCards(
                 tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
                 tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
@@ -147,8 +171,12 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadOptionalStats(View view) {
-        int pointsId = requireContext().getResources().getIdentifier("tv_points_value", "id", requireContext().getPackageName());
-        int co2Id = requireContext().getResources().getIdentifier("tv_co2_saved", "id", requireContext().getPackageName());
+        int pointsId = requireContext().getResources().getIdentifier(
+                "tv_points_value", "id", requireContext().getPackageName()
+        );
+        int co2Id = requireContext().getResources().getIdentifier(
+                "tv_co2_saved", "id", requireContext().getPackageName()
+        );
 
         TextView tvPoints = pointsId != 0 ? view.findViewById(pointsId) : null;
         TextView tvCo2Saved = co2Id != 0 ? view.findViewById(co2Id) : null;
@@ -179,12 +207,12 @@ public class HomeFragment extends Fragment {
 
     private void setRandomGreeting(TextView tvGreetingMessage) {
         List<String> greetings = Arrays.asList(
-                "Hi sunshine 🌱",
-                "Hello lovely 🌷",
+                "Hi sunshine ☀️",
+                "Hello lovely 🌿",
                 "Ready for a little green win? ✨",
                 "Tiny steps, big impact 💚",
-                "Glad you’re here 🌼",
-                "Let’s do something good today 🍃"
+                "Glad you’re here 🌎",
+                "Let’s do something good today 🌱"
         );
 
         Random random = new Random();
@@ -202,7 +230,6 @@ public class HomeFragment extends Fragment {
                     if (displayName != null && !displayName.trim().isEmpty()) {
                         String cleanName = displayName.trim();
                         String firstName = cleanName.split("\\s+")[0];
-
                         tvUserName.setText(firstName + "!");
                         tvProfileInitial.setText(String.valueOf(Character.toUpperCase(firstName.charAt(0))));
                     }
@@ -227,20 +254,21 @@ public class HomeFragment extends Fragment {
                         uniqueDays.add(formatter.format(ts.toDate()));
                     }
 
-                    int streakDays = calculateStreakFromDays(uniqueDays);
+                    int currentStreak = calculateCurrentStreakFromDays(uniqueDays);
+                    int bestStreak = calculateBestStreakFromDays(uniqueDays);
 
-                    tvStreakNumber.setText(String.valueOf(streakDays));
-                    tvBottomStreakDays.setText(String.valueOf(streakDays));
+                    tvStreakNumber.setText(String.valueOf(currentStreak));
+                    tvBottomStreakDays.setText(String.valueOf(bestStreak));
 
-                    if (streakDays <= 0) {
+                    if (currentStreak <= 0) {
                         tvStreakMessage.setText("Log to start your streak");
                         tvStreakPercent.setText("0%");
                         progressStreak.setMax(7);
                         progressStreak.setProgress(0);
                     } else {
-                        tvStreakMessage.setText("You're on a " + streakDays + "-day streak");
+                        tvStreakMessage.setText("You're on a " + currentStreak + "-day streak");
                         progressStreak.setMax(7);
-                        int progress = Math.min(streakDays, 7);
+                        int progress = Math.min(currentStreak, 7);
                         progressStreak.setProgress(progress);
                         int percent = (int) ((progress / 7.0) * 100);
                         tvStreakPercent.setText(percent + "%");
@@ -256,7 +284,7 @@ public class HomeFragment extends Fragment {
                 });
     }
 
-    private int calculateStreakFromDays(Set<String> uniqueDays) {
+    private int calculateCurrentStreakFromDays(Set<String> uniqueDays) {
         if (uniqueDays.isEmpty()) return 0;
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
@@ -298,6 +326,44 @@ public class HomeFragment extends Fragment {
         return streak;
     }
 
+    private int calculateBestStreakFromDays(Set<String> uniqueDays) {
+        if (uniqueDays.isEmpty()) return 0;
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+        List<Calendar> sortedDays = new ArrayList<>();
+
+        for (String dayKey : uniqueDays) {
+            try {
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(formatter.parse(dayKey));
+                resetTime(cal);
+                sortedDays.add(cal);
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (sortedDays.isEmpty()) return 0;
+
+        sortedDays.sort((a, b) -> a.getTime().compareTo(b.getTime()));
+
+        int best = 1;
+        int currentRun = 1;
+
+        for (int i = 1; i < sortedDays.size(); i++) {
+            long diffMillis = sortedDays.get(i).getTimeInMillis() - sortedDays.get(i - 1).getTimeInMillis();
+            long diffDays = diffMillis / (24L * 60L * 60L * 1000L);
+
+            if (diffDays == 1) {
+                currentRun++;
+                best = Math.max(best, currentRun);
+            } else {
+                currentRun = 1;
+            }
+        }
+
+        return best;
+    }
+
     private void loadActivityCards(TextView tvRecent1Icon,
                                    TextView tvRecent1Title,
                                    TextView tvRecent1Subtitle,
@@ -309,7 +375,6 @@ public class HomeFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<QueryDocumentSnapshot> docs = new ArrayList<>();
-
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         docs.add(doc);
                     }
@@ -325,11 +390,11 @@ public class HomeFragment extends Fragment {
                     });
 
                     if (docs.isEmpty()) {
-                        tvRecent1Icon.setText("🌿");
+                        tvRecent1Icon.setText("");
                         tvRecent1Title.setText("MOST FREQUENT");
-                        tvRecent1Subtitle.setText("Your most frequent activity will appear here. Try logging something.");
+                        tvRecent1Subtitle.setText("Your most frequent activity will appear here.\nTry logging something.");
 
-                        tvRecent2Icon.setText("🌿");
+                        tvRecent2Icon.setText("");
                         tvRecent2Title.setText("RECENT ACTIVITY");
                         tvRecent2Subtitle.setText("Your latest activity will appear here once you log one.");
                         return;
@@ -382,17 +447,19 @@ public class HomeFragment extends Fragment {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    tvRecent1Icon.setText("🌿");
+                    tvRecent1Icon.setText("");
                     tvRecent1Title.setText("MOST FREQUENT");
                     tvRecent1Subtitle.setText("Couldn't load activity data");
 
-                    tvRecent2Icon.setText("🌿");
+                    tvRecent2Icon.setText("");
                     tvRecent2Title.setText("RECENT ACTIVITY");
                     tvRecent2Subtitle.setText("Couldn't load activity data");
                 });
     }
 
     private String getActivityEmoji(String activityType) {
+        if (activityType == null) return "";
+
         switch (activityType) {
             case "Cycling":
                 return "🚲";
@@ -403,15 +470,15 @@ public class HomeFragment extends Fragment {
             case "Plant-based meal":
                 return "🥗";
             case "Reusable cup":
-                return "💧";
+                return "☕";
             case "Composting":
-                return "🌱";
+                return "🍂";
             case "Walked":
-                return "👟";
+                return "🚶";
             case "Energy saving":
                 return "💡";
             default:
-                return "🌿";
+                return "";
         }
     }
 
@@ -450,7 +517,7 @@ public class HomeFragment extends Fragment {
                     int progress = Math.min(logCount, target);
                     int percent = (int) ((progress / (double) target) * 100);
 
-                    tvChallengeTitle.setText("Zero Waste February 🗑️");
+                    tvChallengeTitle.setText("Zero Waste February ♻️");
                     progressChallenge.setMax(target);
                     progressChallenge.setProgress(progress);
                     tvChallengeDays.setText(progress + " / " + target + " logs");
@@ -462,7 +529,7 @@ public class HomeFragment extends Fragment {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    tvChallengeTitle.setText("Zero Waste February 🗑️");
+                    tvChallengeTitle.setText("Zero Waste February ♻️");
                     progressChallenge.setMax(20);
                     progressChallenge.setProgress(0);
                     tvChallengeDays.setText("0 / 20 logs");
@@ -485,23 +552,23 @@ public class HomeFragment extends Fragment {
                                      ProgressBar progressChallenge,
                                      TextView tvChallengeDays,
                                      TextView tvChallengePercent) {
-
         tvStreakNumber.setText("0");
         tvStreakMessage.setText("Log to start your streak");
         tvStreakPercent.setText("0%");
         progressStreak.setMax(7);
         progressStreak.setProgress(0);
+
         tvBottomStreakDays.setText("0");
 
-        tvRecent1Icon.setText("🌿");
+        tvRecent1Icon.setText("");
         tvRecent1Title.setText("MOST FREQUENT");
-        tvRecent1Subtitle.setText("Your most frequent activity will appear here. Try logging something.");
+        tvRecent1Subtitle.setText("Your most frequent activity will appear here.\nTry logging something.");
 
-        tvRecent2Icon.setText("🌿");
+        tvRecent2Icon.setText("");
         tvRecent2Title.setText("RECENT ACTIVITY");
         tvRecent2Subtitle.setText("Your latest activity will appear here once you log one.");
 
-        tvChallengeTitle.setText("Zero Waste February 🗑️");
+        tvChallengeTitle.setText("Zero Waste February ♻️");
         progressChallenge.setMax(20);
         progressChallenge.setProgress(0);
         tvChallengeDays.setText("0 / 20 logs");
@@ -541,26 +608,32 @@ public class HomeFragment extends Fragment {
 
         SpannableStringBuilder content = new SpannableStringBuilder();
 
-        addSection(content,
+        addSection(
+                content,
                 "What it is",
-                "Zero Waste on campus means reducing what you throw away by choosing reusable, refillable, and low-waste options whenever possible.");
+                "Zero Waste on campus means reducing what you throw away by choosing reusable, refillable, and low-waste options whenever possible."
+        );
 
-        addSection(content,
+        addSection(
+                content,
                 "What it looks like on campus",
                 "• Bringing a reusable bottle, cup, or food container\n" +
                         "• Refusing single-use plastics and extra packaging\n" +
                         "• Recycling correctly in campus bins\n" +
                         "• Printing less and submitting work digitally when possible\n" +
                         "• Choosing durable items instead of disposable ones\n" +
-                        "• Finishing your food and avoiding waste in cafeterias");
+                        "• Finishing your food and avoiding waste in cafeterias"
+        );
 
-        addSection(content,
+        addSection(
+                content,
                 "What you can do",
                 "• Use a reusable tumbler instead of a takeaway cup\n" +
                         "• Carry your own water bottle to refill on campus\n" +
                         "• Recycle paper, cans, and bottles properly\n" +
                         "• Bring your own cutlery or lunchbox\n" +
-                        "• Avoid taking flyers or items you will throw away immediately");
+                        "• Avoid taking flyers or items you will throw away immediately"
+        );
 
         tvContent.setText(content);
 
@@ -573,7 +646,12 @@ public class HomeFragment extends Fragment {
     private void addSection(SpannableStringBuilder builder, String heading, String body) {
         int start = builder.length();
         builder.append(heading).append("\n");
-        builder.setSpan(new StyleSpan(Typeface.BOLD), start, builder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        builder.setSpan(
+                new StyleSpan(Typeface.BOLD),
+                start,
+                builder.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        );
         builder.append(body).append("\n\n");
     }
 

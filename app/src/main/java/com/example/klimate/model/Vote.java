@@ -1,7 +1,3 @@
-package com.example.klimate.model;
-
-import com.google.firebase.Timestamp;
-
 /**
  * Vote.java
  *
@@ -17,6 +13,11 @@ import com.google.firebase.Timestamp;
  * Outstanding issues: none for the half checkpoint.
  * @author Karar
  */
+
+package com.example.klimate.model;
+
+import com.google.firebase.Timestamp;
+
 public class Vote {
 
     private String voteId;
