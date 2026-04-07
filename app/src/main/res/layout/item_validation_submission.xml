@@ -94,18 +94,17 @@
         <FrameLayout
             android:id="@+id/proof_image_container"
             android:layout_width="match_parent"
-            android:layout_height="160dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:background="@drawable/bg_toggle_pill">
 
             <ImageView
                 android:id="@+id/image_proof"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:adjustViewBounds="true"
-                android:contentDescription="Proof image"
-                android:scaleType="center"
-                android:src="@android:drawable/ic_menu_gallery" />
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/text_proof_overlay"
@@ -113,14 +112,9 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:background="@drawable/bg_leaderboard_row"
-                android:paddingStart="12dp"
-                android:paddingTop="6dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="6dp"
+                android:padding="6dp"
                 android:text="Proof image"
-                android:textColor="@color/color_text_primary"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textSize="12sp"/>
         </FrameLayout>
 
         <TextView

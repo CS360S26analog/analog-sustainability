@@ -1,10 +1,28 @@
+/**
+ * LogFragment.java
+ *
+ * Allows the user to select a sustainability activity and submit it
+ * as either a quick log or a pending verification log.
+ * Writes ActivityLog documents to the "activity_logs" Firestore collection.
+ *
+ * Role in design: Part of the UI/Controller layer. Collects user input,
+ * creates ActivityLog model objects, and saves them to Firestore.
+ *
+ * Outstanding issues: verified proof-upload flow is handled by the teammate
+ * responsible for proof submission. This fragment currently stores the
+ * pending_verification status correctly.
+ *
+ * @author Izza
+ * @author Haroon
+ */
 package com.example.klimate;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -13,29 +31,23 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.example.klimate.model.ActivityLog;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 public class LogFragment extends Fragment {
 
     private LinearLayout selectedCard = null;
     private String selectedActivityName = null;
-    private boolean isSaving = false;
+
+    // Default = quick unless the verified tab is selected
+    private String selectedStatus = "quick";
 
     private FirebaseFirestore db;
-    private FirebaseUser currentUser;
-    private PointsManager pointsManager;
+    private FirebaseAuth mAuth;
 
     private final int[] cardIds = {
             R.id.card_cycling, R.id.card_transit, R.id.card_recycling,
@@ -48,17 +60,6 @@ public class LogFragment extends Fragment {
             "Reusable cup", "Composting", "Walked", "Energy saving"
     };
 
-    private static final Map<String, Double> CO2_PER_ACTIVITY = new HashMap<String, Double>() {{
-        put("Cycling", 0.21);
-        put("Walked", 0.10);
-        put("Recycling", 0.15);
-        put("Composting", 0.12);
-        put("Public Transit", 0.08);
-        put("Plant-based meal", 0.50);
-        put("Reusable cup", 0.05);
-        put("Energy saving", 0.18);
-    }};
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -67,11 +68,7 @@ public class LogFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_log, container, false);
 
         db = FirebaseFirestore.getInstance();
-        currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        pointsManager = new PointsManager();
-
-        ImageView btnHistory = view.findViewById(R.id.btn_history);
-        btnHistory.setOnClickListener(v -> openHistory());
+        mAuth = FirebaseAuth.getInstance();
 
         LinearLayout[] cards = new LinearLayout[cardIds.length];
         for (int i = 0; i < cardIds.length; i++) {
@@ -80,20 +77,63 @@ public class LogFragment extends Fragment {
             cards[i].setOnClickListener(v -> selectCard(cards, (LinearLayout) v, activityNames[index]));
         }
 
+        View quickTab    = view.findViewById(R.id.btn_quick_log);
+        View verifiedTab = view.findViewById(R.id.btn_verified_log);
+
+        // FIX: switch visual active state between the two tabs
+        if (quickTab != null && verifiedTab != null) {
+            quickTab.setOnClickListener(v -> {
+                selectedStatus = "quick";
+                setActiveTab(quickTab, verifiedTab);
+            });
+
+            verifiedTab.setOnClickListener(v -> {
+                selectedStatus = "pending_verification";
+                setActiveTab(verifiedTab, quickTab);
+            });
+
+            // Start with Quick tab visually active
+            setActiveTab(quickTab, verifiedTab);
+        }
+
         TextView btnLog = view.findViewById(R.id.btn_log_activity);
-        btnLog.setOnClickListener(v -> saveQuickLog(cards, btnLog));
+        btnLog.setOnClickListener(v -> submitLog(cards));
 
         return view;
     }
 
-    private void openHistory() {
-        if (getActivity() == null) return;
+    /**
+     * Marks one tab as visually active and the other as inactive,
+     * animating the text colour on both so the switch feels smooth.
+     * Background swaps immediately (the pill shape can't cross-fade
+     * without a custom drawable, but the colour animation makes the
+     * overall transition feel polished).
+     *
+     * @param active   the TextView tab that should appear selected
+     * @param inactive the TextView tab that should appear unselected
+     */
+    private void setActiveTab(View active, View inactive) {
+        // Swap backgrounds immediately
+        active.setBackgroundResource(R.drawable.bg_toggle_selected);
+        inactive.setBackground(null);
 
-        getParentFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, new HistoryFragment())
-                .addToBackStack(null)
-                .commit();
+        // Animate text colour: active → white, inactive → color_text_secondary
+        int white       = requireContext().getColor(android.R.color.white);
+        int secondary   = requireContext().getColor(R.color.color_text_secondary);
+
+        animateTextColor((TextView) active,   secondary, white);
+        animateTextColor((TextView) inactive, white,     secondary);
+    }
+
+    /**
+     * Smoothly animates a TextView's text colour from {@code fromColor}
+     * to {@code toColor} over 200 ms.
+     */
+    private void animateTextColor(TextView tv, int fromColor, int toColor) {
+        ValueAnimator animator = ValueAnimator.ofObject(new ArgbEvaluator(), fromColor, toColor);
+        animator.setDuration(200);
+        animator.addUpdateListener(anim -> tv.setTextColor((int) anim.getAnimatedValue()));
+        animator.start();
     }
 
     private void selectCard(LinearLayout[] cards, LinearLayout card, String name) {
@@ -109,11 +149,11 @@ public class LogFragment extends Fragment {
         }
     }
 
-    private void saveQuickLog(LinearLayout[] cards, TextView btnLog) {
-        if (isSaving) return;
+    private void submitLog(LinearLayout[] cards) {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
 
         if (currentUser == null) {
-            Toast.makeText(getContext(), "You must be logged in to save an activity", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "You must be logged in to submit a log", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -122,139 +162,50 @@ public class LogFragment extends Fragment {
             return;
         }
 
-        isSaving = true;
-        btnLog.setEnabled(false);
-        btnLog.setAlpha(0.6f);
+        int basePoints = getPointsForActivity(selectedActivityName);
 
-        String activityName = selectedActivityName;
-        int basePoints = getBasePoints(activityName);
-        String logId = db.collection("activity_logs").document().getId();
+        ActivityLog log = new ActivityLog(
+                currentUser.getUid(),
+                selectedActivityName,
+                selectedStatus,
+                basePoints,
+                Timestamp.now()
+        );
 
-        Map<String, Object> activityLog = new HashMap<>();
-        activityLog.put("logId", logId);
-        activityLog.put("userId", currentUser.getUid());
-        activityLog.put("activityType", activityName);
-        activityLog.put("status", "quick");
-        activityLog.put("points", basePoints);
-        activityLog.put("bonusPoints", 0);
-        activityLog.put("proofUrl", null);
-        activityLog.put("voteCount", 0);
-        activityLog.put("timestamp", Timestamp.now());
+        DocumentReference docRef = db.collection("activity_logs").document();
+        log.setLogId(docRef.getId());
 
-        db.collection("activity_logs")
-                .document(logId)
-                .set(activityLog)
+        docRef.set(log)
                 .addOnSuccessListener(unused -> {
-                    pointsManager.awardBasePoints(currentUser.getUid(), basePoints);
-                    refreshUserStats();
+                    // Award base points to the user immediately on any log submit
+                    new PointsManager().awardBasePoints(currentUser.getUid(), basePoints);
 
-                    Toast.makeText(
-                            getContext(),
-                            activityName + " logged successfully ✅ +" + basePoints + " pts",
-                            Toast.LENGTH_SHORT
-                    ).show();
+                    String message;
+                    if ("pending_verification".equals(selectedStatus)) {
+                        message = "Verified log submitted for proof/validation";
+                    } else {
+                        message = "Quick activity logged successfully ✅";
+                    }
 
+                    Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                     deselectAll(cards);
                     selectedCard = null;
                     selectedActivityName = null;
-                    isSaving = false;
-                    btnLog.setEnabled(true);
-                    btnLog.setAlpha(1.0f);
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Failed to save log: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    isSaving = false;
-                    btnLog.setEnabled(true);
-                    btnLog.setAlpha(1.0f);
-                });
-    }
 
-    private void refreshUserStats() {
-        if (currentUser == null) return;
-
-        db.collection("activity_logs")
-                .whereEqualTo("userId", currentUser.getUid())
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    double totalCo2 = 0.0;
-                    Set<String> uniqueDays = new HashSet<>();
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
-
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        String activityType = doc.getString("activityType");
-                        if (activityType != null) {
-                            Double co2 = CO2_PER_ACTIVITY.get(activityType);
-                            if (co2 != null) {
-                                totalCo2 += co2;
-                            }
-                        }
-
-                        Timestamp ts = doc.getTimestamp("timestamp");
-                        if (ts != null) {
-                            uniqueDays.add(formatter.format(ts.toDate()));
-                        }
+                    // Reset tab back to Quick after a successful submit
+                    selectedStatus = "quick";
+                    View quickTab    = getView() != null ? getView().findViewById(R.id.btn_quick_log)    : null;
+                    View verifiedTab = getView() != null ? getView().findViewById(R.id.btn_verified_log) : null;
+                    if (quickTab != null && verifiedTab != null) {
+                        setActiveTab(quickTab, verifiedTab);
                     }
-
-                    int streakDays = calculateStreakFromDays(uniqueDays);
-
-                    db.collection("users")
-                            .document(currentUser.getUid())
-                            .update(
-                                    "co2SavedKg", totalCo2,
-                                    "streakDays", streakDays
-                            );
-                });
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(),
+                                "Failed to save log: " + e.getMessage(),
+                                Toast.LENGTH_LONG).show()
+                );
     }
-
-    private int calculateStreakFromDays(Set<String> uniqueDays) {
-        if (uniqueDays.isEmpty()) return 0;
-
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
-
-        Calendar today = Calendar.getInstance();
-        resetTime(today);
-
-        Calendar yesterday = Calendar.getInstance();
-        yesterday.add(Calendar.DAY_OF_YEAR, -1);
-        resetTime(yesterday);
-
-        String todayKey = formatter.format(today.getTime());
-        String yesterdayKey = formatter.format(yesterday.getTime());
-
-        if (!uniqueDays.contains(todayKey) && !uniqueDays.contains(yesterdayKey)) {
-            return 0;
-        }
-
-        int streak = 0;
-        Calendar cursor = Calendar.getInstance();
-
-        if (uniqueDays.contains(todayKey)) {
-            resetTime(cursor);
-        } else {
-            cursor.add(Calendar.DAY_OF_YEAR, -1);
-            resetTime(cursor);
-        }
-
-        while (true) {
-            String key = formatter.format(cursor.getTime());
-            if (uniqueDays.contains(key)) {
-                streak++;
-                cursor.add(Calendar.DAY_OF_YEAR, -1);
-            } else {
-                break;
-            }
-        }
-
-        return streak;
-    }
-
-    private void resetTime(Calendar cal) {
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-    }
-
     private int getBasePoints(String activityType) {
         switch (activityType) {
             case "Cycling":
@@ -274,7 +225,7 @@ public class LogFragment extends Fragment {
             case "Energy saving":
                 return 10;
             default:
-                return 5;
+                return 0;
         }
     }
 }
