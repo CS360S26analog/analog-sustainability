@@ -44,6 +44,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tv_user_name"
                         android:text="Areeb!"
                         android:textColor="@color/white"
                         android:textSize="30sp"
@@ -89,6 +90,7 @@
                     android:layout_height="46dp"
                     android:background="@drawable/bg_streak_number"
                     android:gravity="center"
+                    android:id="@+id/tv_streak_header"
                     android:text="14"
                     android:textColor="@color/white"
                     android:textSize="18sp"
@@ -261,6 +263,7 @@
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                             android:text="🔥" android:textSize="26sp"/>
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:id="@+id/tv_streak_days"
                             android:text="14 days" android:textSize="13sp" android:textStyle="bold"
                             android:textColor="@color/color_text_primary" android:layout_marginTop="5dp"/>
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -282,6 +285,7 @@
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                             android:text="🌍" android:textSize="26sp"/>
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:id="@+id/tv_co2_saved"
                             android:text="2.4 kg" android:textSize="13sp" android:textStyle="bold"
                             android:textColor="@color/color_text_primary" android:layout_marginTop="5dp"/>
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -302,6 +306,7 @@
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                             android:text="⭐" android:textSize="26sp"/>
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:id="@+id/tv_points"
                             android:text="1,240" android:textSize="13sp" android:textStyle="bold"
                             android:textColor="@color/color_text_primary" android:layout_marginTop="5dp"/>
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
