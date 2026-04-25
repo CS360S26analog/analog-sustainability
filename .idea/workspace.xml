@@ -32,58 +32,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="11a2df30-60ac-4fd8-aa04-29a0a5181bf4" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/bin/androidTest/com/example/klimate/AuthUiTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/androidTest/com/example/klimate/BottomNavUiTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/androidTest/com/example/klimate/ExampleInstrumentedTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/androidTest/com/example/klimate/HomeFragmentUiTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/androidTest/com/example/klimate/LogFragmentUiTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/androidTest/com/example/klimate/ValidationFeedUiTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/DashboardViewModel$1.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/DashboardViewModel.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/FriendsFragment.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/HistoryFragment$1.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/HistoryFragment.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/HomeFragment.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/LogFragment.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/LoginActivity.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/MainActivity.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/PointsManager.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/ProfileFragment$Reward.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/ProfileFragment.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/RankingsFragment.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/RegisterActivity.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/StreakNotificationWorker.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/ValidationFeedFragment$1.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/ValidationFeedFragment.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/model/ActivityLog.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/model/User.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/main/com/example/klimate/model/Vote.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/test/com/example/klimate/ActivityLogTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/test/com/example/klimate/DashboardViewModelTest$1.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/test/com/example/klimate/DashboardViewModelTest$2.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/test/com/example/klimate/DashboardViewModelTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/test/com/example/klimate/ExampleUnitTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/test/com/example/klimate/PointsManagerTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/test/com/example/klimate/UserTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bin/test/com/example/klimate/VoteTest.class" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/example/klimate/StreakNotificationWorker.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/checksums/checksums.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/checksums/checksums.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/checksums/md5-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/checksums/md5-checksums.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/checksums/sha1-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/checksums/sha1-checksums.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/executionHistory/executionHistory.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/executionHistory/executionHistory.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/fileHashes.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/fileHashes.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/resourceHashesCache.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/9.1.0/fileHashes/resourceHashesCache.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/config.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/file-system.probe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/klimate/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/klimate/MainActivity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/klimate/ProfileFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/klimate/ProfileFragment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/reports/problems/problems-report.html" beforeDir="false" afterPath="$PROJECT_DIR$/build/reports/problems/problems-report.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/local.properties" beforeDir="false" afterPath="$PROJECT_DIR$/local.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/klimate/DashboardViewModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/klimate/DashboardViewModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/klimate/LogFragment.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/klimate/LogFragment.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/klimate/model/ActivityLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/klimate/model/ActivityLog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_log.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_log.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -579,12 +532,12 @@
       <map>
         <entry key="com.example.klimate">
           <value>
-            <CheckInfo lastCheckTimestamp="1775495050704" />
+            <CheckInfo lastCheckTimestamp="1777154531579" />
           </value>
         </entry>
         <entry key="com.example.klimate.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1775495050720" />
+            <CheckInfo lastCheckTimestamp="1777154531585" />
           </value>
         </entry>
       </map>

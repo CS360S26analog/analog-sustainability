@@ -27,6 +27,7 @@ public class ActivityLog {
     private int bonusPoints;
     private String proofUrl;
     private int voteCount;
+    private int quantity;
     private Timestamp timestamp;
 
     /**
@@ -225,4 +226,8 @@ public class ActivityLog {
     public int getTotalPoints() {
         return points + bonusPoints;
     }
+
+    public int getQuantity() { return quantity; }
+    public void setQuantity(int quantity) { this.quantity = quantity; }
+
 }

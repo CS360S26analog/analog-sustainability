@@ -148,11 +148,23 @@ public class DashboardViewModel extends ViewModel {
      * @param logs list of ActivityLog objects to calculate from
      */
     private void calculateCo2(List<ActivityLog> logs) {
+        Map<String, Double> co2PerUnit = new HashMap<String, Double>() {{
+            put("Cycling",           0.021); // kg CO2 per km
+            put("Walked",            0.010); // kg CO2 per km
+            put("Public Transit",    0.008); // kg CO2 per km
+            put("Plant-based meal",  0.500); // kg CO2 per meal
+            put("Reusable cup",      0.050); // kg CO2 per cup
+            put("Recycling",         0.030); // kg CO2 per item recycled
+            put("Composting",        0.120); // flat per log
+            put("Energy saving",     0.180); // flat per log
+        }};
+
         double total = 0.0;
         for (ActivityLog log : logs) {
-            Double co2 = CO2_PER_ACTIVITY.get(log.getActivityType());
-            if (co2 != null) {
-                total += co2;
+            Double rate = co2PerUnit.get(log.getActivityType());
+            if (rate != null) {
+                int quantity = log.getQuantity() > 0 ? log.getQuantity() : 1;
+                total += rate * quantity;
             }
         }
         co2LiveData.setValue(total);
