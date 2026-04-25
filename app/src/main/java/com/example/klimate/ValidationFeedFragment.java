@@ -42,6 +42,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -320,6 +321,7 @@ public class ValidationFeedFragment extends Fragment {
                           @NonNull TextView textUpvoteCount,
                           @NonNull TextView btnUpvote,
                           @NonNull TextView btnDownvote) {
+
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
         if (currentUser == null) {
@@ -366,6 +368,9 @@ public class ValidationFeedFragment extends Fragment {
                             .document(voteId)
                             .set(voteData)
                             .addOnSuccessListener(unused -> {
+
+                                // Fetch the log to get the owner, then attach the vote listener
+                                // which handles net bonus recalculation and rejection at -5
                                 db.collection("activity_logs")
                                         .document(activityLogDocumentId)
                                         .get()
@@ -373,14 +378,23 @@ public class ValidationFeedFragment extends Fragment {
                                             if (!logDoc.exists()) return;
 
                                             String logOwnerId = logDoc.getString("userId");
-                                            Long prevBonus = logDoc.getLong("bonusPoints");
-                                            int previousBonus = (prevBonus != null) ? prevBonus.intValue() : 0;
 
                                             if (logOwnerId != null) {
+                                                // Immediately deduct 1 point for a downvote
+                                                // The vote listener handles bonus recalculation
+                                                // but the base -1 per downvote is applied here
+                                                if (!isUpvote) {
+                                                    db.collection("users")
+                                                            .document(logOwnerId)
+                                                            .update("totalPoints",
+                                                                    FieldValue.increment(-1));
+                                                }
+
+                                                // Attach listener to recalculate net bonus points
+                                                // and handle rejection if net votes reach -5
                                                 new PointsManager().attachVoteListener(
                                                         activityLogDocumentId,
-                                                        logOwnerId,
-                                                        previousBonus
+                                                        logOwnerId
                                                 );
                                             }
                                         });
