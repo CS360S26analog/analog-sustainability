@@ -45,5 +45,8 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("androidx.work:work-runtime:2.9.0")
+    implementation("com.google.guava:guava:31.1-android")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
 }
