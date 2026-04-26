@@ -127,6 +127,16 @@ public class HomeFragment extends Fragment {
         tvSetGoal.setOnClickListener(v -> showSetGoalDialog());
         btnChallengeInfo.setOnClickListener(v -> showZeroWasteInfo());
 
+        TextView btnShare = view.findViewById(R.id.btn_share_progress);
+        if (btnShare != null) {
+            btnShare.setOnClickListener(v -> shareProgress());
+        }
+
+        TextView btnChallenges = view.findViewById(R.id.btn_view_challenges);
+        if (btnChallenges != null) {
+            btnChallenges.setOnClickListener(v -> navigateToChallenges());
+        }
+
         setDefaultDashboard(
                 tvStreakNumber,
                 tvStreakMessage,
@@ -1012,6 +1022,68 @@ public class HomeFragment extends Fragment {
                     .addToBackStack(null)
                     .commit();
         }
+    }
+
+    private void navigateToChallenges() {
+        if (getActivity() != null) {
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new ChallengesFragment())
+                    .addToBackStack(null)
+                    .commit();
+        }
+    }
+
+    /**
+     * Builds a formatted progress string from the user's Firestore stats
+     * and fires an Intent.ACTION_SEND so the user can share to WhatsApp,
+     * clipboard, or any installed app.
+     * Share progress feature implementation.
+     */
+    private void shareProgress() {
+        if (currentUser == null || getContext() == null) return;
+
+        db.collection("users")
+                .document(currentUser.getUid())
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (!isAdded()) return;
+
+                    String name = doc.getString("displayName");
+                    Long points = doc.getLong("totalPoints");
+                    Double co2 = doc.getDouble("co2SavedKg");
+                    Long streak = doc.getLong("streakDays");
+
+                    String firstName = (name != null && !name.isEmpty())
+                            ? name.split("\\s+")[0] : "I";
+
+                    double co2Val = co2 != null ? co2 : 0.0;
+                    long pts = points != null ? points : 0;
+
+                    // Build equivalents string
+                    String equiv = co2Val > 0
+                            ? " (" + CarbonEquivalentHelper.buildEquivalentString(co2Val) + ")"
+                            : "";
+
+                    String message = "🌿 " + firstName + " is making a difference on Klimate!\n\n"
+                            + "♻️  CO₂ saved: " + String.format(Locale.getDefault(), "%.1f kg", co2Val)
+                            + equiv + "\n"
+                            + "⭐  Points: " + pts + "\n"
+                            + "🔥  Streak: " + (streak != null ? streak : 0) + " days\n\n"
+                            + "Join me on Klimate — track your sustainability impact! 🌍";
+
+                    android.content.Intent shareIntent = new android.content.Intent(
+                            android.content.Intent.ACTION_SEND);
+                    shareIntent.setType("text/plain");
+                    shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, message);
+                    startActivity(android.content.Intent.createChooser(
+                            shareIntent, "Share your progress"));
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(),
+                                "Could not load stats to share",
+                                Toast.LENGTH_SHORT).show()
+                );
     }
 
 }

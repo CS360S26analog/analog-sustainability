@@ -177,7 +177,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+30 pts"
+                        android:text="+3 pts/km"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -212,7 +212,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+20 pts"
+                        android:text="+1 pt/km"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -254,7 +254,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+15 pts"
+                        android:text="+2 pts/item"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -289,7 +289,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+25 pts"
+                        android:text="+25 pts/meal"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -331,7 +331,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+10 pts"
+                        android:text="+10 pts/cup"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -408,7 +408,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+20 pts"
+                        android:text="+2 pts/km"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -443,7 +443,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+10 pts"
+                        android:text="+15 pts"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>

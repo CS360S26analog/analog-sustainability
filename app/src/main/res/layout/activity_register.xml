@@ -87,6 +87,17 @@
         android:paddingEnd="16dp"
         android:layout_marginBottom="24dp"/>
 
+    <EditText
+        android:id="@+id/et_staff_code"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="Staff code (optional — leave blank if student)"
+        android:inputType="textPassword"
+        android:padding="14dp"
+        android:background="@drawable/bg_input_field"
+        android:textSize="14sp" />
+
     <Button
         android:id="@+id/btn_register"
         android:layout_width="match_parent"

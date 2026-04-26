@@ -638,6 +638,33 @@
                 android:layout_width="match_parent"
                 android:layout_height="16dp" />
 
+            <TextView
+                android:id="@+id/btn_share_progress"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_card_amber"
+                android:gravity="center"
+                android:text="↗  Share My Progress"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true" />
+            <TextView
+                android:id="@+id/btn_view_challenges"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_card_forest"
+                android:gravity="center"
+                android:text="🏆  View Challenges"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true" />
+
             <!-- Staff Tips button — only shown to staff users -->
             <TextView
                 android:id="@+id/btn_staff_tips"
