@@ -23,12 +23,16 @@ package com.example.klimate;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
 import android.graphics.Typeface;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,8 +55,11 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -543,6 +550,16 @@ public class LogFragment extends Fragment {
         }
     }
 
+    /**
+     * Compresses the selected proof image, then uploads the compressed
+     * bytes to Firebase Storage. Falls back to uploading the original
+     * file if compression fails, so the flow never breaks.
+     *
+     * @param docRef    the pre-created Firestore document reference for this log
+     * @param userId    the UID of the user submitting the log
+     * @param points    calculated points for this log
+     * @param cards     the activity card array, used to reset the form on success
+     */
     private void uploadProofAndSaveLog(@NonNull DocumentReference docRef,
                                        @NonNull String userId,
                                        int points,
@@ -558,22 +575,59 @@ public class LogFragment extends Fragment {
                 .child(userId)
                 .child(docRef.getId() + ".jpg");
 
-        proofRef.putFile(selectedProofUri)
-                .continueWithTask(task -> {
-                    if (!task.isSuccessful() && task.getException() != null) {
-                        throw task.getException();
-                    }
-                    return proofRef.getDownloadUrl();
-                })
-                .addOnSuccessListener(downloadUri ->
-                        saveLogDocument(docRef, userId, points, downloadUri.toString(), cards)
-                )
-                .addOnFailureListener(e -> {
-                    setLogButtonEnabled(true);
-                    Toast.makeText(getContext(),
-                            "Failed to upload proof photo: " + e.getMessage(),
-                            Toast.LENGTH_LONG).show();
-                });
+        // Attempt compression first
+        Context context = getContext();
+        if (context == null) {
+            setLogButtonEnabled(true);
+            return;
+        }
+
+        byte[] compressedBytes = compressImage(context, selectedProofUri);
+
+        if (compressedBytes != null) {
+            // Upload compressed bytes directly — faster, less bandwidth
+            StorageMetadata metadata = new StorageMetadata.Builder()
+                    .setContentType("image/jpeg")
+                    .build();
+
+            proofRef.putBytes(compressedBytes, metadata)
+                    .continueWithTask(task -> {
+                        if (!task.isSuccessful() && task.getException() != null) {
+                            throw task.getException();
+                        }
+                        return proofRef.getDownloadUrl();
+                    })
+                    .addOnSuccessListener(downloadUri ->
+                            saveLogDocument(docRef, userId, points, downloadUri.toString(), cards)
+                    )
+                    .addOnFailureListener(e -> {
+                        setLogButtonEnabled(true);
+                        Toast.makeText(getContext(),
+                                "Failed to upload proof photo: " + e.getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    });
+        } else {
+            // Compression failed — fall back to uploading original file
+            // This ensures the flow never breaks even if compression errors
+            Log.w("LogFragment", "Compression failed — uploading original file as fallback");
+
+            proofRef.putFile(selectedProofUri)
+                    .continueWithTask(task -> {
+                        if (!task.isSuccessful() && task.getException() != null) {
+                            throw task.getException();
+                        }
+                        return proofRef.getDownloadUrl();
+                    })
+                    .addOnSuccessListener(downloadUri ->
+                            saveLogDocument(docRef, userId, points, downloadUri.toString(), cards)
+                    )
+                    .addOnFailureListener(e -> {
+                        setLogButtonEnabled(true);
+                        Toast.makeText(getContext(),
+                                "Failed to upload proof photo: " + e.getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    });
+        }
     }
 
     private void saveLogDocument(@NonNull DocumentReference docRef,
@@ -711,5 +765,67 @@ public class LogFragment extends Fragment {
         }
 
         return spannable;
+    }
+    /**
+     * Compresses and resizes a Uri-referenced image before upload.
+     *
+     * Resizes so the longest side is at most MAX_IMAGE_DIMENSION px,
+     * preserving aspect ratio. Then compresses to JPEG at JPEG_QUALITY.
+     *
+     * This runs on the calling thread — always call from a background
+     * thread or WorkManager. In our case Firebase Storage's putBytes()
+     * handles threading so this is called just before that.
+     *
+     * @param context   application context for ContentResolver
+     * @param imageUri  the Uri returned by the image picker
+     * @return compressed image as a byte array, or null if processing failed
+     */
+    @Nullable
+    private byte[] compressImage(@NonNull Context context, @NonNull Uri imageUri) {
+        final int MAX_IMAGE_DIMENSION = 1080; // px — longest side cap
+        final int JPEG_QUALITY        = 80;   // 0-100, 80 is visually lossless
+
+        try {
+            // Decode the full bitmap from the Uri
+            InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
+            if (inputStream == null) return null;
+
+            Bitmap original = BitmapFactory.decodeStream(inputStream);
+            inputStream.close();
+
+            if (original == null) return null;
+
+            int width  = original.getWidth();
+            int height = original.getHeight();
+
+            // Only resize if the image is actually larger than our cap
+            if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+                float scale;
+
+                if (width >= height) {
+                    scale = (float) MAX_IMAGE_DIMENSION / width;
+                } else {
+                    scale = (float) MAX_IMAGE_DIMENSION / height;
+                }
+
+                int newWidth  = Math.round(width  * scale);
+                int newHeight = Math.round(height * scale);
+
+                Bitmap resized = Bitmap.createScaledBitmap(original, newWidth, newHeight, true);
+                original.recycle(); // free the large original from memory
+                original = resized;
+            }
+
+            // Compress to JPEG bytes
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            original.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, outputStream);
+            original.recycle();
+
+            return outputStream.toByteArray();
+
+        } catch (Exception e) {
+            Log.e("LogFragment", "Image compression failed", e);
+            return null;
+        }
     }
 }
