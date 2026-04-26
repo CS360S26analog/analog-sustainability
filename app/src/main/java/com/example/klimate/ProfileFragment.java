@@ -1,18 +1,16 @@
 /**
  * ProfileFragment.java
  *
- * Displays the logged-in student's profile, including real-time points
- * balance read from Firestore, streak days, CO2 saved, and a list of
- * available rewards. Handles reward redemption — checks point balance,
- * writes to rewards_redemptions collection, deducts points, and marks
- * the reward row as redeemed.
+ * Displays the logged-in student's profile, including real-time points,
+ * streak days, CO2 saved, badge grid, rewards, settings rows, and logout.
  *
- * Role in design: Part of the View layer (MVC). Reads from the users/
- * Firestore collection using the current Firebase Auth UID. Points are
- * updated by PointsManager whenever votes change.
- *
- * Outstanding issues: Rewards list is hardcoded — replace with Firestore
- * read in a future sprint. Challenges count is hardcoded.
+ * Current sprint work:
+ * - Shows earned and locked badges from the badge catalogue
+ * - Reads earned badge IDs from users/{uid}/badges
+ * - Also unlocks point and streak badges directly from user stats
+ * - Earned badges show full colour
+ * - Locked badges show dimmed with lock overlay
+ * - Tapping a badge opens a detail dialog
  *
  * @author Haroon
  * @author Izza
@@ -23,16 +21,22 @@
 package com.example.klimate;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -42,21 +46,31 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 public class ProfileFragment extends Fragment {
 
     private FirebaseFirestore db;
     private FirebaseAuth auth;
 
-    // Tracks the user's live points balance so reward dialogs can check it
     private long currentTotalPoints = 0;
+    private long currentStreakDays = 0;
 
-    /**
-     * Reward item data class — holds display info for one reward row.
-     */
+    private GridLayout badgesContainer;
+    private ListenerRegistration profileListener;
+    private ListenerRegistration badgesListener;
+
+    private final Set<String> earnedBadgeIds = new HashSet<>();
+    private final Map<String, Timestamp> earnedDates = new HashMap<>();
+
     private static class Reward {
         final String emoji;
         final String name;
@@ -69,25 +83,126 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-    /** Hardcoded rewards catalogue — replace with Firestore read in a future sprint. */
+    private static class BadgeDefinition {
+        final String id;
+        final String emoji;
+        final String name;
+        final String description;
+        final String lockedHint;
+        final int backgroundDrawable;
+        final long requiredPoints;
+        final long requiredStreakDays;
+
+        BadgeDefinition(String id,
+                        String emoji,
+                        String name,
+                        String description,
+                        String lockedHint,
+                        int backgroundDrawable,
+                        long requiredPoints,
+                        long requiredStreakDays) {
+            this.id = id;
+            this.emoji = emoji;
+            this.name = name;
+            this.description = description;
+            this.lockedHint = lockedHint;
+            this.backgroundDrawable = backgroundDrawable;
+            this.requiredPoints = requiredPoints;
+            this.requiredStreakDays = requiredStreakDays;
+        }
+    }
+
     private static final Reward[] REWARDS = {
-            new Reward("☕", "Free Coffee",          500),
+            new Reward("☕", "Free Coffee", 500),
             new Reward("🚲", "Bike Rental Voucher", 1200),
-            new Reward("♻️", "Eco Tote Bag",         800),
-            new Reward("🌍", "Plant a Tree",        1000),
+            new Reward("♻️", "Eco Tote Bag", 800),
+            new Reward("🌍", "Plant a Tree", 1000),
             new Reward("🍃", "Campus Meal Discount", 1500),
     };
 
-    /**
-     * Inflates the profile screen, loads the logged-in user's profile data
-     * from Firestore, displays points, streak, CO₂ saved, and rewards,
-     * and wires profile row actions such as logout.
-     *
-     * @param inflater           the LayoutInflater used to inflate the fragment layout
-     * @param container          the parent view group for this fragment
-     * @param savedInstanceState previously saved fragment state if available
-     * @return the root view for the profile screen
-     */
+    private static final BadgeDefinition[] BADGE_CATALOGUE = {
+            new BadgeDefinition(
+                    "first_steps",
+                    "🌱",
+                    "First Steps",
+                    "Awarded after reaching 100 sustainability points.",
+                    "Reach 100 points to unlock this badge.",
+                    R.drawable.bg_badge_green,
+                    100,
+                    0
+            ),
+            new BadgeDefinition(
+                    "recycler",
+                    "♻️",
+                    "Recycler",
+                    "Awarded after reaching 200 sustainability points.",
+                    "Reach 200 points to unlock this badge.",
+                    R.drawable.bg_badge_green,
+                    200,
+                    0
+            ),
+            new BadgeDefinition(
+                    "eco_sprout",
+                    "🍃",
+                    "Eco Sprout",
+                    "Awarded after reaching 500 sustainability points.",
+                    "Reach 500 points to unlock this badge.",
+                    R.drawable.bg_badge_amber,
+                    500,
+                    0
+            ),
+            new BadgeDefinition(
+                    "green_guardian",
+                    "🛡️",
+                    "Green Guardian",
+                    "Awarded after reaching 1000 sustainability points.",
+                    "Reach 1000 points to unlock this badge.",
+                    R.drawable.bg_badge_blue,
+                    1000,
+                    0
+            ),
+            new BadgeDefinition(
+                    "climate_champion",
+                    "🏆",
+                    "Climate Champion",
+                    "Awarded after reaching 2500 sustainability points.",
+                    "Reach 2500 points to unlock this badge.",
+                    R.drawable.bg_badge_amber,
+                    2500,
+                    0
+            ),
+            new BadgeDefinition(
+                    "streak_7",
+                    "🔥",
+                    "7 Day Streak",
+                    "Awarded after logging for 7 days in a row.",
+                    "Build a 7 day streak to unlock this badge.",
+                    R.drawable.bg_badge_green,
+                    0,
+                    7
+            ),
+            new BadgeDefinition(
+                    "streak_30",
+                    "🌟",
+                    "30 Day Streak",
+                    "Awarded after logging for 30 days in a row.",
+                    "Build a 30 day streak to unlock this badge.",
+                    R.drawable.bg_badge_blue,
+                    0,
+                    30
+            ),
+            new BadgeDefinition(
+                    "cat_bff",
+                    "🐱",
+                    "Cat BFF",
+                    "Awarded after keeping Mimi happy for 14 consecutive days.",
+                    "Keep Mimi happy for 14 days to unlock this badge.",
+                    R.drawable.bg_badge_amber,
+                    0,
+                    0
+            )
+    };
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -95,7 +210,7 @@ public class ProfileFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        db   = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
 
         FirebaseUser currentUser = auth.getCurrentUser();
@@ -103,54 +218,244 @@ public class ProfileFragment extends Fragment {
 
         String uid = currentUser.getUid();
 
-        // TextViews to update from Firestore
-        TextView tvName        = view.findViewById(R.id.tv_display_name);
+        TextView tvName = view.findViewById(R.id.tv_display_name);
         TextView tvPointsBadge = view.findViewById(R.id.tv_points_badge);
-        TextView tvCo2         = view.findViewById(R.id.tv_co2_value);
-        TextView tvStreak      = view.findViewById(R.id.tv_streak_value);
-        TextView tvAvatar      = view.findViewById(R.id.tv_avatar_initials);
+        TextView tvCo2 = view.findViewById(R.id.tv_co2_value);
+        TextView tvStreak = view.findViewById(R.id.tv_streak_value);
+        TextView tvAvatar = view.findViewById(R.id.tv_avatar_initials);
+        badgesContainer = view.findViewById(R.id.badges_container);
 
-        // Read user document from Firestore in real time
-        db.collection("users").document(uid)
+        profileListener = db.collection("users").document(uid)
                 .addSnapshotListener((doc, e) -> {
+                    if (!isAdded() || getContext() == null) return;
                     if (e != null || doc == null || !doc.exists()) return;
 
                     String displayName = doc.getString("displayName");
-                    long totalPoints   = doc.getLong("totalPoints")  != null ? doc.getLong("totalPoints")  : 0;
-                    long streakDays    = doc.getLong("streakDays")   != null ? doc.getLong("streakDays")   : 0;
-                    double co2Saved    = doc.getDouble("co2SavedKg") != null ? doc.getDouble("co2SavedKg") : 0.0;
+                    Long totalPointsValue = doc.getLong("totalPoints");
+                    Long streakDaysValue = doc.getLong("streakDays");
+                    Double co2SavedValue = doc.getDouble("co2SavedKg");
 
-                    // Keep currentTotalPoints in sync so reward dialogs can read it
-                    currentTotalPoints = totalPoints;
+                    currentTotalPoints = totalPointsValue != null ? totalPointsValue : 0;
+                    currentStreakDays = streakDaysValue != null ? streakDaysValue : 0;
+                    double co2Saved = co2SavedValue != null ? co2SavedValue : 0.0;
 
-                    if (tvName != null && displayName != null) {
+                    if (tvName != null && !TextUtils.isEmpty(displayName)) {
                         tvName.setText(displayName);
                     }
 
-                    if (tvAvatar != null && displayName != null && displayName.length() >= 2) {
-                        tvAvatar.setText(displayName.substring(0, 2).toUpperCase());
+                    if (tvAvatar != null && !TextUtils.isEmpty(displayName)) {
+                        tvAvatar.setText(getInitials(displayName));
                     }
 
                     if (tvPointsBadge != null) {
-                        tvPointsBadge.setText("• " + totalPoints + " pts");
+                        tvPointsBadge.setText("• " + currentTotalPoints + " pts");
                     }
 
                     if (tvCo2 != null) {
-                        tvCo2.setText(String.format("%.1f", co2Saved));
+                        tvCo2.setText(String.format(Locale.getDefault(), "%.1f", co2Saved));
                     }
 
                     if (tvStreak != null) {
-                        tvStreak.setText(String.valueOf(streakDays));
+                        tvStreak.setText(String.valueOf(currentStreakDays));
                     }
+
+                    renderBadges();
                 });
 
-        // Settings rows
-        int[]    rowIds    = {R.id.row_account, R.id.row_privacy, R.id.row_notifications, R.id.row_help};
-        String[] rowLabels = {"Account Settings", "Privacy", "Notifications", "Help & Support"};
+        loadBadges(uid);
+        wireSettingsRows(view);
+        wireLogout(view);
+        populateRewards(view, uid);
+
+        return view;
+    }
+
+    private void loadBadges(String uid) {
+        if (badgesContainer == null) return;
+
+        badgesListener = db.collection("users")
+                .document(uid)
+                .collection("badges")
+                .addSnapshotListener((snapshots, e) -> {
+                    if (!isAdded() || getContext() == null) return;
+
+                    earnedBadgeIds.clear();
+                    earnedDates.clear();
+
+                    if (snapshots != null) {
+                        for (QueryDocumentSnapshot doc : snapshots) {
+                            String docId = normalizeBadgeId(doc.getId());
+                            earnedBadgeIds.add(docId);
+
+                            String badgeIdField = doc.getString("badgeId");
+                            if (!TextUtils.isEmpty(badgeIdField)) {
+                                earnedBadgeIds.add(normalizeBadgeId(badgeIdField));
+                            }
+
+                            Timestamp earnedAt = doc.getTimestamp("earnedAt");
+                            if (earnedAt == null) {
+                                earnedAt = doc.getTimestamp("timestamp");
+                            }
+
+                            earnedDates.put(docId, earnedAt);
+
+                            if (!TextUtils.isEmpty(badgeIdField)) {
+                                earnedDates.put(normalizeBadgeId(badgeIdField), earnedAt);
+                            }
+                        }
+                    }
+
+                    renderBadges();
+                });
+    }
+
+    private void renderBadges() {
+        if (badgesContainer == null || getContext() == null) return;
+
+        badgesContainer.removeAllViews();
+        badgesContainer.setColumnCount(4);
+
+        for (BadgeDefinition badge : BADGE_CATALOGUE) {
+            boolean earned = isBadgeEarned(badge);
+            Timestamp earnedAt = earnedDates.get(normalizeBadgeId(badge.id));
+
+            View badgeView = createBadgeView(badge, earned, earnedAt);
+            badgesContainer.addView(badgeView);
+        }
+    }
+
+    private boolean isBadgeEarned(BadgeDefinition badge) {
+        String normalizedId = normalizeBadgeId(badge.id);
+
+        if (earnedBadgeIds.contains(normalizedId)) {
+            return true;
+        }
+
+        if (badge.requiredPoints > 0 && currentTotalPoints >= badge.requiredPoints) {
+            return true;
+        }
+
+        if (badge.requiredStreakDays > 0 && currentStreakDays >= badge.requiredStreakDays) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private View createBadgeView(BadgeDefinition badge, boolean earned, Timestamp earnedAt) {
+        LinearLayout outer = new LinearLayout(requireContext());
+        outer.setOrientation(LinearLayout.VERTICAL);
+        outer.setGravity(Gravity.CENTER);
+        outer.setPadding(dpToPx(4), dpToPx(6), dpToPx(4), dpToPx(6));
+
+        GridLayout.LayoutParams outerParams = new GridLayout.LayoutParams();
+        outerParams.width = 0;
+        outerParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        outerParams.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+        outerParams.setGravity(Gravity.FILL_HORIZONTAL);
+        outerParams.setMargins(0, 0, 0, dpToPx(12));
+        outer.setLayoutParams(outerParams);
+
+        FrameLayout badgeCircle = new FrameLayout(requireContext());
+        LinearLayout.LayoutParams circleParams = new LinearLayout.LayoutParams(dpToPx(62), dpToPx(62));
+        badgeCircle.setLayoutParams(circleParams);
+        badgeCircle.setAlpha(earned ? 1.0f : 0.35f);
+
+        TextView emojiView = new TextView(requireContext());
+        emojiView.setLayoutParams(new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        emojiView.setBackgroundResource(earned ? badge.backgroundDrawable : R.drawable.bg_badge_locked);
+        emojiView.setGravity(Gravity.CENTER);
+        emojiView.setText(badge.emoji);
+        emojiView.setTextSize(24);
+        badgeCircle.addView(emojiView);
+
+        if (!earned) {
+            TextView lockView = new TextView(requireContext());
+            lockView.setLayoutParams(new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+            ));
+            lockView.setGravity(Gravity.CENTER);
+            lockView.setText("🔒");
+            lockView.setTextSize(20);
+            badgeCircle.addView(lockView);
+        }
+
+        TextView nameView = new TextView(requireContext());
+        nameView.setText(badge.name.toUpperCase(Locale.getDefault()));
+        nameView.setTextSize(9);
+        nameView.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        nameView.setGravity(Gravity.CENTER);
+        nameView.setMaxLines(2);
+        nameView.setTextColor(ContextCompat.getColor(
+                requireContext(),
+                earned ? R.color.color_green_text : R.color.color_text_secondary
+        ));
+
+        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        nameParams.setMargins(0, dpToPx(6), 0, 0);
+        nameView.setLayoutParams(nameParams);
+
+        outer.addView(badgeCircle);
+        outer.addView(nameView);
+
+        outer.setClickable(true);
+        outer.setFocusable(true);
+        outer.setOnClickListener(v -> showBadgeDetailDialog(badge, earned, earnedAt));
+
+        return outer;
+    }
+
+    private void showBadgeDetailDialog(BadgeDefinition badge, boolean earned, Timestamp earnedAt) {
+        if (getContext() == null) return;
+
+        String message;
+
+        if (earned) {
+            message = badge.description;
+
+            if (earnedAt != null) {
+                SimpleDateFormat format = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+                message += "\n\nEarned on: " + format.format(earnedAt.toDate());
+            } else {
+                message += "\n\nStatus: Earned";
+            }
+        } else {
+            message = badge.lockedHint + "\n\nStatus: Locked";
+        }
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle((earned ? badge.emoji + " " : "🔒 ") + badge.name)
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+    private void wireSettingsRows(View view) {
+        int[] rowIds = {
+                R.id.row_account,
+                R.id.row_privacy,
+                R.id.row_notifications,
+                R.id.row_help
+        };
+
+        String[] rowLabels = {
+                "Account Settings",
+                "Privacy",
+                "Notifications",
+                "Help & Support"
+        };
 
         for (int i = 0; i < rowIds.length; i++) {
             final String label = rowLabels[i];
             LinearLayout row = view.findViewById(rowIds[i]);
+
             if (row != null) {
                 row.setOnClickListener(v ->
                         Toast.makeText(getContext(), label + " — coming soon!", Toast.LENGTH_SHORT).show()
@@ -158,16 +463,17 @@ public class ProfileFragment extends Fragment {
             }
         }
 
-        // View all achievements
         TextView tvViewAll = view.findViewById(R.id.tv_view_all);
         if (tvViewAll != null) {
             tvViewAll.setOnClickListener(v ->
-                    Toast.makeText(getContext(), "All achievements — coming soon!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(getContext(), "All badges are shown below", Toast.LENGTH_SHORT).show()
             );
         }
+    }
 
-        // Log out
+    private void wireLogout(View view) {
         LinearLayout rowLogout = view.findViewById(R.id.row_logout);
+
         if (rowLogout != null) {
             rowLogout.setOnClickListener(v -> {
                 auth.signOut();
@@ -176,24 +482,13 @@ public class ProfileFragment extends Fragment {
                 startActivity(intent);
             });
         }
-
-        // Hardcoded rewards list
-        populateRewards(view, uid);
-
-        return view;
     }
 
-    /**
-     * Inflates a row for each hardcoded reward into the rewards_container
-     * LinearLayout. Each row shows an emoji, reward name, and points cost.
-     * Clicking a row opens a confirmation dialog to redeem the reward.
-     *
-     * @param root the inflated fragment view containing rewards_container
-     * @param uid  the Firebase Auth UID of the current user
-     */
     private void populateRewards(View root, String uid) {
         LinearLayout container = root.findViewById(R.id.rewards_container);
         if (container == null) return;
+
+        container.removeAllViews();
 
         int dp16 = dpToPx(16);
         int dp12 = dpToPx(12);
@@ -201,44 +496,45 @@ public class ProfileFragment extends Fragment {
         for (int i = 0; i < REWARDS.length; i++) {
             Reward reward = REWARDS[i];
 
-            // Outer row
             LinearLayout row = new LinearLayout(getContext());
             row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+
             LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    dpToPx(56));
+                    dpToPx(56)
+            );
             row.setLayoutParams(rowParams);
             row.setPadding(dp16, 0, dp16, 0);
             row.setClickable(true);
             row.setFocusable(true);
 
-            // Emoji
             TextView tvEmoji = new TextView(getContext());
             tvEmoji.setText(reward.emoji);
             tvEmoji.setTextSize(20);
             tvEmoji.setPadding(0, 0, dp12, 0);
             row.addView(tvEmoji);
 
-            // Reward name (expands)
             TextView tvName = new TextView(getContext());
             tvName.setText(reward.name);
             tvName.setTextSize(15);
-            tvName.setTextColor(getResources().getColor(R.color.color_text_primary, null));
+            tvName.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_text_primary));
+
             LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
-                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+            );
             tvName.setLayoutParams(nameParams);
             row.addView(tvName);
 
-            // Points cost badge
             TextView tvCost = new TextView(getContext());
             tvCost.setText(reward.pointsCost + " pts");
             tvCost.setTextSize(13);
-            tvCost.setTextColor(getResources().getColor(R.color.color_green_text, null));
-            tvCost.setTypeface(null, android.graphics.Typeface.BOLD);
+            tvCost.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_green_text));
+            tvCost.setTypeface(null, Typeface.BOLD);
             row.addView(tvCost);
 
-            // Wire the click listener for redemption
             final Reward finalReward = reward;
             final TextView finalTvCost = tvCost;
             final LinearLayout finalRow = row;
@@ -247,35 +543,20 @@ public class ProfileFragment extends Fragment {
 
             container.addView(row);
 
-            // Divider between rows (not after the last one)
             if (i < REWARDS.length - 1) {
                 View divider = new View(getContext());
                 LinearLayout.LayoutParams divParams = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, 1);
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        1
+                );
                 divParams.setMarginStart(dp16);
                 divider.setLayoutParams(divParams);
-                divider.setBackgroundColor(getResources().getColor(R.color.color_divider, null));
+                divider.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.color_divider));
                 container.addView(divider);
             }
         }
     }
 
-    /**
-     * Shows a confirmation dialog for redeeming a reward.
-     * Checks whether the user has enough points before proceeding.
-     * On confirmation:
-     *   - Writes a record to the rewards_redemptions Firestore collection
-     *   - Deducts the cost from the user's totalPoints
-     *   - Shows a Snackbar confirmation
-     *   - Marks the reward row as redeemed in the UI
-     * If the user has insufficient points, shows a Toast explaining the shortfall.
-     *
-     * @param uid         the Firebase Auth UID of the current user
-     * @param reward      the Reward object being redeemed
-     * @param row         the row view to mark as redeemed on success
-     * @param tvCost      the cost TextView to update to "Redeemed" on success
-     * @param rootView    the root view used to anchor the Snackbar
-     */
     private void showRedeemDialog(String uid,
                                   Reward reward,
                                   LinearLayout row,
@@ -288,8 +569,6 @@ public class ProfileFragment extends Fragment {
                 .setMessage("This will cost " + reward.pointsCost + " pts.\nYou currently have " + currentTotalPoints + " pts.")
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Redeem", (dialog, which) -> {
-
-                    // Check the user has enough points
                     if (currentTotalPoints < reward.pointsCost) {
                         Toast.makeText(
                                 getContext(),
@@ -299,63 +578,93 @@ public class ProfileFragment extends Fragment {
                         return;
                     }
 
-                    // Write redemption record to Firestore
                     Map<String, Object> redemptionData = new HashMap<>();
                     redemptionData.put("uid", uid);
-                    redemptionData.put("rewardId", reward.name.toLowerCase().replace(" ", "_"));
+                    redemptionData.put("rewardId", reward.name.toLowerCase(Locale.getDefault()).replace(" ", "_"));
                     redemptionData.put("rewardName", reward.name);
                     redemptionData.put("cost", reward.pointsCost);
                     redemptionData.put("redeemedAt", Timestamp.now());
 
                     db.collection("rewards_redemptions")
                             .add(redemptionData)
-                            .addOnSuccessListener(docRef -> {
+                            .addOnSuccessListener(docRef ->
+                                    db.collection("users")
+                                            .document(uid)
+                                            .update("totalPoints", FieldValue.increment(-reward.pointsCost))
+                                            .addOnSuccessListener(unused -> {
+                                                row.setAlpha(0.45f);
+                                                row.setClickable(false);
+                                                tvCost.setText("Redeemed");
+                                                tvCost.setTextColor(ContextCompat.getColor(
+                                                        requireContext(),
+                                                        R.color.color_text_secondary
+                                                ));
 
-                                // Deduct points from the user
-                                db.collection("users")
-                                        .document(uid)
-                                        .update("totalPoints",
-                                                FieldValue.increment(-reward.pointsCost))
-                                        .addOnSuccessListener(unused -> {
-
-                                            // Mark the row as redeemed in the UI
-                                            row.setAlpha(0.45f);
-                                            row.setClickable(false);
-                                            tvCost.setText("Redeemed");
-                                            tvCost.setTextColor(
-                                                    getResources().getColor(R.color.color_text_secondary, null)
-                                            );
-
-                                            // Show Snackbar confirmation
-                                            Snackbar.make(
-                                                    rootView,
-                                                    reward.emoji + " Reward redeemed! Enjoy your " + reward.name + ".",
-                                                    Snackbar.LENGTH_LONG
-                                            ).show();
-                                        })
-                                        .addOnFailureListener(e ->
-                                                Toast.makeText(getContext(),
-                                                        "Failed to deduct points. Please try again.",
-                                                        Toast.LENGTH_SHORT).show()
-                                        );
-                            })
+                                                Snackbar.make(
+                                                        rootView,
+                                                        reward.emoji + " Reward redeemed! Enjoy your " + reward.name + ".",
+                                                        Snackbar.LENGTH_LONG
+                                                ).show();
+                                            })
+                                            .addOnFailureListener(e ->
+                                                    Toast.makeText(
+                                                            getContext(),
+                                                            "Failed to deduct points. Please try again.",
+                                                            Toast.LENGTH_SHORT
+                                                    ).show()
+                                            )
+                            )
                             .addOnFailureListener(e ->
-                                    Toast.makeText(getContext(),
+                                    Toast.makeText(
+                                            getContext(),
                                             "Redemption failed. Please try again.",
-                                            Toast.LENGTH_SHORT).show()
+                                            Toast.LENGTH_SHORT
+                                    ).show()
                             );
                 })
                 .show();
     }
 
-    /**
-     * Converts dp units to pixels using the current display density.
-     *
-     * @param dp value in density-independent pixels
-     * @return equivalent value in pixels
-     */
+    private String getInitials(String displayName) {
+        if (TextUtils.isEmpty(displayName)) return "ST";
+
+        String cleanName = displayName.trim();
+        if (cleanName.isEmpty()) return "ST";
+
+        String[] parts = cleanName.split("\\s+");
+
+        if (parts.length >= 2) {
+            return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase(Locale.getDefault());
+        }
+
+        if (cleanName.length() >= 2) {
+            return cleanName.substring(0, 2).toUpperCase(Locale.getDefault());
+        }
+
+        return cleanName.substring(0, 1).toUpperCase(Locale.getDefault());
+    }
+
+    private String normalizeBadgeId(String value) {
+        if (value == null) return "";
+        return value.toLowerCase(Locale.getDefault()).replaceAll("[^a-z0-9]", "");
+    }
+
     private int dpToPx(int dp) {
-        float density = getResources().getDisplayMetrics().density;
-        return Math.round(dp * density);
+        return Math.round(dp * getResources().getDisplayMetrics().density);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        if (profileListener != null) {
+            profileListener.remove();
+            profileListener = null;
+        }
+
+        if (badgesListener != null) {
+            badgesListener.remove();
+            badgesListener = null;
+        }
     }
 }

@@ -2,9 +2,9 @@
  * User.java
  *
  * Model class representing a registered Klimate app user.
- * Stores the user's authentication identity, display name, and aggregated
- * sustainability statistics: total points earned, current logging streak,
- * and cumulative CO2 saved.
+ * Stores the user's authentication identity, display name, university,
+ * and aggregated sustainability statistics: total points earned, current
+ * logging streak, and cumulative CO2 saved.
  *
  * Each instance maps to a single document in the Firestore "users"
  * collection, where the document ID equals the Firebase Auth UID.
@@ -13,8 +13,7 @@
  *
  * Role in design: Part of the Model layer (MVC/MVVM). Written by
  * RegisterActivity on first registration. Read by DashboardViewModel
- * (to populate the home screen) and ProfileFragment (to display live
- * stats). Updated by PointsManager whenever the user earns points.
+ * and ProfileFragment. Updated by PointsManager whenever the user earns points.
  *
  * Outstanding issues:
  * - streakDays is only ever incremented; the reset logic (check whether
@@ -31,6 +30,7 @@ public class User {
     private String uid;
     private String displayName;
     private String email;
+    private String university;
     private int totalPoints;
     private int streakDays;
     private double co2SavedKg;
@@ -49,19 +49,21 @@ public class User {
      * @param uid         Firebase Auth UID, also used as the Firestore document ID
      * @param displayName the user's chosen display name
      * @param email       the campus email address used at registration
+     * @param university  the university the user belongs to
      * @param createdAt   timestamp of account creation
      * @param role        "staff" if the user entered the staff code, "student" otherwise
      */
     public User(String uid, String displayName, String email,
-                Timestamp createdAt, String role) {
-        this.uid = uid;
+                String university, Timestamp createdAt, String role) {
+        this.uid         = uid;
         this.displayName = displayName;
-        this.email = email;
+        this.email       = email;
+        this.university  = university;
         this.totalPoints = 0;
-        this.streakDays = 0;
-        this.co2SavedKg = 0.0;
-        this.createdAt = createdAt;
-        this.role = role;
+        this.streakDays  = 0;
+        this.co2SavedKg  = 0.0;
+        this.createdAt   = createdAt;
+        this.role        = role;
     }
 
     /**
@@ -105,6 +107,24 @@ public class User {
      * @param email the campus email address
      */
     public void setEmail(String email) { this.email = email; }
+
+    /**
+     * Returns the university this user is registered under.
+     * Defaults to "LUMS" if not set (for accounts created before
+     * this field was introduced).
+     *
+     * @return university name string
+     */
+    public String getUniversity() {
+        return university != null ? university : "LUMS";
+    }
+
+    /**
+     * Sets the university.
+     *
+     * @param university the university name
+     */
+    public void setUniversity(String university) { this.university = university; }
 
     /**
      * Returns the user's current total points balance.

@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- GREEN HEADER (avatar overlaps) -->
+        <!-- GREEN HEADER -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="180dp">
@@ -19,17 +19,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="140dp"
                 android:background="@drawable/bg_header_green"
+                android:gravity="top"
                 android:orientation="horizontal"
                 android:paddingStart="20dp"
-                android:paddingEnd="20dp"
                 android:paddingTop="20dp"
-                android:gravity="top">
+                android:paddingEnd="20dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🍃"
-                    android:textSize="20sp"/>
+                    android:textSize="20sp" />
 
                 <TextView
                     android:layout_width="0dp"
@@ -39,29 +39,54 @@
                     android:text="Campus"
                     android:textColor="@color/white"
                     android:textSize="16sp"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold" />
 
-                <!-- Notification icons -->
-                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:orientation="horizontal">
-                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp" android:layout_marginEnd="8dp">
-                        <TextView android:layout_width="38dp" android:layout_height="38dp"
-                            android:background="@drawable/bg_card_white" android:gravity="center"
-                            android:text="👤+" android:textSize="12sp"/>
-                        <View android:layout_width="10dp" android:layout_height="10dp"
-                            android:layout_gravity="top|end" android:background="@drawable/bg_notification_dot"/>
+
+                    <FrameLayout
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_marginEnd="8dp">
+
+                        <TextView
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:background="@drawable/bg_card_white"
+                            android:gravity="center"
+                            android:text="👤+"
+                            android:textSize="12sp" />
+
+                        <View
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:layout_gravity="top|end"
+                            android:background="@drawable/bg_notification_dot" />
                     </FrameLayout>
-                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp">
-                        <TextView android:layout_width="38dp" android:layout_height="38dp"
-                            android:background="@drawable/bg_card_white" android:gravity="center"
-                            android:text="🔔" android:textSize="14sp"/>
-                        <View android:layout_width="10dp" android:layout_height="10dp"
-                            android:layout_gravity="top|end" android:background="@drawable/bg_notification_dot"/>
+
+                    <FrameLayout
+                        android:layout_width="38dp"
+                        android:layout_height="38dp">
+
+                        <TextView
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:background="@drawable/bg_card_white"
+                            android:gravity="center"
+                            android:text="🔔"
+                            android:textSize="14sp" />
+
+                        <View
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:layout_gravity="top|end"
+                            android:background="@drawable/bg_notification_dot" />
                     </FrameLayout>
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Avatar circle (centred, overlapping) -->
             <FrameLayout
                 android:layout_width="110dp"
                 android:layout_height="110dp"
@@ -76,7 +101,7 @@
                     android:text="MP"
                     android:textColor="@color/white"
                     android:textSize="32sp"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="28dp"
@@ -86,11 +111,11 @@
                     android:gravity="center"
                     android:text="⚙"
                     android:textColor="@color/white"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp" />
             </FrameLayout>
         </FrameLayout>
 
-        <!-- Name & badge -->
+        <!-- Name and points -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -104,29 +129,41 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Maya P."
+                android:textColor="@color/color_text_primary"
                 android:textSize="22sp"
-                android:textStyle="bold"
-                android:textColor="@color/color_text_primary"/>
+                android:textStyle="bold" />
 
-            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_eco_badge"
                     android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
                     android:paddingTop="4dp"
+                    android:paddingEnd="14dp"
                     android:paddingBottom="4dp"
                     android:text="Eco Warrior"
-                    android:textSize="13sp"
-                    android:textColor="@color/color_eco_badge_text"/>
-                <TextView android:id="@+id/tv_points_badge" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text=" • 1,840 pts" android:textSize="14sp" android:textColor="@color/color_text_primary" android:textStyle="bold"/>
+                    android:textColor="@color/color_eco_badge_text"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tv_points_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" • 1,840 pts"
+                    android:textColor="@color/color_text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Stats cards -->
+        <!-- Main content -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -139,58 +176,131 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
+                app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/white">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:orientation="vertical" android:padding="20dp">
-                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:orientation="horizontal" android:gravity="center_vertical">
-                        <TextView android:layout_width="32dp" android:layout_height="32dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
                             android:background="@drawable/bg_badge_green"
-                            android:gravity="center" android:text="☁" android:textSize="14sp" android:textColor="@color/color_green_text"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="☁"
+                            android:textColor="@color/color_green_text"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
                             android:text="Total CO2 Saved"
-                            android:textSize="14sp" android:textColor="@color/color_text_secondary"/>
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="14sp" />
                     </LinearLayout>
-                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
-                        <TextView android:id="@+id/tv_co2_value" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="2.4" android:textSize="36sp" android:textStyle="bold" android:textColor="@color/color_text_primary"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text=" kg" android:textSize="20sp" android:textColor="@color/color_text_primary" android:layout_marginStart="4dp"/>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tv_co2_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2.4"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="36sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:text=" kg"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="20sp" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Streak + Challenges row -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:layout_marginBottom="16dp">
+            <!-- Streak and challenges -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="@color/white"
                     app:cardCornerRadius="20dp"
-                    app:cardElevation="2dp"
-                    app:cardBackgroundColor="@color/white">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:orientation="vertical" android:padding="18dp">
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:orientation="horizontal" android:gravity="center_vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                                android:text="🔥 " android:textSize="14sp"/>
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                                android:text="Days Streak" android:textSize="13sp" android:textColor="@color/color_text_secondary"/>
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="18dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🔥 "
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Days Streak"
+                                android:textColor="@color/color_text_secondary"
+                                android:textSize="13sp" />
                         </LinearLayout>
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
-                            <TextView android:id="@+id/tv_streak_value" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                                android:text="14" android:textSize="28sp" android:textStyle="bold" android:textColor="@color/color_text_primary"/>
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                                android:text=" days" android:textSize="14sp" android:textColor="@color/color_text_secondary"/>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/tv_streak_value"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="14"
+                                android:textColor="@color/color_text_primary"
+                                android:textSize="28sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text=" days"
+                                android:textColor="@color/color_text_secondary"
+                                android:textSize="14sp" />
                         </LinearLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -198,224 +308,316 @@
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="@color/white"
                     app:cardCornerRadius="20dp"
-                    app:cardElevation="2dp"
-                    app:cardBackgroundColor="@color/white">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:orientation="vertical" android:padding="18dp">
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:orientation="horizontal" android:gravity="center_vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                                android:text="✅ " android:textSize="14sp"/>
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                                android:text="Challenges" android:textSize="13sp" android:textColor="@color/color_text_secondary"/>
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="18dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="✅ "
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Challenges"
+                                android:textColor="@color/color_text_secondary"
+                                android:textSize="13sp" />
                         </LinearLayout>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="12" android:textSize="28sp" android:textStyle="bold"
-                            android:textColor="@color/color_text_primary" android:layout_marginTop="6dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="12"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="28sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
             <!-- Achievements -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="12dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:text="Achievements"
-                    android:textSize="18sp" android:textStyle="bold" android:textColor="@color/color_text_primary"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="View all" android:textSize="13sp" android:textColor="@color/color_green_text"
-                    android:id="@+id/tv_view_all"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Achievements"
+                    android:textColor="@color/color_text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_view_all"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View all"
+                    android:textColor="@color/color_green_text"
+                    android:textSize="13sp" />
             </LinearLayout>
 
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:layout_marginBottom="24dp">
-
-                <!-- Seedling -->
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <TextView android:layout_width="62dp" android:layout_height="62dp"
-                        android:background="@drawable/bg_badge_green"
-                        android:gravity="center" android:text="⚡" android:textSize="24sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="SEEDLING" android:textSize="10sp" android:textStyle="bold"
-                        android:textColor="@color/color_green_text" android:layout_marginTop="6dp"/>
-                </LinearLayout>
-
-                <!-- Commuter -->
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <TextView android:layout_width="62dp" android:layout_height="62dp"
-                        android:background="@drawable/bg_badge_amber"
-                        android:gravity="center" android:text="🚲" android:textSize="24sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="COMMUTER" android:textSize="10sp" android:textStyle="bold"
-                        android:textColor="@color/color_amber_text" android:layout_marginTop="6dp"/>
-                </LinearLayout>
-
-                <!-- Sorter -->
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <TextView android:layout_width="62dp" android:layout_height="62dp"
-                        android:background="@drawable/bg_badge_blue"
-                        android:gravity="center" android:text="♻️" android:textSize="24sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="SORTER" android:textSize="10sp" android:textStyle="bold"
-                        android:textColor="#3A6A9A" android:layout_marginTop="6dp"/>
-                </LinearLayout>
-
-                <!-- Locked -->
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <TextView android:layout_width="62dp" android:layout_height="62dp"
-                        android:background="@drawable/bg_badge_locked"
-                        android:gravity="center" android:text="🔒" android:textSize="22sp"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="LOCKED" android:textSize="10sp" android:textStyle="bold"
-                        android:textColor="@color/color_text_secondary" android:layout_marginTop="6dp"/>
-                </LinearLayout>
-            </LinearLayout>
+            <GridLayout
+                android:id="@+id/badges_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:columnCount="4"
+                android:orientation="horizontal" />
 
             <!-- Rewards -->
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="12dp">
-                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:text="Available Rewards"
-                    android:textSize="18sp" android:textStyle="bold" android:textColor="@color/color_text_primary"/>
-            </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="Rewards"
+                android:textColor="@color/color_text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/white">
+                android:layout_marginBottom="18dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:id="@+id/rewards_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="8dp"/>
-
+                    android:orientation="vertical" />
             </androidx.cardview.widget.CardView>
 
-            <!-- Account section -->
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Account" android:textSize="18sp" android:textStyle="bold"
-                android:textColor="@color/color_text_primary" android:layout_marginBottom="10dp"/>
+            <!-- Settings -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="Settings"
+                android:textColor="@color/color_text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/white">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <!-- Account Settings -->
-                    <LinearLayout android:id="@+id/row_account" android:layout_width="match_parent"
-                        android:layout_height="56dp" android:orientation="horizontal"
-                        android:padding="16dp" android:gravity="center_vertical"
-                        android:clickable="true" android:focusable="true">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="👤 " android:textSize="16sp"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                            android:layout_weight="1" android:text="Account Settings"
-                            android:textSize="15sp" android:textColor="@color/color_text_primary"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="›" android:textSize="20sp" android:textColor="@color/color_text_secondary"/>
+                    <LinearLayout
+                        android:id="@+id/row_account"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="👤 "
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Account Settings"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="›"
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="20sp" />
                     </LinearLayout>
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp"
-                        android:background="@color/color_divider" android:layout_marginStart="16dp"/>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="16dp"
+                        android:background="@color/color_divider" />
 
-                    <!-- Privacy -->
-                    <LinearLayout android:id="@+id/row_privacy" android:layout_width="match_parent"
-                        android:layout_height="56dp" android:orientation="horizontal"
-                        android:padding="16dp" android:gravity="center_vertical"
-                        android:clickable="true" android:focusable="true">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="🔒 " android:textSize="16sp"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                            android:layout_weight="1" android:text="Privacy"
-                            android:textSize="15sp" android:textColor="@color/color_text_primary"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="›" android:textSize="20sp" android:textColor="@color/color_text_secondary"/>
+                    <LinearLayout
+                        android:id="@+id/row_privacy"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🔒 "
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Privacy"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="›"
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="20sp" />
                     </LinearLayout>
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp"
-                        android:background="@color/color_divider" android:layout_marginStart="16dp"/>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="16dp"
+                        android:background="@color/color_divider" />
 
-                    <!-- Notifications -->
-                    <LinearLayout android:id="@+id/row_notifications" android:layout_width="match_parent"
-                        android:layout_height="56dp" android:orientation="horizontal"
-                        android:padding="16dp" android:gravity="center_vertical"
-                        android:clickable="true" android:focusable="true">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="🔔 " android:textSize="16sp"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                            android:layout_weight="1" android:text="Notifications"
-                            android:textSize="15sp" android:textColor="@color/color_text_primary"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="›" android:textSize="20sp" android:textColor="@color/color_text_secondary"/>
+                    <LinearLayout
+                        android:id="@+id/row_notifications"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🔔 "
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Notifications"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="›"
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="20sp" />
                     </LinearLayout>
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp"
-                        android:background="@color/color_divider" android:layout_marginStart="16dp"/>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="16dp"
+                        android:background="@color/color_divider" />
 
-                    <!-- Help & Support -->
-                    <LinearLayout android:id="@+id/row_help" android:layout_width="match_parent"
-                        android:layout_height="56dp" android:orientation="horizontal"
-                        android:padding="16dp" android:gravity="center_vertical"
-                        android:clickable="true" android:focusable="true">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="❓ " android:textSize="16sp"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                            android:layout_weight="1" android:text="Help &amp; Support"
-                            android:textSize="15sp" android:textColor="@color/color_text_primary"/>
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="›" android:textSize="20sp" android:textColor="@color/color_text_secondary"/>
+                    <LinearLayout
+                        android:id="@+id/row_help"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="❓ "
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Help &amp; Support"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="›"
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="20sp" />
                     </LinearLayout>
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp"
-                        android:background="@color/color_divider" android:layout_marginStart="16dp"/>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="16dp"
+                        android:background="@color/color_divider" />
 
-                    <!-- Log Out -->
                     <LinearLayout
                         android:id="@+id/row_logout"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
-                        android:orientation="horizontal"
-                        android:padding="16dp"
-                        android:gravity="center_vertical"
                         android:clickable="true"
-                        android:focusable="true">
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="🚪 "
-                            android:textSize="16sp"/>
+                            android:textSize="16sp" />
+
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Log Out"
+                            android:textColor="@color/color_red_text"
                             android:textSize="15sp"
-                            android:textColor="#D32F2F"/>
+                            android:textStyle="bold" />
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="›"
-                            android:textSize="20sp"
-                            android:textColor="@color/color_text_secondary"/>
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="20sp" />
                     </LinearLayout>
-
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
         </LinearLayout>
