@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- GOLD HEADER with podium -->
+        <!-- GOLD HEADER with live podium -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -28,7 +28,7 @@
                 android:text="CAMPUS"
                 android:textColor="#CCFFFFFF"
                 android:textSize="12sp"
-                android:letterSpacing="0.12"/>
+                android:letterSpacing="0.12" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -38,7 +38,7 @@
                 android:textColor="@color/white"
                 android:textSize="26sp"
                 android:textStyle="bold"
-                android:layout_marginTop="2dp"/>
+                android:layout_marginTop="2dp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -50,19 +50,19 @@
                 android:paddingEnd="18dp"
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
-                android:text="🏆 Winner"
+                android:text="🏆 Live Rankings"
                 android:textColor="@color/white"
                 android:textSize="13sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="160dp"
+                android:layout_height="170dp"
                 android:layout_marginTop="8dp">
 
                 <LinearLayout
                     android:id="@+id/podium_1"
-                    android:layout_width="90dp"
+                    android:layout_width="96dp"
                     android:layout_height="wrap_content"
                     android:layout_centerHorizontal="true"
                     android:layout_alignParentBottom="true"
@@ -70,40 +70,61 @@
                     android:gravity="center_horizontal">
 
                     <TextView
+                        android:id="@+id/text_rank_1_initials"
                         android:layout_width="52dp"
                         android:layout_height="52dp"
                         android:background="@drawable/bg_avatar_slate"
                         android:gravity="center"
-                        android:text="AK"
+                        android:text="--"
                         android:textColor="@color/white"
                         android:textSize="14sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
 
                     <LinearLayout
-                        android:layout_width="90dp"
-                        android:layout_height="85dp"
+                        android:layout_width="96dp"
+                        android:layout_height="92dp"
                         android:layout_marginTop="6dp"
                         android:background="@drawable/bg_rank_1"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:paddingStart="4dp"
+                        android:paddingEnd="4dp">
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="1"
                             android:textColor="@color/white"
                             android:textSize="28sp"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
+
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:id="@+id/text_rank_1_name"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Alex K."
+                            android:ellipsize="end"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:text="Waiting"
                             android:textColor="#CCFFFFFF"
-                            android:textSize="11sp"/>
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/text_rank_1_points"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:text="0 pts"
+                            android:textColor="@color/white"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="78dp"
+                    android:layout_width="82dp"
                     android:layout_height="wrap_content"
                     android:layout_toStartOf="@id/podium_1"
                     android:layout_marginEnd="6dp"
@@ -112,40 +133,61 @@
                     android:gravity="center_horizontal">
 
                     <TextView
+                        android:id="@+id/text_rank_2_initials"
                         android:layout_width="46dp"
                         android:layout_height="46dp"
                         android:background="@drawable/bg_avatar_teal"
                         android:gravity="center"
-                        android:text="PS"
+                        android:text="--"
                         android:textColor="@color/white"
                         android:textSize="13sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
 
                     <LinearLayout
-                        android:layout_width="78dp"
-                        android:layout_height="68dp"
+                        android:layout_width="82dp"
+                        android:layout_height="74dp"
                         android:layout_marginTop="6dp"
                         android:background="@drawable/bg_rank_2"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:paddingStart="4dp"
+                        android:paddingEnd="4dp">
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="2"
                             android:textColor="@color/white"
                             android:textSize="22sp"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
+
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:id="@+id/text_rank_2_name"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Priya S."
+                            android:ellipsize="end"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:text="Waiting"
                             android:textColor="#CCFFFFFF"
-                            android:textSize="10sp"/>
+                            android:textSize="10sp" />
+
+                        <TextView
+                            android:id="@+id/text_rank_2_points"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:text="0 pts"
+                            android:textColor="@color/white"
+                            android:textSize="9sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="78dp"
+                    android:layout_width="82dp"
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@id/podium_1"
                     android:layout_marginStart="6dp"
@@ -154,41 +196,211 @@
                     android:gravity="center_horizontal">
 
                     <TextView
+                        android:id="@+id/text_rank_3_initials"
                         android:layout_width="46dp"
                         android:layout_height="46dp"
                         android:background="@drawable/bg_avatar_purple"
                         android:gravity="center"
-                        android:text="JL"
+                        android:text="--"
                         android:textColor="@color/white"
                         android:textSize="13sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
 
                     <LinearLayout
-                        android:layout_width="78dp"
-                        android:layout_height="55dp"
+                        android:layout_width="82dp"
+                        android:layout_height="64dp"
                         android:layout_marginTop="6dp"
                         android:background="@drawable/bg_rank_3"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:paddingStart="4dp"
+                        android:paddingEnd="4dp">
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="3"
                             android:textColor="@color/white"
                             android:textSize="20sp"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
+
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:id="@+id/text_rank_3_name"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="James L."
+                            android:ellipsize="end"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:text="Waiting"
                             android:textColor="#CCFFFFFF"
-                            android:textSize="10sp"/>
+                            android:textSize="10sp" />
+
+                        <TextView
+                            android:id="@+id/text_rank_3_points"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:text="0 pts"
+                            android:textColor="@color/white"
+                            android:textSize="9sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
             </RelativeLayout>
         </LinearLayout>
 
-        <!-- Leaderboard rows -->
+        <!-- Nemesis Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="4dp"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="NEMESIS WATCH"
+                    android:textColor="@color/color_text_secondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1" />
+
+                <TextView
+                    android:id="@+id/text_nemesis_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Loading nemesis..."
+                    android:textColor="@color/color_text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/row_nemesis_above"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/text_nemesis_above_initials"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:background="@drawable/bg_avatar_amber"
+                        android:gravity="center"
+                        android:text="--"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/text_nemesis_above_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Above you"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/text_nemesis_above_gap"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="0 pts ahead"
+                            android:textColor="@color/color_amber_text"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="↑"
+                        android:textColor="@color/color_amber_text"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/row_nemesis_below"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/text_nemesis_below_initials"
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:background="@drawable/bg_avatar_brown"
+                        android:gravity="center"
+                        android:text="--"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/text_nemesis_below_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Below you"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/text_nemesis_below_gap"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="0 pts behind"
+                            android:textColor="@color/color_red_text"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="↓"
+                        android:textColor="@color/color_red_text"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Live Leaderboard -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -198,293 +410,30 @@
             android:paddingTop="18dp"
             android:paddingBottom="16dp">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LIVE LEADERBOARD"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
+                android:id="@+id/text_leaderboard_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Loading leaderboard..."
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp"
+                android:layout_marginBottom="12dp" />
+
             <LinearLayout
-                android:id="@+id/card_open_validation_feed"
+                android:id="@+id/leaderboard_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:background="@drawable/bg_leaderboard_row"
-                android:orientation="horizontal"
-                android:padding="14dp"
-                android:gravity="center_vertical"
-                android:clickable="true"
-                android:focusable="true">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Review pending submissions"
-                        android:textColor="@color/color_text_primary"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="Open the community validation feed"
-                        android:textColor="@color/color_text_secondary"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Open →"
-                    android:textColor="@color/color_green_text"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- Row 04 - YOU -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/bg_you_row"
-                android:orientation="horizontal"
-                android:padding="12dp"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="32dp"
-                    android:layout_height="wrap_content"
-                    android:text="04"
-                    android:textSize="14sp"
-                    android:textColor="@color/color_green_text"
-                    android:textStyle="bold"/>
-
-                <TextView
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_avatar_green"
-                    android:gravity="center"
-                    android:text="MP"
-                    android:textColor="@color/white"
-                    android:textSize="13sp"
-                    android:textStyle="bold"/>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Maya P."
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/color_text_primary"/>
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text=" (You)"
-                            android:textSize="13sp"
-                            android:textColor="@color/color_text_secondary"/>
-                    </LinearLayout>
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🍃 1,840 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="+3 ▲"
-                    android:textSize="13sp"
-                    android:textColor="@color/color_green_text"
-                    android:textStyle="bold"/>
-            </LinearLayout>
-
-            <!-- Row 05 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/bg_leaderboard_row"
-                android:orientation="horizontal"
-                android:padding="12dp"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="32dp"
-                    android:layout_height="wrap_content"
-                    android:text="05"
-                    android:textSize="14sp"
-                    android:textColor="@color/color_text_secondary"/>
-
-                <TextView
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_avatar_brown"
-                    android:gravity="center"
-                    android:text="CW"
-                    android:textColor="@color/white"
-                    android:textSize="13sp"
-                    android:textStyle="bold"/>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Chris W."
-                        android:textSize="15sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_text_primary"/>
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🍃 1,760 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="-1 ▼"
-                    android:textSize="13sp"
-                    android:textColor="@color/color_red_text"
-                    android:textStyle="bold"/>
-            </LinearLayout>
-
-            <!-- Row 06 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/bg_leaderboard_row"
-                android:orientation="horizontal"
-                android:padding="12dp"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="32dp"
-                    android:layout_height="wrap_content"
-                    android:text="06"
-                    android:textSize="14sp"
-                    android:textColor="@color/color_text_secondary"/>
-
-                <TextView
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_avatar_amber"
-                    android:gravity="center"
-                    android:text="SR"
-                    android:textColor="@color/white"
-                    android:textSize="13sp"
-                    android:textStyle="bold"/>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Sofia R."
-                        android:textSize="15sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_text_primary"/>
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🍃 1,640 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="-2 ▼"
-                    android:textSize="13sp"
-                    android:textColor="@color/color_red_text"
-                    android:textStyle="bold"/>
-            </LinearLayout>
-
-            <!-- Row 07 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/bg_leaderboard_row"
-                android:orientation="horizontal"
-                android:padding="12dp"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="32dp"
-                    android:layout_height="wrap_content"
-                    android:text="07"
-                    android:textSize="14sp"
-                    android:textColor="@color/color_text_secondary"/>
-
-                <TextView
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_avatar_teal"
-                    android:gravity="center"
-                    android:text="OA"
-                    android:textColor="@color/white"
-                    android:textSize="13sp"
-                    android:textStyle="bold"/>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:orientation="vertical">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Omar A."
-                        android:textSize="15sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_text_primary"/>
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🍃 1,520 pts"
-                        android:textSize="12sp"
-                        android:textColor="@color/color_green_text"/>
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="+1 ▲"
-                    android:textSize="13sp"
-                    android:textColor="@color/color_green_text"
-                    android:textStyle="bold"/>
-            </LinearLayout>
+                android:orientation="vertical" />
 
         </LinearLayout>
     </LinearLayout>
