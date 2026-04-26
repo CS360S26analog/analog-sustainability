@@ -35,6 +35,7 @@ public class User {
     private int streakDays;
     private double co2SavedKg;
     private Timestamp createdAt;
+    private String role; // "student" or "staff"
 
     /**
      * Required no-argument constructor for Firestore deserialization.
@@ -49,8 +50,10 @@ public class User {
      * @param displayName the user's chosen display name
      * @param email       the campus email address used at registration
      * @param createdAt   timestamp of account creation
+     * @param role        "staff" if the user entered the staff code, "student" otherwise
      */
-    public User(String uid, String displayName, String email, Timestamp createdAt) {
+    public User(String uid, String displayName, String email,
+                Timestamp createdAt, String role) {
         this.uid = uid;
         this.displayName = displayName;
         this.email = email;
@@ -58,6 +61,7 @@ public class User {
         this.streakDays = 0;
         this.co2SavedKg = 0.0;
         this.createdAt = createdAt;
+        this.role = role;
     }
 
     /**
@@ -157,4 +161,20 @@ public class User {
      * @param createdAt the creation timestamp
      */
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+
+    /**
+     * Returns the user's role — either "student" or "staff".
+     * Staff users have access to the challenge creation and tips
+     * management screens.
+     *
+     * @return role string
+     */
+    public String getRole() { return role; }
+
+    /**
+     * Sets the user's role.
+     *
+     * @param role "student" or "staff"
+     */
+    public void setRole(String role) { this.role = role; }
 }

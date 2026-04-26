@@ -289,6 +289,78 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Campus Impact Card (US-13) -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/color_green_header"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="3dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🌍  Campus Impact"
+                            android:textColor="#CCFFFFFF"
+                            android:textSize="12sp"
+                            android:textAllCaps="true" />
+
+                        <TextView
+                            android:id="@+id/tv_campus_co2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Loading..."
+                            android:textColor="@color/white"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_campus_students"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=""
+                            android:textColor="#CCFFFFFF"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
+
+                        <View
+                            android:layout_width="6dp"
+                            android:layout_height="6dp"
+                            android:background="@drawable/bg_notification_dot" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="live"
+                            android:textColor="#CCFFFFFF"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <!-- Stats row -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -371,6 +443,16 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tv_co2_equivalent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:gravity="center"
+                            android:text=""
+                            android:textColor="@color/color_green_text"
+                            android:textSize="9sp" />
+
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="CO₂ saved"
@@ -437,6 +519,18 @@
                     android:text="Monthly Challenges"
                     android:textColor="@color/color_text_primary"
                     android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_set_goal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="+ Set Goal"
+                    android:textColor="@color/color_amber"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -529,12 +623,37 @@
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>
+                    <TextView
+                        android:id="@+id/tv_goal_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text=""
+                        android:textColor="@color/color_text_secondary"
+                        android:textSize="12sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="16dp" />
+
+            <!-- Staff Tips button — only shown to staff users -->
+            <TextView
+                android:id="@+id/btn_staff_tips"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/bg_header_green"
+                android:gravity="center"
+                android:text="📋  Staff: Manage Tips"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true" />
         </LinearLayout>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

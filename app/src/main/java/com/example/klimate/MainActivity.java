@@ -83,7 +83,8 @@ public class MainActivity extends AppCompatActivity {
                 fragment = logFragment;
             } else if (id == R.id.nav_rankings) {
                 fragment = new RankingsFragment();
-            } else if (id == R.id.nav_friends) {
+            }  else if (id == R.id.nav_friends) {
+            // Staff users see the Tips management screen here
                 fragment = new FriendsFragment();
             } else if (id == R.id.nav_profile) {
                 fragment = new ProfileFragment();
