@@ -23,6 +23,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -36,6 +37,7 @@ import androidx.work.WorkManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.concurrent.TimeUnit;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -201,5 +203,9 @@ public class MainActivity extends AppCompatActivity {
                 joinCode,
                 target
         ));
+    }
+    public void setBottomNavVisible(boolean visible) {
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
+        bottomNav.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 }

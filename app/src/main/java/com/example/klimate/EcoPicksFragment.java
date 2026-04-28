@@ -38,53 +38,83 @@ public class EcoPicksFragment extends Fragment {
         String title;
         String activityType;
         String[] tips;
-        int leftDp;
-        int topDp;
+        float x;
+        float y;
 
-        EcoSpot(String title, String activityType, int leftDp, int topDp, String[] tips) {
+        EcoSpot(String title, String activityType, float x, float y, String[] tips) {
             this.title = title;
             this.activityType = activityType;
-            this.leftDp = leftDp;
-            this.topDp = topDp;
+            this.x = x;
+            this.y = y;
             this.tips = tips;
         }
     }
 
     private final EcoSpot[] spots = {
-            new EcoSpot("Academic Blocks", "Energy saving", 195, 280, new String[]{
-                    "If you’re the last one in the lab, switch off the lights and AV equipment. 💡",
-                    "Stairs > elevators. Get those steps in! 🚶",
-                    "Printing a draft? Go double-sided or do not print at all. 📄"
+
+            new EcoSpot("Parking", "Public Transit", 0.24f, 0.13f, new String[]{
+                    "Use designated parking efficiently. 🚗",
+                    "Carpool when possible. 🌱"
             }),
-            new EcoSpot("PDC / Eateries", "Reusable cup", 95, 245, new String[]{
-                    "Do not buy a bottle. Refill your glass or bottle for free. 🚰",
+
+            new EcoSpot("Campus Gates", "Public Transit", 0.08f, 0.88f, new String[]{
+                    "Coordinate carpools for daily commutes. 🚗",
+                    "Walk or cycle for short distances. 🚲",
+                    "Waiting for pickup? Turn off the engine. 🌬️"
+            }),
+
+            new EcoSpot("Campus Gates", "Public Transit", 0.47f, 0.88f, new String[]{
+                    "Coordinate carpools for daily commutes. 🚗",
+                    "Walk or cycle for short distances. 🚲",
+                    "Waiting for pickup? Turn off the engine. 🌬️"
+            }),
+
+            new EcoSpot("Male Hostels", "Energy saving", 0.16f, 0.30f, new String[]{
+                    "Set AC to 26°C for efficiency. ❄️",
+                    "Wash laundry in full loads. 🧺",
+                    "Switch off lights before leaving. 💡"
+            }),
+
+            new EcoSpot("PDC / Eateries", "Reusable cup", 0.25f, 0.56f, new String[]{
                     "Bring your own mug for chai or coffee. ☕",
-                    "Take only what you will finish to reduce food waste. 🥘"
+                    "Refill bottles instead of buying new ones. 🚰",
+                    "Take only what you will finish. 🥘"
             }),
-            new EcoSpot("Hostels", "Energy saving", 55, 175, new String[]{
-                    "Set AC to 26°C for energy efficiency. ❄️",
-                    "Wait for a full laundry load before starting the machine. 🧺",
-                    "Switch off extra lights before leaving your room. 💡"
+
+            new EcoSpot("Academic Block", "Energy saving", 0.49f, 0.5f, new String[]{
+                    "Switch off lights if you're last out. 💡",
+                    "Use stairs over elevators. 🚶",
+                    "Print less, print double-sided. 📄"
             }),
-            new EcoSpot("Library / SOE", "Paper saving", 265, 295, new String[]{
-                    "Use digital notes when possible. 📱",
-                    "Use desk lamps instead of unnecessary overhead lighting. 🛋️",
-                    "Print only final versions, not every draft. 📄"
+
+            new EcoSpot("SOE / Library", "Paper saving", 0.64f, 0.63f, new String[]{
+                    "Use digital notes where possible. 📱",
+                    "Print only final versions. 📄",
+                    "Use task lighting smartly. 💡"
             }),
-            new EcoSpot("Sports Complex", "Reusable bottle", 205, 115, new String[]{
-                    "Carry a reusable flask for water. 💧",
-                    "Switch off court lights immediately after play. 🏀",
-                    "Stay on paths to protect green spaces. 🌿"
+
+            new EcoSpot("SSE", "Energy saving", 0.10f, 0.53f, new String[]{
+                    "Turn off lab equipment before leaving. 💡",
+                    "Use stairs where possible. 🚶",
+                    "Reduce unnecessary printing. 📄"
             }),
-            new EcoSpot("Parking / Gates", "Public Transit", 45, 390, new String[]{
-                    "Carpool from Gulberg, DHA, or nearby areas. 🚗",
-                    "Waiting for pickup? Turn off the engine. 🌬️",
-                    "Walk or cycle when the distance is short. 🚲"
-            }),
-            new EcoSpot("Mosque", "Water saving", 300, 205, new String[]{
+
+            new EcoSpot("Mosque", "Water saving", 0.71f, 0.41f, new String[]{
                     "Use water mindfully during wudu. 🚰",
-                    "Turn taps off properly after use. 💧",
-                    "Help keep the area clean and low-waste. 🌿"
+                    "Turn taps off fully. 💧",
+                    "Help keep the area clean. 🌿"
+            }),
+
+            new EcoSpot("Sports Complex", "Reusable bottle", 0.55f, 0.22f, new String[]{
+                    "Carry a reusable flask. 💧",
+                    "Switch off lights after play. 🏀",
+                    "Respect green spaces. 🌿"
+            }),
+
+            new EcoSpot("Female Hostels", "Energy saving", 0.86f, 0.59f, new String[]{
+                    "Set AC to 26°C for efficiency. ❄️",
+                    "Wash laundry in full loads. 🧺",
+                    "Switch off lights before leaving. 💡"
             })
     };
 
@@ -103,13 +133,29 @@ public class EcoPicksFragment extends Fragment {
 
     private void addMapMarkers() {
         mapContainer.post(() -> {
+            if (mapContainer.getChildCount() > 1) {
+                mapContainer.removeViews(1, mapContainer.getChildCount() - 1);
+            }
+
+            int mapW = mapContainer.getWidth();
+            int mapH = mapContainer.getHeight();
+
             for (EcoSpot spot : spots) {
                 TextView marker = createMarker();
-                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(dp(38), dp(38));
-                params.leftMargin = dp(spot.leftDp);
-                params.topMargin = dp(spot.topDp);
+
+                int markerSize = dp(34);
+                int left = (int) (mapW * spot.x) - markerSize / 2;
+                int top = (int) (mapH * spot.y) - markerSize / 2;
+
+                FrameLayout.LayoutParams params =
+                        new FrameLayout.LayoutParams(markerSize, markerSize);
+
+                params.leftMargin = left;
+                params.topMargin = top;
+
                 marker.setLayoutParams(params);
                 marker.setOnClickListener(v -> showStickyNote(spot));
+
                 mapContainer.addView(marker);
             }
         });
@@ -118,10 +164,11 @@ public class EcoPicksFragment extends Fragment {
     private TextView createMarker() {
         TextView marker = new TextView(requireContext());
         marker.setText("📍");
-        marker.setTextSize(28);
+        marker.setTextSize(24);
         marker.setGravity(Gravity.CENTER);
         marker.setBackgroundResource(R.drawable.bg_activity_card_selected);
         marker.setElevation(dp(4));
+        marker.setClickable(true);
         return marker;
     }
 
