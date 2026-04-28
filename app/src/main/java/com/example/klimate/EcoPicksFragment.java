@@ -1,37 +1,123 @@
 /**
  * EcoPicksFragment.java
  *
- * Displays hardcoded sustainable alternatives around LUMS. Each item opens
- * LogFragment with the matching activity type pre-selected so students can
- * quickly log campus-specific sustainable choices.
+ * Displays an interactive LUMS EcoMap. Students can tap campus map markers
+ * to view sticky-note sustainability tips, log suggested activities, and
+ * submit their own eco notes for staff review.
  *
- * Role in design: View layer for EXTRA-2 Eco Picks @ LUMS.
+ * Role in design: View layer for EXTRA-2 EcoMap / Eco Picks @ LUMS.
  *
- * Outstanding issues: Eco Picks data is currently hardcoded through
- * LumsAlternatives.java for the final demo.
+ * Outstanding issues: submitted notes are currently shown as confirmation only;
+ * Firestore staff-review storage can be added next.
  *
  * @author Izza
  */
 package com.example.klimate;
 
+import android.app.AlertDialog;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-
-import java.util.List;
+import android.widget.LinearLayout;
 
 public class EcoPicksFragment extends Fragment {
 
-    private LinearLayout llEcoLocations;
-    private TextView tvEcoEmpty;
+    private FrameLayout mapContainer;
+
+    private static class EcoSpot {
+        String title;
+        String activityType;
+        String[] tips;
+        float x;
+        float y;
+
+        EcoSpot(String title, String activityType, float x, float y, String[] tips) {
+            this.title = title;
+            this.activityType = activityType;
+            this.x = x;
+            this.y = y;
+            this.tips = tips;
+        }
+    }
+
+    private final EcoSpot[] spots = {
+
+            new EcoSpot("Parking", "Public Transit", 0.24f, 0.13f, new String[]{
+                    "Use designated parking efficiently. 🚗",
+                    "Carpool when possible. 🌱"
+            }),
+
+            new EcoSpot("Campus Gates", "Public Transit", 0.08f, 0.88f, new String[]{
+                    "Coordinate carpools for daily commutes. 🚗",
+                    "Walk or cycle for short distances. 🚲",
+                    "Waiting for pickup? Turn off the engine. 🌬️"
+            }),
+
+            new EcoSpot("Campus Gates", "Public Transit", 0.47f, 0.88f, new String[]{
+                    "Coordinate carpools for daily commutes. 🚗",
+                    "Walk or cycle for short distances. 🚲",
+                    "Waiting for pickup? Turn off the engine. 🌬️"
+            }),
+
+            new EcoSpot("Male Hostels", "Energy saving", 0.16f, 0.30f, new String[]{
+                    "Set AC to 26°C for efficiency. ❄️",
+                    "Wash laundry in full loads. 🧺",
+                    "Switch off lights before leaving. 💡"
+            }),
+
+            new EcoSpot("PDC / Eateries", "Reusable cup", 0.25f, 0.56f, new String[]{
+                    "Bring your own mug for chai or coffee. ☕",
+                    "Refill bottles instead of buying new ones. 🚰",
+                    "Take only what you will finish. 🥘"
+            }),
+
+            new EcoSpot("Academic Block", "Energy saving", 0.49f, 0.5f, new String[]{
+                    "Switch off lights if you're last out. 💡",
+                    "Use stairs over elevators. 🚶",
+                    "Print less, print double-sided. 📄"
+            }),
+
+            new EcoSpot("SOE / Library", "Paper saving", 0.64f, 0.63f, new String[]{
+                    "Use digital notes where possible. 📱",
+                    "Print only final versions. 📄",
+                    "Use task lighting smartly. 💡"
+            }),
+
+            new EcoSpot("SSE", "Energy saving", 0.10f, 0.53f, new String[]{
+                    "Turn off lab equipment before leaving. 💡",
+                    "Use stairs where possible. 🚶",
+                    "Reduce unnecessary printing. 📄"
+            }),
+
+            new EcoSpot("Mosque", "Water saving", 0.71f, 0.41f, new String[]{
+                    "Use water mindfully during wudu. 🚰",
+                    "Turn taps off fully. 💧",
+                    "Help keep the area clean. 🌿"
+            }),
+
+            new EcoSpot("Sports Complex", "Reusable bottle", 0.55f, 0.22f, new String[]{
+                    "Carry a reusable flask. 💧",
+                    "Switch off lights after play. 🏀",
+                    "Respect green spaces. 🌿"
+            }),
+
+            new EcoSpot("Female Hostels", "Energy saving", 0.86f, 0.59f, new String[]{
+                    "Set AC to 26°C for efficiency. ❄️",
+                    "Wash laundry in full loads. 🧺",
+                    "Switch off lights before leaving. 💡"
+            })
+    };
 
     @Nullable
     @Override
@@ -40,137 +126,191 @@ public class EcoPicksFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_eco_picks, container, false);
 
-        llEcoLocations = view.findViewById(R.id.ll_eco_locations);
-        tvEcoEmpty = view.findViewById(R.id.tv_eco_empty);
-
-        renderEcoPicks();
+        mapContainer = view.findViewById(R.id.map_container);
+        addMapMarkers();
+        View btnHomeChip = view.findViewById(R.id.btn_home_chip);
+        btnHomeChip.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).setBottomNavVisible(true);
+                ((MainActivity) getActivity()).navigateToHome();
+            }
+        });
 
         return view;
     }
 
-    /**
-     * Renders all Eco Pick location cards from LumsAlternatives.
-     */
-    private void renderEcoPicks() {
-        List<LumsAlternatives.EcoLocation> locations = LumsAlternatives.getLocations();
+    private void addMapMarkers() {
+        mapContainer.post(() -> {
+            if (mapContainer.getChildCount() > 1) {
+                mapContainer.removeViews(1, mapContainer.getChildCount() - 1);
+            }
 
-        llEcoLocations.removeAllViews();
+            int mapW = mapContainer.getWidth();
+            int mapH = mapContainer.getHeight();
 
-        if (locations.isEmpty()) {
-            tvEcoEmpty.setVisibility(View.VISIBLE);
-            return;
-        }
+            for (EcoSpot spot : spots) {
+                TextView marker = createMarker();
 
-        tvEcoEmpty.setVisibility(View.GONE);
+                int markerSize = dp(34);
+                int left = (int) (mapW * spot.x) - markerSize / 2;
+                int top = (int) (mapH * spot.y) - markerSize / 2;
 
-        for (LumsAlternatives.EcoLocation location : locations) {
-            llEcoLocations.addView(createLocationCard(location));
-        }
+                FrameLayout.LayoutParams params =
+                        new FrameLayout.LayoutParams(markerSize, markerSize);
+
+                params.leftMargin = left;
+                params.topMargin = top;
+
+                marker.setLayoutParams(params);
+                marker.setOnClickListener(v -> showStickyNote(spot));
+
+                mapContainer.addView(marker);
+            }
+        });
     }
 
-    /**
-     * Creates a location card containing all sustainable actions for that place.
-     *
-     * @param location campus location data
-     * @return fully configured card view
-     */
-    private View createLocationCard(LumsAlternatives.EcoLocation location) {
-        LinearLayout card = new LinearLayout(requireContext());
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setBackgroundResource(R.drawable.bg_card_outline);
-        card.setPadding(dp(16), dp(14), dp(16), dp(14));
 
-        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        cardParams.setMargins(0, 0, 0, dp(14));
-        card.setLayoutParams(cardParams);
 
-        TextView tvLocation = new TextView(requireContext());
-        tvLocation.setText(location.getLocationName());
-        tvLocation.setTextColor(requireContext().getColor(R.color.color_text_primary));
-        tvLocation.setTextSize(18);
-        tvLocation.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        card.addView(tvLocation);
+    private TextView createMarker() {
+        TextView marker = new TextView(requireContext());
+        marker.setText("📍");
+        marker.setTextSize(24);
+        marker.setGravity(Gravity.CENTER);
+        marker.setBackgroundResource(R.drawable.bg_activity_card_selected);
+        marker.setElevation(dp(4));
+        marker.setClickable(true);
+        return marker;
+    }
 
-        TextView tvBlock = new TextView(requireContext());
-        tvBlock.setText(location.getBlock());
-        tvBlock.setTextColor(requireContext().getColor(R.color.color_green_header));
-        tvBlock.setTextSize(13);
-        tvBlock.setPadding(0, dp(2), 0, dp(8));
-        card.addView(tvBlock);
+    private void showStickyNote(EcoSpot spot) {
+        LinearLayout noteLayout = new LinearLayout(requireContext());
+        noteLayout.setOrientation(LinearLayout.VERTICAL);
+        noteLayout.setBackgroundResource(R.drawable.bg_sticky_note);
+        noteLayout.setPadding(dp(20), dp(18), dp(20), dp(16));
 
-        for (LumsAlternatives.EcoItem item : location.getItems()) {
-            card.addView(createEcoItemRow(item));
+        TextView title = new TextView(requireContext());
+        title.setText("📌 " + spot.title);
+        title.setTextColor(requireContext().getColor(R.color.color_text_primary));
+        title.setTextSize(20);
+        title.setTypeface(Typeface.create("casual", Typeface.BOLD));
+        noteLayout.addView(title);
+
+        for (String tip : spot.tips) {
+            TextView tipView = new TextView(requireContext());
+            tipView.setText("• " + tip);
+            tipView.setTextColor(requireContext().getColor(R.color.color_text_primary));
+            tipView.setTextSize(16);
+            tipView.setTypeface(Typeface.create("casual", Typeface.NORMAL));
+            tipView.setPadding(0, dp(10), 0, 0);
+            noteLayout.addView(tipView);
         }
 
-        return card;
+        TextView suggested = new TextView(requireContext());
+        suggested.setText("\nSuggested log: " + spot.activityType);
+        suggested.setTextColor(requireContext().getColor(R.color.color_green_header));
+        suggested.setTextSize(14);
+        suggested.setTypeface(Typeface.DEFAULT_BOLD);
+        noteLayout.addView(suggested);
+
+        LinearLayout buttons = new LinearLayout(requireContext());
+        buttons.setOrientation(LinearLayout.HORIZONTAL);
+        buttons.setGravity(Gravity.END);
+        buttons.setPadding(0, dp(16), 0, 0);
+
+        TextView btnLog = createStickyButton("Log this");
+        TextView btnSubmit = createStickyButton("Submit note");
+        TextView btnClose = createStickyButton("Close");
+
+        buttons.addView(btnLog);
+        buttons.addView(btnSubmit);
+        buttons.addView(btnClose);
+        noteLayout.addView(buttons);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(noteLayout)
+                .create();
+
+        btnLog.setOnClickListener(v -> {
+            dialog.dismiss();
+            openLogWithActivity(spot.activityType);
+        });
+
+        btnSubmit.setOnClickListener(v -> {
+            dialog.dismiss();
+            showSubmitNoteDialog(spot);
+        });
+
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        dialog.show();
     }
 
-    /**
-     * Creates one tappable Eco Pick row.
-     *
-     * @param item sustainable action data
-     * @return row view that opens LogFragment when tapped
-     */
-    private View createEcoItemRow(LumsAlternatives.EcoItem item) {
-        LinearLayout row = new LinearLayout(requireContext());
-        row.setOrientation(LinearLayout.VERTICAL);
-        row.setPadding(dp(12), dp(10), dp(12), dp(10));
-        row.setBackgroundResource(R.drawable.bg_activity_card);
+    private void showSubmitNoteDialog(EcoSpot spot) {
+        EditText input = new EditText(requireContext());
+        input.setHint("Write your eco tip here...");
+        input.setMinLines(3);
+        input.setPadding(dp(16), dp(12), dp(16), dp(12));
+        input.setBackgroundResource(R.drawable.bg_card_outline);
+        input.setTextColor(requireContext().getColor(R.color.color_text_primary));
+        input.setHintTextColor(requireContext().getColor(R.color.color_text_secondary));
+        input.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.ITALIC));
 
-        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        rowParams.setMargins(0, dp(8), 0, 0);
-        row.setLayoutParams(rowParams);
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Submit note for " + spot.title)
+                .setView(input)
+                .setPositiveButton("Submit", (dialog, which) -> {
+                    String note = input.getText().toString().trim();
 
-        TextView tvTitle = new TextView(requireContext());
-        tvTitle.setText(item.getTitle());
-        tvTitle.setTextColor(requireContext().getColor(R.color.color_text_primary));
-        tvTitle.setTextSize(15);
-        tvTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        row.addView(tvTitle);
-
-        TextView tvDescription = new TextView(requireContext());
-        tvDescription.setText(item.getDescription());
-        tvDescription.setTextColor(requireContext().getColor(R.color.color_text_secondary));
-        tvDescription.setTextSize(13);
-        tvDescription.setPadding(0, dp(3), 0, dp(6));
-        row.addView(tvDescription);
-
-        TextView tvAction = new TextView(requireContext());
-        tvAction.setText("Log as: " + item.getActivityType());
-        tvAction.setTextColor(requireContext().getColor(R.color.color_green_header));
-        tvAction.setTextSize(13);
-        tvAction.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        row.addView(tvAction);
-
-        row.setOnClickListener(v -> openLogWithActivity(item.getActivityType()));
-
-        return row;
+                    if (note.isEmpty()) {
+                        Toast.makeText(getContext(), "Note cannot be empty", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Note submitted for staff review ✅", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
-    /**
-     * Opens the Log tab with the selected activity pre-filled.
-     *
-     * @param activityType activity type to pre-select in LogFragment
-     */
     private void openLogWithActivity(String activityType) {
         if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).navigateToLog(activityType, false, false);
+            ((MainActivity) getActivity()).navigateToLog();
         }
     }
 
-    /**
-     * Converts density-independent pixels to raw pixels.
-     *
-     * @param value dp value
-     * @return pixel value
-     */
     private int dp(int value) {
         return (int) (value * getResources().getDisplayMetrics().density);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).setBottomNavVisible(false);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).setBottomNavVisible(true);
+        }
+    }
+
+    private TextView createStickyButton(String text) {
+        TextView button = new TextView(requireContext());
+        button.setText(text);
+        button.setTextColor(requireContext().getColor(R.color.color_green_header));
+        button.setTextSize(13);
+        button.setTypeface(Typeface.DEFAULT_BOLD);
+        button.setPadding(dp(10), dp(8), dp(10), dp(8));
+        button.setGravity(Gravity.CENTER);
+        button.setClickable(true);
+
+        return button;
     }
 }
