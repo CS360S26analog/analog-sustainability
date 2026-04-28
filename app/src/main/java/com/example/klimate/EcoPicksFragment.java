@@ -29,6 +29,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import android.widget.LinearLayout;
 
 public class EcoPicksFragment extends Fragment {
 
@@ -127,6 +128,13 @@ public class EcoPicksFragment extends Fragment {
 
         mapContainer = view.findViewById(R.id.map_container);
         addMapMarkers();
+        View btnHomeChip = view.findViewById(R.id.btn_home_chip);
+        btnHomeChip.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).setBottomNavVisible(true);
+                ((MainActivity) getActivity()).navigateToHome();
+            }
+        });
 
         return view;
     }
@@ -161,6 +169,8 @@ public class EcoPicksFragment extends Fragment {
         });
     }
 
+
+
     private TextView createMarker() {
         TextView marker = new TextView(requireContext());
         marker.setText("📍");
@@ -173,21 +183,70 @@ public class EcoPicksFragment extends Fragment {
     }
 
     private void showStickyNote(EcoSpot spot) {
-        StringBuilder message = new StringBuilder();
+        LinearLayout noteLayout = new LinearLayout(requireContext());
+        noteLayout.setOrientation(LinearLayout.VERTICAL);
+        noteLayout.setBackgroundResource(R.drawable.bg_sticky_note);
+        noteLayout.setPadding(dp(20), dp(18), dp(20), dp(16));
+
+        TextView title = new TextView(requireContext());
+        title.setText("📌 " + spot.title);
+        title.setTextColor(requireContext().getColor(R.color.color_text_primary));
+        title.setTextSize(20);
+        title.setTypeface(Typeface.create("casual", Typeface.BOLD));
+        noteLayout.addView(title);
 
         for (String tip : spot.tips) {
-            message.append("• ").append(tip).append("\n\n");
+            TextView tipView = new TextView(requireContext());
+            tipView.setText("• " + tip);
+            tipView.setTextColor(requireContext().getColor(R.color.color_text_primary));
+            tipView.setTextSize(16);
+            tipView.setTypeface(Typeface.create("casual", Typeface.NORMAL));
+            tipView.setPadding(0, dp(10), 0, 0);
+            noteLayout.addView(tipView);
         }
 
-        message.append("Suggested log: ").append(spot.activityType);
+        TextView suggested = new TextView(requireContext());
+        suggested.setText("\nSuggested log: " + spot.activityType);
+        suggested.setTextColor(requireContext().getColor(R.color.color_green_header));
+        suggested.setTextSize(14);
+        suggested.setTypeface(Typeface.DEFAULT_BOLD);
+        noteLayout.addView(suggested);
 
-        new AlertDialog.Builder(requireContext())
-                .setTitle("📌 " + spot.title)
-                .setMessage(message.toString())
-                .setPositiveButton("Log this activity", (dialog, which) -> openLogWithActivity(spot.activityType))
-                .setNegativeButton("Submit note", (dialog, which) -> showSubmitNoteDialog(spot))
-                .setNeutralButton("Close", null)
-                .show();
+        LinearLayout buttons = new LinearLayout(requireContext());
+        buttons.setOrientation(LinearLayout.HORIZONTAL);
+        buttons.setGravity(Gravity.END);
+        buttons.setPadding(0, dp(16), 0, 0);
+
+        TextView btnLog = createStickyButton("Log this");
+        TextView btnSubmit = createStickyButton("Submit note");
+        TextView btnClose = createStickyButton("Close");
+
+        buttons.addView(btnLog);
+        buttons.addView(btnSubmit);
+        buttons.addView(btnClose);
+        noteLayout.addView(buttons);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(noteLayout)
+                .create();
+
+        btnLog.setOnClickListener(v -> {
+            dialog.dismiss();
+            openLogWithActivity(spot.activityType);
+        });
+
+        btnSubmit.setOnClickListener(v -> {
+            dialog.dismiss();
+            showSubmitNoteDialog(spot);
+        });
+
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        dialog.show();
     }
 
     private void showSubmitNoteDialog(EcoSpot spot) {
@@ -240,5 +299,18 @@ public class EcoPicksFragment extends Fragment {
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).setBottomNavVisible(true);
         }
+    }
+
+    private TextView createStickyButton(String text) {
+        TextView button = new TextView(requireContext());
+        button.setText(text);
+        button.setTextColor(requireContext().getColor(R.color.color_green_header));
+        button.setTextSize(13);
+        button.setTypeface(Typeface.DEFAULT_BOLD);
+        button.setPadding(dp(10), dp(8), dp(10), dp(8));
+        button.setGravity(Gravity.CENTER);
+        button.setClickable(true);
+
+        return button;
     }
 }

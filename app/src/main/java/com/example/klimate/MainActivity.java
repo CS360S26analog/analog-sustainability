@@ -208,4 +208,9 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
+
+    public void navigateToHome() {
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
+        bottomNav.setSelectedItemId(R.id.nav_home);
+    }
 }

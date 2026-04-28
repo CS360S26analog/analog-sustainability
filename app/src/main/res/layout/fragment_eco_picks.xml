@@ -1,24 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.example.klimate.ZoomableFrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/map_zoom_container"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/color_cream_bg">
 
-    <FrameLayout
-        android:id="@+id/map_container"
-        android:layout_width="900dp"
-        android:layout_height="620dp">
+    <com.example.klimate.ZoomableFrameLayout
+        android:id="@+id/map_zoom_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/color_cream_bg">
 
-        <ImageView
-            android:id="@+id/img_lums_map"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="fitXY"
-            android:src="@drawable/lums_ecomap"
-            android:layerType="hardware" />
+        <FrameLayout
+            android:id="@+id/map_container"
+            android:layout_width="900dp"
+            android:layout_height="620dp">
 
-    </FrameLayout>
+            <ImageView
+                android:id="@+id/img_lums_map"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitXY"
+                android:src="@drawable/lums_ecomap"
+                android:layerType="hardware" />
 
-</com.example.klimate.ZoomableFrameLayout>
+        </FrameLayout>
+
+    </com.example.klimate.ZoomableFrameLayout>
+
+    <LinearLayout
+        android:id="@+id/btn_home_chip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="18dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:elevation="10dp"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="42dp"
+            android:layout_height="10dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="-4dp"
+            android:background="@drawable/bg_tape_strip" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_paper_chip"
+            android:paddingStart="14dp"
+            android:paddingTop="9dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="9dp"
+            android:text="🏠 Home"
+            android:textColor="@color/color_green_header"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</FrameLayout>
