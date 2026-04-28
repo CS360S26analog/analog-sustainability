@@ -185,6 +185,22 @@ public class HomeFragment extends Fragment {
             loadCampusImpact(view);
             loadGoalStatus(view);
         }
+        TextView btnEcoPicks = view.findViewById(R.id.btn_eco_picks);
+        if (btnEcoPicks != null) {
+            btnEcoPicks.setOnClickListener(v -> {
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).navigateToEcoPicks();
+                }
+            });
+        }
+        TextView btnStaffManageChallenges = view.findViewById(R.id.btn_staff_manage_challenges);
+        if (btnStaffManageChallenges != null) {
+            btnStaffManageChallenges.setOnClickListener(v -> {
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).navigateToStaffManage();
+                }
+            });
+        }
 
         return view;
     }
