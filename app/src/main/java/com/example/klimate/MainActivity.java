@@ -168,4 +168,38 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setSelectedItemId(R.id.nav_log);
     }
+    /**
+     * Opens the Eco Picks screen from Home.
+     */
+    public void navigateToEcoPicks() {
+        loadFragment(new EcoPicksFragment());
+    }
+    /**
+     * Opens the staff challenge management screen.
+     */
+    public void navigateToStaffManage() {
+        loadFragment(new StaffManageFragment());
+    }
+    /**
+     * Opens the real-time progress screen for a joined team.
+     *
+     * @param teamId Firestore team document ID
+     * @param challengeId Firestore challenge document ID
+     * @param challengeName challenge display name
+     * @param joinCode team join code
+     * @param target target contribution count
+     */
+    public void navigateToTeamProgress(String teamId,
+                                       String challengeId,
+                                       String challengeName,
+                                       String joinCode,
+                                       int target) {
+        loadFragment(TeamProgressFragment.newInstance(
+                teamId,
+                challengeId,
+                challengeName,
+                joinCode,
+                target
+        ));
+    }
 }
