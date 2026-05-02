@@ -1,25 +1,3 @@
-/**
- * MainActivity.java
- *
- * The primary host activity of the Klimate app. Manages the bottom
- * navigation bar and switches between the five main fragments.
- *
- * On launch, checks the current user's role from Firestore:
- * - "staff" → loads the staff navigation (Overview, Manage, Reports,
- *   Community, Profile) with admin-only screens
- * - "student" (default) → loads the student navigation (Home, Log,
- *   Rankings, Friends, Profile)
- *
- * Also schedules the daily streak notification WorkManager task
- * and requests POST_NOTIFICATIONS permission on Android 13+.
- *
- * Role in design: Part of the Navigation layer. Acts as the container
- * for all main screen fragments.
- *
- * Outstanding issues: None.
- *
- * @author Team Analog
- */
 package com.example.klimate;
 
 import android.Manifest;
@@ -35,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.viewpager2.widget.ViewPager2;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -53,6 +32,9 @@ public class MainActivity extends AppCompatActivity {
     private Bundle pendingLogArguments;
     private boolean isStaff = false;
 
+    private ViewPager2 viewPager;
+    private boolean isUpdatingBottomNavFromPager = false;
+
     private final ActivityResultLauncher<String> notificationPermissionLauncher =
             registerForActivityResult(
                     new ActivityResultContracts.RequestPermission(),
@@ -64,12 +46,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        viewPager = findViewById(R.id.view_pager);
+
+        getSupportFragmentManager().addOnBackStackChangedListener(() -> {
+            Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+            if (current != null) {
+                showFragmentContainer();
+            } else {
+                showPager();
+            }
+        });
+
         requestNotificationPermissionIfNeeded();
         scheduleStreakNotificationWorker();
 
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
 
-        // Check role, then set up the correct navigation
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             FirebaseFirestore.getInstance()
@@ -83,15 +75,12 @@ public class MainActivity extends AppCompatActivity {
                         if (isStaff) {
                             setupStaffNavigation(bottomNav);
                         } else {
-                            setupStudentNavigation(bottomNav, savedInstanceState);
+                            setupStudentNavigation(bottomNav);
                         }
                     })
-                    .addOnFailureListener(e ->
-                            // Default to student if role check fails
-                            setupStudentNavigation(bottomNav, savedInstanceState)
-                    );
+                    .addOnFailureListener(e -> setupStudentNavigation(bottomNav));
         } else {
-            setupStudentNavigation(bottomNav, savedInstanceState);
+            setupStudentNavigation(bottomNav);
         }
     }
 
@@ -99,101 +88,170 @@ public class MainActivity extends AppCompatActivity {
     // STUDENT NAVIGATION
     // ═══════════════════════════════════════════════════
 
-    /**
-     * Sets up the student bottom navigation with 5 student-specific tabs.
-     * Shows the Home screen and the navigation tutorial on first launch.
-     */
-    private void setupStudentNavigation(BottomNavigationView bottomNav,
-                                        Bundle savedInstanceState) {
+    private void setupStudentNavigation(BottomNavigationView bottomNav) {
         bottomNav.getMenu().clear();
         bottomNav.inflateMenu(R.menu.bottom_nav_menu);
 
-        if (savedInstanceState == null) {
-            loadFragment(new HomeFragment());
-        }
+        viewPager.setAdapter(new MainPagerAdapter(this));
+        viewPager.setOffscreenPageLimit(2);
+        viewPager.setCurrentItem(0, false);
+        showPager();
 
         bottomNav.setOnItemSelectedListener(item -> {
-            Fragment fragment;
+            if (isUpdatingBottomNavFromPager) {
+                return true;
+            }
+
             int id = item.getItemId();
 
-            if (id == R.id.nav_home) {
-                fragment = new HomeFragment();
-            } else if (id == R.id.nav_log) {
+            if (id == R.id.nav_log && pendingLogArguments != null) {
+                Bundle args = pendingLogArguments;
+                pendingLogArguments = null;
+
                 LogFragment logFragment = new LogFragment();
-                if (pendingLogArguments != null) {
-                    logFragment.setArguments(pendingLogArguments);
-                    pendingLogArguments = null;
-                }
-                fragment = logFragment;
-            } else if (id == R.id.nav_rankings) {
-                fragment = new RankingsFragment();
-            } else if (id == R.id.nav_friends) {
-                fragment = new FriendsFragment();
-            } else if (id == R.id.nav_profile) {
-                fragment = new ProfileFragment();
-            } else {
+                logFragment.setArguments(args);
+                loadFragment(logFragment);
+                return true;
+            }
+
+            int position = getStudentPositionForNavId(id);
+            if (position == -1) {
                 return false;
             }
 
-            loadFragment(fragment);
+            showPager();
+            viewPager.setCurrentItem(position, true);
             return true;
         });
 
-        // Show tutorial on first launch
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                int navId = getStudentNavIdForPosition(position);
+                if (navId == -1) return;
+
+                isUpdatingBottomNavFromPager = true;
+                bottomNav.setSelectedItemId(navId);
+                isUpdatingBottomNavFromPager = false;
+            }
+        });
+
+        bottomNav.setSelectedItemId(R.id.nav_home);
         showNavigationTutorialIfNeeded(bottomNav);
+    }
+
+    private int getStudentPositionForNavId(int id) {
+        if (id == R.id.nav_home) {
+            return 0;
+        } else if (id == R.id.nav_log) {
+            return 1;
+        } else if (id == R.id.nav_rankings) {
+            return 2;
+        } else if (id == R.id.nav_friends) {
+            return 3;
+        } else if (id == R.id.nav_profile) {
+            return 4;
+        } else {
+            return -1;
+        }
+    }
+
+    private int getStudentNavIdForPosition(int position) {
+        if (position == 0) {
+            return R.id.nav_home;
+        } else if (position == 1) {
+            return R.id.nav_log;
+        } else if (position == 2) {
+            return R.id.nav_rankings;
+        } else if (position == 3) {
+            return R.id.nav_friends;
+        } else if (position == 4) {
+            return R.id.nav_profile;
+        } else {
+            return -1;
+        }
     }
 
     // ═══════════════════════════════════════════════════
     // STAFF NAVIGATION
     // ═══════════════════════════════════════════════════
 
-    /**
-     * Sets up the staff bottom navigation with 5 admin-specific tabs.
-     * Staff cannot access student screens (Log, Leaderboard, etc.).
-     */
     private void setupStaffNavigation(BottomNavigationView bottomNav) {
         bottomNav.getMenu().clear();
         bottomNav.inflateMenu(R.menu.staff_nav_menu);
-        loadFragment(new StaffOverviewFragment());
+
+        viewPager.setAdapter(new StaffPagerAdapter(this));
+        viewPager.setOffscreenPageLimit(2);
+        viewPager.setCurrentItem(0, false);
+        showPager();
 
         bottomNav.setOnItemSelectedListener(item -> {
-            Fragment fragment;
-            int id = item.getItemId();
+            if (isUpdatingBottomNavFromPager) {
+                return true;
+            }
 
-            if (id == R.id.staff_nav_overview) {
-                fragment = new StaffOverviewFragment();
-            } else if (id == R.id.staff_nav_manage) {
-                fragment = new StaffManageFragment();
-            } else if (id == R.id.staff_nav_reports) {
-                fragment = new StaffReportsFragment();
-            } else if (id == R.id.staff_nav_community) {
-                fragment = new StaffTipsFragment();
-            } else if (id == R.id.staff_nav_profile) {
-                fragment = new ProfileFragment();
-            } else {
+            int position = getStaffPositionForNavId(item.getItemId());
+            if (position == -1) {
                 return false;
             }
 
-            loadFragment(fragment);
+            showPager();
+            viewPager.setCurrentItem(position, true);
             return true;
         });
 
-        // Show staff-specific tutorial on first staff login
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                int navId = getStaffNavIdForPosition(position);
+                if (navId == -1) return;
+
+                isUpdatingBottomNavFromPager = true;
+                bottomNav.setSelectedItemId(navId);
+                isUpdatingBottomNavFromPager = false;
+            }
+        });
+
+        bottomNav.setSelectedItemId(R.id.staff_nav_overview);
         showStaffTutorialIfNeeded(bottomNav);
     }
 
+    private int getStaffPositionForNavId(int id) {
+        if (id == R.id.staff_nav_overview) {
+            return 0;
+        } else if (id == R.id.staff_nav_manage) {
+            return 1;
+        } else if (id == R.id.staff_nav_reports) {
+            return 2;
+        } else if (id == R.id.staff_nav_community) {
+            return 3;
+        } else if (id == R.id.staff_nav_profile) {
+            return 4;
+        } else {
+            return -1;
+        }
+    }
+
+    private int getStaffNavIdForPosition(int position) {
+        if (position == 0) {
+            return R.id.staff_nav_overview;
+        } else if (position == 1) {
+            return R.id.staff_nav_manage;
+        } else if (position == 2) {
+            return R.id.staff_nav_reports;
+        } else if (position == 3) {
+            return R.id.staff_nav_community;
+        } else if (position == 4) {
+            return R.id.staff_nav_profile;
+        } else {
+            return -1;
+        }
+    }
+
     // ═══════════════════════════════════════════════════
-    // NAVIGATION TUTORIAL (EXTRA-3)
+    // NAVIGATION TUTORIAL
     // ═══════════════════════════════════════════════════
 
-    /**
-     * Shows a detailed TapTargetView navigation tutorial on first launch.
-     * Explains each tab with a meaningful description so new students
-     * understand the app immediately without any guesswork.
-     * Marked done in SharedPreferences so it only ever shows once.
-     *
-     * @param bottomNav the BottomNavigationView to highlight
-     */
     private void showNavigationTutorialIfNeeded(BottomNavigationView bottomNav) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (prefs.getBoolean("tutorial_shown", false)) return;
@@ -276,8 +334,7 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             @Override
-                            public void onSequenceStep(TapTarget lastTarget,
-                                                       boolean targetClicked) {}
+                            public void onSequenceStep(TapTarget lastTarget, boolean targetClicked) {}
 
                             @Override
                             public void onSequenceCanceled(TapTarget lastTarget) {
@@ -292,13 +349,6 @@ public class MainActivity extends AppCompatActivity {
         }, 800);
     }
 
-    /**
-     * Shows a staff-specific TapTargetView tutorial on first staff login.
-     * Uses a separate SharedPreferences flag 'staff_tutorial_shown' so
-     * staff and student tutorials are tracked independently.
-     *
-     * @param bottomNav the BottomNavigationView to highlight
-     */
     private void showStaffTutorialIfNeeded(BottomNavigationView bottomNav) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (prefs.getBoolean("staff_tutorial_shown", false)) return;
@@ -381,8 +431,7 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             @Override
-                            public void onSequenceStep(TapTarget lastTarget,
-                                                       boolean targetClicked) {}
+                            public void onSequenceStep(TapTarget lastTarget, boolean targetClicked) {}
 
                             @Override
                             public void onSequenceCanceled(TapTarget lastTarget) {
@@ -401,12 +450,31 @@ public class MainActivity extends AppCompatActivity {
     // SHARED HELPERS
     // ═══════════════════════════════════════════════════
 
-    /**
-     * Loads a fragment into the main fragment container.
-     *
-     * @param fragment the fragment to display
-     */
+    private void showPager() {
+        if (viewPager != null) {
+            viewPager.setVisibility(View.VISIBLE);
+        }
+
+        View fragmentContainer = findViewById(R.id.fragment_container);
+        if (fragmentContainer != null) {
+            fragmentContainer.setVisibility(View.GONE);
+        }
+    }
+
+    private void showFragmentContainer() {
+        if (viewPager != null) {
+            viewPager.setVisibility(View.GONE);
+        }
+
+        View fragmentContainer = findViewById(R.id.fragment_container);
+        if (fragmentContainer != null) {
+            fragmentContainer.setVisibility(View.VISIBLE);
+        }
+    }
+
     public void loadFragment(Fragment fragment) {
+        showFragmentContainer();
+
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
@@ -418,6 +486,7 @@ public class MainActivity extends AppCompatActivity {
                 new PeriodicWorkRequest.Builder(
                         StreakNotificationWorker.class, 24, TimeUnit.HOURS
                 ).build();
+
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
                 "streak_check",
                 ExistingPeriodicWorkPolicy.KEEP,
@@ -427,54 +496,109 @@ public class MainActivity extends AppCompatActivity {
 
     private void requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                notificationPermissionLauncher.launch(
-                        Manifest.permission.POST_NOTIFICATIONS);
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
             }
         }
     }
 
     public void navigateToLog() {
         pendingLogArguments = null;
+
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
-        bottomNav.setSelectedItemId(R.id.nav_log);
+        if (bottomNav != null) {
+            bottomNav.setSelectedItemId(R.id.nav_log);
+        }
+
+        if (viewPager != null) {
+            showPager();
+            viewPager.setCurrentItem(1, true);
+        }
     }
 
-    public void navigateToLog(String activityName, boolean openVerifiedFlow,
-                              boolean openProofPicker) {
+    public void navigateToLog(String activityName, boolean openVerifiedFlow, boolean openProofPicker) {
         Bundle args = new Bundle();
         args.putString("preselected_activity", activityName);
         args.putBoolean("open_verified_flow", openVerifiedFlow);
         args.putBoolean("open_proof_picker", openProofPicker);
+
         pendingLogArguments = args;
+
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
-        bottomNav.setSelectedItemId(R.id.nav_log);
+        if (bottomNav != null) {
+            bottomNav.setSelectedItemId(R.id.nav_log);
+        }
+
+        if (pendingLogArguments != null) {
+            Bundle logArgs = pendingLogArguments;
+            pendingLogArguments = null;
+
+            LogFragment logFragment = new LogFragment();
+            logFragment.setArguments(logArgs);
+            loadFragment(logFragment);
+        }
     }
 
-    public void navigateToEcoPicks() { loadFragment(new EcoPicksFragment()); }
+    public void navigateToEcoPicks() {
+        loadFragment(new EcoPicksFragment());
+    }
 
-    public void navigateToStaffManage() { loadFragment(new StaffManageFragment()); }
+    public void navigateToStaffManage() {
+        if (isStaff && viewPager != null) {
+            BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
+            if (bottomNav != null) {
+                bottomNav.setSelectedItemId(R.id.staff_nav_manage);
+            }
+            showPager();
+            viewPager.setCurrentItem(1, true);
+        } else {
+            loadFragment(new StaffManageFragment());
+        }
+    }
 
-    public void navigateToTeamProgress(String teamId, String challengeId,
-                                       String challengeName, String joinCode,
+    public void navigateToTeamProgress(String teamId,
+                                       String challengeId,
+                                       String challengeName,
+                                       String joinCode,
                                        int target) {
         loadFragment(TeamProgressFragment.newInstance(
-                teamId, challengeId, challengeName, joinCode, target));
+                teamId,
+                challengeId,
+                challengeName,
+                joinCode,
+                target
+        ));
     }
 
     public void setBottomNavVisible(boolean visible) {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
-        bottomNav.setVisibility(visible ? View.VISIBLE : View.GONE);
+        if (bottomNav != null) {
+            bottomNav.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
     }
 
     public void navigateToHome() {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
+
         if (isStaff) {
-            bottomNav.setSelectedItemId(R.id.staff_nav_overview);
+            if (bottomNav != null) {
+                bottomNav.setSelectedItemId(R.id.staff_nav_overview);
+            }
+            if (viewPager != null) {
+                showPager();
+                viewPager.setCurrentItem(0, true);
+            }
         } else {
-            bottomNav.setSelectedItemId(R.id.nav_home);
+            if (bottomNav != null) {
+                bottomNav.setSelectedItemId(R.id.nav_home);
+            }
+            if (viewPager != null) {
+                showPager();
+                viewPager.setCurrentItem(0, true);
+            }
         }
     }
 }

@@ -50,6 +50,7 @@ dependencies {
     implementation("com.google.guava:guava:31.1-android")
     //for the tutorial
     implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
 
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
 }
