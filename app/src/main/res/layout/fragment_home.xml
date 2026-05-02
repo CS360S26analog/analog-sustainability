@@ -652,6 +652,20 @@
                 android:clickable="true"
                 android:focusable="true" />
             <TextView
+                android:id="@+id/btn_view_feed"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_card_forest"
+                android:gravity="center"
+                android:text="🌍  Community Feed"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
                 android:id="@+id/btn_view_challenges"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
@@ -682,11 +696,13 @@
             <TextView
                 android:id="@+id/btn_staff_manage_challenges"
                 android:layout_width="match_parent"
+                android:visibility="gone"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_header_green"
                 android:gravity="center"
-                android:text="🛠  Staff: Manage Challenges"
+                android:text="🛠  ]
+                : Manage Challenges"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"

@@ -48,5 +48,8 @@ dependencies {
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.work:work-runtime:2.9.0")
     implementation("com.google.guava:guava:31.1-android")
+    //for the tutorial
+    implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
+
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
 }

@@ -137,6 +137,11 @@ public class HomeFragment extends Fragment {
             btnChallenges.setOnClickListener(v -> navigateToChallenges());
         }
 
+        TextView btnFeed = view.findViewById(R.id.btn_view_feed);
+        if (btnFeed != null) {
+            btnFeed.setOnClickListener(v -> navigateToFeed());
+        }
+
         setDefaultDashboard(
                 tvStreakNumber,
                 tvStreakMessage,
@@ -1100,6 +1105,16 @@ public class HomeFragment extends Fragment {
                                 "Could not load stats to share",
                                 Toast.LENGTH_SHORT).show()
                 );
+    }
+
+    private void navigateToFeed() {
+        if (getActivity() != null) {
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new FeedFragment())
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 
 }

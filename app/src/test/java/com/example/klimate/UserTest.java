@@ -6,6 +6,8 @@
  * and default zero values for stats fields.
  * No Firebase or Android dependencies needed — pure Java logic only.
  *
+ * Outstanding issues: None.
+ *
  * @author Maryam Waseem
  */
 package com.example.klimate;
@@ -16,92 +18,90 @@ import static org.junit.Assert.*;
 
 public class UserTest {
 
-    /**
-     * New user created via full constructor should have zero stats.
-     */
+    // Helper — builds a standard test user with the current 6-arg constructor
+    private User makeUser() {
+        return new User("uid123", "Maya", "maya@lums.edu.pk", "LUMS", null, "student");
+    }
+
     @Test
     public void testNewUser_statsInitialisedToZero() {
-        User user = new User("uid123", "Maya", "maya@lums.edu.pk", null);
+        User user = makeUser();
         assertEquals(0, user.getTotalPoints());
         assertEquals(0, user.getStreakDays());
         assertEquals(0.0, user.getCo2SavedKg(), 0.001);
     }
 
-    /**
-     * getDisplayName should return the name passed to the constructor.
-     */
     @Test
     public void testGetDisplayName_returnsConstructorValue() {
-        User user = new User("uid123", "Maya", "maya@lums.edu.pk", null);
-        assertEquals("Maya", user.getDisplayName());
+        assertEquals("Maya", makeUser().getDisplayName());
     }
 
-    /**
-     * getEmail should return the email passed to the constructor.
-     */
     @Test
     public void testGetEmail_returnsConstructorValue() {
-        User user = new User("uid123", "Maya", "maya@lums.edu.pk", null);
-        assertEquals("maya@lums.edu.pk", user.getEmail());
+        assertEquals("maya@lums.edu.pk", makeUser().getEmail());
     }
 
-    /**
-     * getUid should return the UID passed to the constructor.
-     */
     @Test
     public void testGetUid_returnsConstructorValue() {
-        User user = new User("uid123", "Maya", "maya@lums.edu.pk", null);
-        assertEquals("uid123", user.getUid());
+        assertEquals("uid123", makeUser().getUid());
     }
 
-    /**
-     * setTotalPoints then getTotalPoints should return the updated value.
-     */
+    @Test
+    public void testGetUniversity_returnsConstructorValue() {
+        assertEquals("LUMS", makeUser().getUniversity());
+    }
+
+    @Test
+    public void testGetRole_returnsConstructorValue() {
+        assertEquals("student", makeUser().getRole());
+    }
+
+    @Test
+    public void testGetRole_staffUser_returnsStaff() {
+        User staff = new User("s1", "Prof", "prof@lums.edu.pk", "LUMS", null, "staff");
+        assertEquals("staff", staff.getRole());
+    }
+
     @Test
     public void testSetTotalPoints_updatesCorrectly() {
-        User user = new User("uid123", "Maya", "maya@lums.edu.pk", null);
+        User user = makeUser();
         user.setTotalPoints(500);
         assertEquals(500, user.getTotalPoints());
     }
 
-    /**
-     * setStreakDays then getStreakDays should return the updated value.
-     */
     @Test
     public void testSetStreakDays_updatesCorrectly() {
-        User user = new User("uid123", "Maya", "maya@lums.edu.pk", null);
+        User user = makeUser();
         user.setStreakDays(14);
         assertEquals(14, user.getStreakDays());
     }
 
-    /**
-     * setCo2SavedKg then getCo2SavedKg should return the updated value.
-     */
     @Test
     public void testSetCo2SavedKg_updatesCorrectly() {
-        User user = new User("uid123", "Maya", "maya@lums.edu.pk", null);
+        User user = makeUser();
         user.setCo2SavedKg(2.4);
         assertEquals(2.4, user.getCo2SavedKg(), 0.001);
     }
 
-    /**
-     * setDisplayName should overwrite the name set in the constructor.
-     */
     @Test
     public void testSetDisplayName_overwritesConstructorValue() {
-        User user = new User("uid123", "Maya", "maya@lums.edu.pk", null);
+        User user = makeUser();
         user.setDisplayName("Maya P.");
         assertEquals("Maya P.", user.getDisplayName());
     }
 
-    /**
-     * No-arg constructor should not throw and all fields should be null/zero.
-     */
     @Test
     public void testNoArgConstructor_doesNotThrow() {
         User user = new User();
         assertNotNull(user);
         assertEquals(0, user.getTotalPoints());
         assertEquals(0, user.getStreakDays());
+    }
+
+    @Test
+    public void testUniversity_defaultsToLums_whenNull() {
+        User user = new User();
+        // getUniversity() returns "LUMS" as default when field is null
+        assertEquals("LUMS", user.getUniversity());
     }
 }
