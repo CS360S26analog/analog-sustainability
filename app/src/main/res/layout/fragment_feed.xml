@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -34,7 +33,7 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Filter chip bar -->
+    <!-- Filter chip bar — Updated to 3 Tabs -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -45,31 +44,31 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="16dp"
-            android:paddingEnd="16dp"
             android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:gravity="center_vertical">
+            android:paddingEnd="16dp"
+            android:paddingBottom="10dp">
 
             <TextView
                 android:id="@+id/chip_feed"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_header_green"
+                android:background="@drawable/bg_button_amber"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
-                android:text="🌿  Feed"
+                android:text="Verified"
                 android:textColor="@color/white"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/chip_tips"
+                android:id="@+id/chip_news"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:layout_marginEnd="8dp"
@@ -79,12 +78,13 @@
                 android:gravity="center"
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
-                android:text="💡  Tips"
+                android:text="News"
                 android:textColor="@color/color_text_secondary"
                 android:textSize="13sp" />
 
+            <!-- This now represents BOTH Tips and Challenges -->
             <TextView
-                android:id="@+id/chip_challenges"
+                android:id="@+id/chip_explore"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:background="@drawable/bg_card_outline"
@@ -93,14 +93,24 @@
                 android:gravity="center"
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
-                android:text="🏆  Challenges"
+                android:text="Explore"
                 android:textColor="@color/color_text_secondary"
                 android:textSize="13sp" />
+            <TextView
+                android:id="@+id/chip_teams"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_card_outline"
+                android:text="My Teams"
+                android:textColor="@color/color_text_secondary"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:gravity="center" />
 
         </LinearLayout>
     </HorizontalScrollView>
 
-    <!-- Content area that swaps based on selected tab -->
+    <!-- Content area -->
     <FrameLayout
         android:id="@+id/feed_content_container"
         android:layout_width="match_parent"

@@ -78,11 +78,6 @@ public class ValidationFeedFragment extends Fragment {
         validationFeedContainer = view.findViewById(R.id.validation_feed_container);
         emptyStateCard = view.findViewById(R.id.card_empty_validation_state);
 
-        TextView backButton = view.findViewById(R.id.btn_validation_back);
-        backButton.setOnClickListener(v -> requireActivity()
-                .getSupportFragmentManager()
-                .popBackStack());
-
         loadPendingLogs(inflater);
 
         return view;

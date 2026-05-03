@@ -54,6 +54,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
@@ -91,24 +92,28 @@ public class ChallengesFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_challenges, container, false);
-
+        String mode = getArguments() != null ? getArguments().getString("mode") : "browse";
+        View view;
         db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        llChallengesList = view.findViewById(R.id.ll_challenges_list);
-        llMyTeamsList = view.findViewById(R.id.ll_my_teams_list);
-        panelBrowse = view.findViewById(R.id.panel_browse);
-        panelMyTeams = view.findViewById(R.id.panel_my_teams);
-        tabBrowse = view.findViewById(R.id.tab_browse);
-        tabMyTeams = view.findViewById(R.id.tab_my_teams);
-        tvBrowseEmpty = view.findViewById(R.id.tv_browse_empty);
-        tvMyTeamsEmpty = view.findViewById(R.id.tv_my_teams_empty);
+        if ("teams".equals(mode)) {
+            // Inflate the new dedicated Teams XML
+            view = inflater.inflate(R.layout.fragment_challenges_my_teams, container, false);
 
-        tabBrowse.setOnClickListener(v -> showTab(true));
-        tabMyTeams.setOnClickListener(v -> showTab(false));
+            llMyTeamsList = view.findViewById(R.id.ll_my_teams_list);
+            tvMyTeamsEmpty = view.findViewById(R.id.tv_my_teams_empty);
 
-        loadActiveChallenges();
+            loadMyTeams(); // Run the Teams query
+        } else {
+            // Inflate the new dedicated Browse XML
+            view = inflater.inflate(R.layout.fragment_challenges, container, false);
+
+            llChallengesList = view.findViewById(R.id.ll_challenges_list);
+            tvBrowseEmpty = view.findViewById(R.id.tv_browse_empty);
+
+            loadActiveChallenges(); // Run the Browse query with Descending sort
+        }
 
         return view;
     }
@@ -155,6 +160,7 @@ public class ChallengesFragment extends Fragment {
 
         db.collection(COLLECTION_CHALLENGES)
                 .whereEqualTo("active", true)
+                .orderBy("startDate", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(snapshots -> {
                     llChallengesList.removeAllViews();
@@ -187,10 +193,10 @@ public class ChallengesFragment extends Fragment {
         String uid = currentUser.getUid();
 
         llMyTeamsList.removeAllViews();
-        tvMyTeamsEmpty.setVisibility(View.GONE);
 
         db.collection(COLLECTION_TEAMS)
                 .whereArrayContains("memberUids", uid)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(teamSnapshots -> {
                     if (teamSnapshots.isEmpty()) {

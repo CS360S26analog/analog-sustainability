@@ -19,7 +19,8 @@ public class MainPagerAdapter extends FragmentStateAdapter {
                 return new HomeFragment();
 
             case 1:
-                return new FriendsFragment();
+                // Community Feed replaces the old Friends tab
+                return new FeedFragment();
 
             case 2:
                 return new LogFragment();

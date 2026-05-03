@@ -21,27 +21,33 @@
  */
 package com.example.klimate;
 
+import android.Manifest;
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
-import android.graphics.Typeface;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.io.File;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -70,6 +76,7 @@ public class LogFragment extends Fragment {
     private String selectedActivityName = null;
     private String selectedStatus = "quick";
     private Uri selectedProofUri = null;
+    private Uri cameraImageUri = null;
     private int selectedQuantity = 1;
 
     private FirebaseFirestore db;
@@ -80,6 +87,7 @@ public class LogFragment extends Fragment {
     private ImageView imageProofPreview;
     private TextView textProofStatus;
     private TextView btnSelectProof;
+    private TextView btnTakeProof;
     private TextView btnLogActivity;
     private View quickTab;
     private View verifiedTab;
@@ -88,14 +96,25 @@ public class LogFragment extends Fragment {
     private boolean shouldAutoOpenProofPicker = false;
 
     private final int[] cardIds = {
-            R.id.card_cycling, R.id.card_transit, R.id.card_recycling,
-            R.id.card_plantbased, R.id.card_reusable, R.id.card_composting,
-            R.id.card_walked, R.id.card_energy
+            R.id.card_cycling,
+            R.id.card_transit,
+            R.id.card_recycling,
+            R.id.card_plantbased,
+            R.id.card_reusable,
+            R.id.card_composting,
+            R.id.card_walked,
+            R.id.card_energy
     };
 
     private final String[] activityNames = {
-            "Cycling", "Public Transit", "Recycling", "Plant-based meal",
-            "Reusable cup", "Composting", "Walked", "Energy saving"
+            "Cycling",
+            "Public Transit",
+            "Recycling",
+            "Plant-based meal",
+            "Reusable cup",
+            "Composting",
+            "Walked",
+            "Energy saving"
     };
 
     // -------------------------------------------------------------------
@@ -164,6 +183,67 @@ public class LogFragment extends Fragment {
             default:                 return 5;
         }
     }
+
+    // -------------------------------------------------------------------
+    // Activity result launchers
+    // -------------------------------------------------------------------
+
+    private final ActivityResultLauncher<String> pickImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri == null) return;
+
+                selectedProofUri = uri;
+
+                if (imageProofPreview != null) {
+                    imageProofPreview.setImageURI(uri);
+                    imageProofPreview.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                }
+
+                if (textProofStatus != null) {
+                    textProofStatus.setText("Photo selected");
+                }
+
+                if (btnSelectProof != null) {
+                    btnSelectProof.setText("Choose Another Photo");
+                }
+            });
+
+    private final ActivityResultLauncher<Uri> takePictureLauncher =
+            registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
+                if (success && cameraImageUri != null) {
+                    selectedProofUri = cameraImageUri;
+
+                    if (imageProofPreview != null) {
+                        imageProofPreview.setImageURI(selectedProofUri);
+                        imageProofPreview.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    }
+
+                    if (textProofStatus != null) {
+                        textProofStatus.setText("Photo captured");
+                    }
+
+                    if (btnSelectProof != null) {
+                        btnSelectProof.setText("Choose Another Photo");
+                    }
+                }
+            });
+
+    private final ActivityResultLauncher<String> cameraPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                if (granted) {
+                    launchCamera();
+                } else {
+                    Toast.makeText(
+                            getContext(),
+                            "Camera permission is needed to take proof photos",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+            });
+
+    // -------------------------------------------------------------------
+    // Activity configuration — quantity helpers
+    // -------------------------------------------------------------------
 
     /**
      * Returns the slider question label for a given activity type.
@@ -237,30 +317,6 @@ public class LogFragment extends Fragment {
     }
 
     // -------------------------------------------------------------------
-    // Image picker
-    // -------------------------------------------------------------------
-
-    private final ActivityResultLauncher<String> pickImageLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
-                if (uri == null) return;
-
-                selectedProofUri = uri;
-
-                if (imageProofPreview != null) {
-                    imageProofPreview.setImageURI(uri);
-                    imageProofPreview.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                }
-
-                if (textProofStatus != null) {
-                    textProofStatus.setText("Photo selected");
-                }
-
-                if (btnSelectProof != null) {
-                    btnSelectProof.setText("Choose Another Photo");
-                }
-            });
-
-    // -------------------------------------------------------------------
     // Lifecycle
     // -------------------------------------------------------------------
 
@@ -295,6 +351,7 @@ public class LogFragment extends Fragment {
         imageProofPreview = view.findViewById(R.id.image_verified_proof_preview);
         textProofStatus   = view.findViewById(R.id.text_verified_proof_status);
         btnSelectProof    = view.findViewById(R.id.btn_select_verified_proof);
+        btnTakeProof      = view.findViewById(R.id.btn_take_verified_photo);
         btnLogActivity    = view.findViewById(R.id.btn_log_activity);
         quickTab          = view.findViewById(R.id.btn_quick_log);
         verifiedTab       = view.findViewById(R.id.btn_verified_log);
@@ -332,6 +389,19 @@ public class LogFragment extends Fragment {
             btnSelectProof.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
         }
 
+        if (btnTakeProof != null) {
+            btnTakeProof.setOnClickListener(v -> {
+                if (ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.CAMERA
+                ) == PackageManager.PERMISSION_GRANTED) {
+                    launchCamera();
+                } else {
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+                }
+            });
+        }
+
         if (btnLogActivity != null) {
             btnLogActivity.setOnClickListener(v -> submitLog(cards));
         }
@@ -339,6 +409,40 @@ public class LogFragment extends Fragment {
         applyIncomingArguments(cards);
 
         return view;
+    }
+
+    // -------------------------------------------------------------------
+    // Camera
+    // -------------------------------------------------------------------
+
+    /**
+     * Creates a temporary file in the app cache, obtains a FileProvider Uri
+     * for it, and launches the system camera. The Uri is stored in
+     * cameraImageUri so the TakePicture launcher can read it on return.
+     */
+    private void launchCamera() {
+        try {
+            File imageFile = File.createTempFile(
+                    "verified_proof_",
+                    ".jpg",
+                    requireContext().getCacheDir()
+            );
+
+            cameraImageUri = FileProvider.getUriForFile(
+                    requireContext(),
+                    requireContext().getPackageName() + ".fileprovider",
+                    imageFile
+            );
+
+            takePictureLauncher.launch(cameraImageUri);
+
+        } catch (Exception e) {
+            Toast.makeText(
+                    getContext(),
+                    "Could not open camera: " + e.getMessage(),
+                    Toast.LENGTH_SHORT
+            ).show();
+        }
     }
 
     // -------------------------------------------------------------------
@@ -418,7 +522,7 @@ public class LogFragment extends Fragment {
         TextView tvLabel = new TextView(requireContext());
         tvLabel.setText(getQuantityQuestion(activityType));
         tvLabel.setTextSize(12);
-        tvLabel.setTextColor(0xFF4A8A4A); // white 80% opacity — matches card text style
+        tvLabel.setTextColor(0xFF4A8A4A);
         tvLabel.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -463,8 +567,6 @@ public class LogFragment extends Fragment {
         sliderRow.addView(tvValue);
         sliderContainer.addView(sliderRow);
 
-        // Summary line — shows e.g. "Logging: 5 km"
-
         // Points row: "Points earned" label on the left, dynamic value on right
         LinearLayout ptsRow = new LinearLayout(requireContext());
         ptsRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -485,11 +587,10 @@ public class LogFragment extends Fragment {
         ptsRow.addView(tvPtsLabel);
 
         TextView tvPts = new TextView(requireContext());
-        TextView tvquantity = new TextView(requireContext());
         int initialPts = calculatePoints(activityType, 1);
         tvPts.setText("+" + initialPts + " pts");
         tvPts.setTextSize(13);
-        tvPts.setTextColor(0xFFC17B2F); // amber
+        tvPts.setTextColor(0xFFC17B2F);
         tvPts.setTypeface(null, Typeface.BOLD);
         ptsRow.addView(tvPts);
 
@@ -512,7 +613,6 @@ public class LogFragment extends Fragment {
                 selectedQuantity = quantity;
 
                 tvValue.setText(quantity + " " + buildUnitLabel(activityType, quantity));
-
 
                 int pts = calculatePoints(activityType, quantity);
                 tvPts.setText("+" + pts + " pts");
@@ -759,11 +859,12 @@ public class LogFragment extends Fragment {
 
     private void resetForm(@NonNull LinearLayout[] cards) {
         deselectAll(cards); // also removes any inline slider
-        selectedCard         = null;
-        selectedActivityName = null;
-        selectedProofUri     = null;
-        selectedStatus       = "quick";
-        selectedQuantity     = 1;
+        selectedCard              = null;
+        selectedActivityName      = null;
+        selectedProofUri          = null;
+        cameraImageUri            = null;
+        selectedStatus            = "quick";
+        selectedQuantity          = 1;
         shouldAutoOpenProofPicker = false;
 
         if (btnLogActivity != null) {
@@ -865,7 +966,7 @@ public class LogFragment extends Fragment {
      * then compresses to JPEG at 80% quality.
      *
      * @param context  application context for ContentResolver
-     * @param imageUri the Uri returned by the image picker
+     * @param imageUri the Uri returned by the image picker or camera
      * @return compressed image as a byte array, or null if processing failed
      */
     @Nullable

@@ -12,16 +12,16 @@
         android:padding="16dp">
 
         <TextView
-            android:id="@+id/tv_browse_empty"
+            android:id="@+id/tv_my_teams_empty"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="No active challenges right now.\nCheck back soon! 🌿"
+            android:text="You haven't joined any challenges yet.\nBrowse and tap Join to get started!"
             android:textColor="@color/color_text_secondary"
             android:textSize="14sp"
             android:visibility="gone" />
 
         <LinearLayout
-            android:id="@+id/ll_challenges_list"
+            android:id="@+id/ll_my_teams_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />

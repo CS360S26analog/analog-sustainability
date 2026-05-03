@@ -1,14 +1,20 @@
 /**
  * FeedFragment.java
  *
- * Community feed screen with a filter chip bar at the top.
- * Three tabs: Feed (recent activity logs with display names fetched
- * from Firestore), Tips (staff-published sustainability tips),
- * and Challenges (active campus challenges via ChallengesFragment).
+ * Community feed screen with four filter chips: Verified, News, Tips,
+ * and Challenges.
  *
- * Role in design: Part of the View layer. Uses Observer pattern via
- * Firestore queries. Each activity log card does a secondary lookup
- * to resolve the userId to a displayName for a personalised feed.
+ * Verified tab   — embeds ValidationFeedFragment as a child fragment,
+ *                  reusing all its voting, proof-image, and upvote logic.
+ * News tab       — reads news_articles where approved == true, ordered
+ *                  by publishedAt descending. Tapping a card opens the
+ *                  article URL in the device browser.
+ * Tips tab       — reads staff-published tips from the tips collection.
+ * Challenges tab — embeds ChallengesFragment via childFragmentManager.
+ *
+ * Role in design: Part of the View layer. Uses child-fragment embedding
+ * for the Verified and Challenges tabs so that their own fragment logic
+ * (voting, team joining, etc.) works correctly without duplication.
  *
  * Outstanding issues: None.
  *
@@ -16,10 +22,14 @@
  */
 package com.example.klimate;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -28,22 +38,23 @@ import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class FeedFragment extends Fragment {
 
-    private TextView chipFeed, chipTips, chipChallenges;
+    private TextView chipFeed, chipNews, chipExplore, chipTeams;
     private ViewGroup contentContainer;
     private FirebaseFirestore db;
 
@@ -57,13 +68,17 @@ public class FeedFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
 
         chipFeed       = view.findViewById(R.id.chip_feed);
-        chipTips       = view.findViewById(R.id.chip_tips);
-        chipChallenges = view.findViewById(R.id.chip_challenges);
+        chipNews       = view.findViewById(R.id.chip_news);
+        chipExplore    = view.findViewById(R.id.chip_explore);
+        chipTeams    = view.findViewById(R.id.chip_teams);
+
+
         contentContainer = view.findViewById(R.id.feed_content_container);
 
-        chipFeed.setOnClickListener(v -> selectChip(0));
-        chipTips.setOnClickListener(v -> selectChip(1));
-        chipChallenges.setOnClickListener(v -> selectChip(2));
+        chipFeed.setOnClickListener(v       -> selectChip(0));
+        chipNews.setOnClickListener(v       -> selectChip(1));
+        chipExplore.setOnClickListener(v       -> selectChip(2));
+        chipTeams.setOnClickListener(v -> selectChip(3));
 
         selectChip(0);
         return view;
@@ -71,146 +86,128 @@ public class FeedFragment extends Fragment {
 
     /**
      * Switches the active filter chip and refreshes content.
-     * 0 = Feed, 1 = Tips, 2 = Challenges
+     * Clears any child fragments before swapping so that embedded
+     * fragments (Verified / Challenges) are properly torn down.
+     *
+     * 0 = Verified, 1 = News, 2 = Tips, 3 = Challenges
      *
      * @param index the selected chip index
      */
     private void selectChip(int index) {
-        chipFeed.setBackgroundResource(R.drawable.bg_card_outline);
-        chipFeed.setTextColor(requireContext().getColor(R.color.color_text_secondary));
-        chipTips.setBackgroundResource(R.drawable.bg_card_outline);
-        chipTips.setTextColor(requireContext().getColor(R.color.color_text_secondary));
-        chipChallenges.setBackgroundResource(R.drawable.bg_card_outline);
-        chipChallenges.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+        // Style — reset all, then highlight selected
+        TextView[] chips = { chipFeed, chipNews, chipExplore, chipTeams};
+        for (TextView chip : chips) {
+            chip.setBackgroundResource(R.drawable.bg_card_outline);
+            chip.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+            chip.setTypeface(null, android.graphics.Typeface.NORMAL);
+        }
+        chips[index].setBackgroundResource(R.drawable.bg_button_amber);
+        chips[index].setTextColor(requireContext().getColor(android.R.color.white));
+        chips[index].setTypeface(null, android.graphics.Typeface.BOLD);
 
-        TextView selected = index == 0 ? chipFeed : index == 1 ? chipTips : chipChallenges;
-        selected.setBackgroundResource(R.drawable.bg_header_green);
-        selected.setTextColor(requireContext().getColor(android.R.color.white));
-
+        // Remove any previously embedded child fragment before switching
+        Fragment existing = getChildFragmentManager().findFragmentById(R.id.feed_content_container);
+        if (existing != null) {
+            getChildFragmentManager().beginTransaction().remove(existing).commitNow();
+        }
         contentContainer.removeAllViews();
+
         switch (index) {
-            case 0: loadFeedContent(); break;
-            case 1: loadTipsContent(); break;
-            case 2: loadChallengesContent(); break;
+            case 0: loadVerifiedContent(); break;
+            case 1: loadNewsContent();     break;
+            case 2: loadExploreContent();  break; // Index 2 is now Explore
+            case 3: loadMyTeamsContent();    break;
         }
     }
 
     // ─────────────────────────────────────────────────
-    // FEED TAB — activity logs with resolved names
+    // VERIFIED TAB — delegates entirely to ValidationFeedFragment
     // ─────────────────────────────────────────────────
 
     /**
-     * Loads recent activity logs from all users. For each log, does a
-     * secondary Firestore lookup to resolve userId → displayName so
-     * the feed shows personalised entries rather than raw UIDs.
+     * Embeds ValidationFeedFragment into the content container so that
+     * all voting, proof-image loading, and upvote logic is handled there
+     * without any duplication.
      */
-    private void loadFeedContent() {
-        LinearLayout list = buildScrollList();
-        list.addView(buildLoadingLabel("Loading community feed…"));
+    private void loadVerifiedContent() {
+        FragmentTransaction ft = getChildFragmentManager().beginTransaction();
+        ft.replace(R.id.feed_content_container, new ValidationFeedFragment());
+        ft.commit();
+    }
 
-        db.collection("activity_logs")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .limit(20)
+    // ─────────────────────────────────────────────────
+    // NEWS TAB
+    // ─────────────────────────────────────────────────
+
+    /**
+     * Loads approved news articles from Firestore, ordered by publishedAt
+     * descending. Each card is tappable and opens the article URL in the
+     * device's default browser via an Intent.
+     *
+     * Articles are pre-imported into Firestore (no scraping in the app).
+     * Only documents where approved == true are shown.
+     */
+    private void loadNewsContent() {
+        LinearLayout list = buildScrollList();
+        list.addView(buildLoadingLabel("Loading news…"));
+
+        db.collection("news_articles")
+                .whereEqualTo("approved", true)
+                .orderBy("publishedAt", Query.Direction.DESCENDING)
+                .limit(30)
                 .get()
                 .addOnSuccessListener(snapshots -> {
                     list.removeAllViews();
 
                     if (snapshots.isEmpty()) {
                         list.addView(buildEmptyLabel(
-                                "No activity logs yet.\nBe the first to log! 🌿"));
+                                "No news articles yet.\nCheck back soon! 📰"));
                         return;
                     }
 
-                    // Collect all docs into a list so we can render in order
-                    List<QueryDocumentSnapshot> docs = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc : snapshots) docs.add(doc);
-
-                    // Use AtomicInteger to track async completion
-                    AtomicInteger remaining = new AtomicInteger(docs.size());
-
-                    // Pre-create card views in order (null = placeholder)
-                    View[] cardSlots = new View[docs.size()];
-
-                    for (int i = 0; i < docs.size(); i++) {
-                        final int idx = i;
-                        QueryDocumentSnapshot doc = docs.get(i);
-
-                        String userId      = doc.getString("userId");
-                        String activityType = doc.getString("activityType");
-                        String status      = doc.getString("status");
-                        Long points        = doc.getLong("points");
-                        Long bonusPoints   = doc.getLong("bonusPoints");
-                        Long voteCount     = doc.getLong("voteCount");
-                        Timestamp ts       = doc.getTimestamp("timestamp");
-
-                        if (userId == null) {
-                            cardSlots[idx] = buildActivityCard(
-                                    "Someone", activityType, status,
-                                    points, bonusPoints, voteCount, ts);
-                            if (remaining.decrementAndGet() == 0)
-                                renderCards(list, cardSlots);
-                            continue;
-                        }
-
-                        // Secondary lookup: resolve userId → displayName
-                        db.collection("users").document(userId).get()
-                                .addOnSuccessListener(userDoc -> {
-                                    String name = userDoc.getString("displayName");
-                                    String firstName = resolveFirstName(name, userId);
-                                    cardSlots[idx] = buildActivityCard(
-                                            firstName, activityType, status,
-                                            points, bonusPoints, voteCount, ts);
-                                    if (remaining.decrementAndGet() == 0)
-                                        renderCards(list, cardSlots);
-                                })
-                                .addOnFailureListener(e -> {
-                                    cardSlots[idx] = buildActivityCard(
-                                            "A student", activityType, status,
-                                            points, bonusPoints, voteCount, ts);
-                                    if (remaining.decrementAndGet() == 0)
-                                        renderCards(list, cardSlots);
-                                });
+                    for (QueryDocumentSnapshot doc : snapshots) {
+                        list.addView(buildNewsCard(
+                                doc.getString("title"),
+                                doc.getString("summary"),
+                                doc.getString("url"),
+                                doc.getString("source"),
+                                doc.getString("category"),
+                                doc.getTimestamp("publishedAt")));
                     }
                 })
                 .addOnFailureListener(e -> {
                     list.removeAllViews();
-                    list.addView(buildEmptyLabel("Could not load feed."));
+                    list.addView(buildEmptyLabel("Could not load news."));
                 });
     }
 
-    /**
-     * Renders card views into the list in the original order once all
-     * async name lookups have completed.
-     */
-    private void renderCards(LinearLayout list, View[] cardSlots) {
-        if (!isAdded()) return;
-        requireActivity().runOnUiThread(() -> {
-            list.removeAllViews();
-            for (View card : cardSlots) {
-                if (card != null) list.addView(card);
-            }
-        });
+    private void loadMyTeamsContent() {
+        ChallengesFragment fragment = new ChallengesFragment();
+
+        // Create a bundle to tell the fragment to show "My Teams" by default
+        Bundle args = new Bundle();
+        args.putString("mode", "teams"); // Triggers fragment_challenges_my_teams.xml
+        fragment.setArguments(args);
+
+        getChildFragmentManager().beginTransaction()
+                .replace(R.id.feed_content_container, fragment).commit();
     }
 
     /**
-     * Extracts the first name from a display name string,
-     * or falls back to a shortened UID if name is missing.
+     * Builds a tappable news article card. Tapping opens the article URL
+     * in the device's default browser. If the URL is missing the card is
+     * still shown but is not tappable.
+     *
+     * @param title       article headline
+     * @param summary     short article summary
+     * @param url         full article URL
+     * @param source      publisher name e.g. "Dawn", "BBC"
+     * @param category    topic category e.g. "Climate"
+     * @param publishedAt Firestore Timestamp of publication date
      */
-    private String resolveFirstName(String displayName, String userId) {
-        if (displayName != null && !displayName.trim().isEmpty()) {
-            return displayName.trim().split("\\s+")[0];
-        }
-        return userId != null && userId.length() >= 6
-                ? "User " + userId.substring(0, 4) : "A student";
-    }
-
-    /**
-     * Builds a rich activity log card showing the user's name, activity
-     * emoji, points badge, time-ago label, and verification status.
-     */
-    private View buildActivityCard(String firstName, String activityType,
-                                   String status, Long points, Long bonusPoints,
-                                   Long voteCount, Timestamp ts) {
+    private View buildNewsCard(String title, String summary, String url,
+                               String source, String category,
+                               Timestamp publishedAt) {
         CardView card = new CardView(requireContext());
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -221,111 +218,85 @@ public class FeedFragment extends Fragment {
         card.setCardElevation(dpToPx(2));
         card.setCardBackgroundColor(requireContext().getColor(android.R.color.white));
 
+        if (url != null && !url.isEmpty()) {
+            card.setClickable(true);
+            card.setFocusable(true);
+            card.setForeground(requireContext()
+                    .obtainStyledAttributes(new int[]{android.R.attr.selectableItemBackground})
+                    .getDrawable(0));
+            card.setOnClickListener(v -> {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(browserIntent);
+            });
+        }
+
         LinearLayout inner = new LinearLayout(requireContext());
         inner.setOrientation(LinearLayout.VERTICAL);
         inner.setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(14));
 
-        // ── Top row: emoji + name + time-ago ──
-        LinearLayout topRow = new LinearLayout(requireContext());
-        topRow.setOrientation(LinearLayout.HORIZONTAL);
-        topRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        // Meta row: category badge + source + date
+        LinearLayout metaRow = new LinearLayout(requireContext());
+        metaRow.setOrientation(LinearLayout.HORIZONTAL);
+        metaRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
 
-        // Big activity emoji circle
-        TextView tvEmoji = new TextView(requireContext());
-        tvEmoji.setText(getActivityEmoji(activityType));
-        tvEmoji.setTextSize(22f);
-        LinearLayout.LayoutParams emojiLp = new LinearLayout.LayoutParams(
-                dpToPx(44), dpToPx(44));
-        emojiLp.setMarginEnd(dpToPx(12));
-        tvEmoji.setLayoutParams(emojiLp);
-        tvEmoji.setGravity(android.view.Gravity.CENTER);
-        tvEmoji.setBackground(requireContext().getDrawable(R.drawable.bg_streak_number));
+        if (category != null && !category.isEmpty()) {
+            metaRow.addView(buildBadge("📰 " + category,
+                    R.color.color_green_header, android.R.color.white));
+        }
 
-        // Name + activity
-        LinearLayout nameBlock = new LinearLayout(requireContext());
-        nameBlock.setOrientation(LinearLayout.VERTICAL);
-        nameBlock.setLayoutParams(new LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        if (source != null && !source.isEmpty()) {
+            TextView tvSource = new TextView(requireContext());
+            tvSource.setText("  ·  " + source);
+            tvSource.setTextSize(11f);
+            tvSource.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+            metaRow.addView(tvSource);
+        }
 
-        TextView tvName = new TextView(requireContext());
-        tvName.setText(firstName + " logged");
-        tvName.setTextSize(12f);
-        tvName.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+        if (publishedAt != null) {
+            TextView tvDate = new TextView(requireContext());
+            tvDate.setText("  ·  " + new SimpleDateFormat(
+                    "dd MMM", Locale.getDefault()).format(publishedAt.toDate()));
+            tvDate.setTextSize(11f);
+            tvDate.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+            metaRow.addView(tvDate);
+        }
 
-        TextView tvActivity = new TextView(requireContext());
-        tvActivity.setText(activityType != null ? activityType : "Sustainable activity");
-        tvActivity.setTextSize(15f);
-        tvActivity.setTypeface(null, android.graphics.Typeface.BOLD);
-        tvActivity.setTextColor(requireContext().getColor(R.color.color_text_primary));
-
-        nameBlock.addView(tvName);
-        nameBlock.addView(tvActivity);
-
-        // Time-ago label
-        TextView tvTime = new TextView(requireContext());
-        tvTime.setText(getTimeAgo(ts));
-        tvTime.setTextSize(11f);
-        tvTime.setTextColor(requireContext().getColor(R.color.color_text_secondary));
-
-        topRow.addView(tvEmoji);
-        topRow.addView(nameBlock);
-        topRow.addView(tvTime);
-        inner.addView(topRow);
-
-        // ── Bottom row: points badge + status badge + vote count ──
-        LinearLayout bottomRow = new LinearLayout(requireContext());
-        bottomRow.setOrientation(LinearLayout.HORIZONTAL);
-        bottomRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        LinearLayout.LayoutParams bottomLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
+        TextView tvTitle = new TextView(requireContext());
+        tvTitle.setText(title != null ? title : "Untitled article");
+        tvTitle.setTextSize(15f);
+        tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvTitle.setTextColor(requireContext().getColor(R.color.color_text_primary));
+        LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
-        bottomLp.topMargin = dpToPx(10);
-        bottomRow.setLayoutParams(bottomLp);
+        titleLp.topMargin    = dpToPx(8);
+        titleLp.bottomMargin = dpToPx(4);
+        tvTitle.setLayoutParams(titleLp);
 
-        // Points badge
-        long totalPts = (points != null ? points : 0)
-                + (bonusPoints != null ? bonusPoints : 0);
-        TextView tvPoints = buildBadge("⭐ +" + totalPts + " pts",
-                R.color.color_amber, android.R.color.white);
-        bottomRow.addView(tvPoints);
+        TextView tvSummary = new TextView(requireContext());
+        tvSummary.setText(summary != null ? summary : "");
+        tvSummary.setTextSize(13f);
+        tvSummary.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+        tvSummary.setLineSpacing(dpToPx(2), 1f);
 
-        // Status badge
-        if ("pending_verification".equals(status)) {
-            TextView tvStatus = buildBadge("📋 Pending review",
-                    R.color.color_green_header, android.R.color.white);
-            LinearLayout.LayoutParams sp =
-                    new LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT);
-            sp.setMarginStart(dpToPx(6));
-            tvStatus.setLayoutParams(sp);
-            bottomRow.addView(tvStatus);
-        } else if ("verified".equals(status)) {
-            TextView tvStatus = buildBadge("✅ Verified",
-                    R.color.color_green_header, android.R.color.white);
-            LinearLayout.LayoutParams sp =
-                    new LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT);
-            sp.setMarginStart(dpToPx(6));
-            tvStatus.setLayoutParams(sp);
-            bottomRow.addView(tvStatus);
+        inner.addView(metaRow);
+        inner.addView(tvTitle);
+        inner.addView(tvSummary);
+
+        if (url != null && !url.isEmpty()) {
+            TextView tvReadMore = new TextView(requireContext());
+            tvReadMore.setText("Read article →");
+            tvReadMore.setTextSize(12f);
+            tvReadMore.setTypeface(null, android.graphics.Typeface.BOLD);
+            tvReadMore.setTextColor(requireContext().getColor(R.color.color_green_text));
+            LinearLayout.LayoutParams readLp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            readLp.topMargin = dpToPx(8);
+            tvReadMore.setLayoutParams(readLp);
+            inner.addView(tvReadMore);
         }
 
-        // Vote count (only show if > 0)
-        if (voteCount != null && voteCount > 0) {
-            TextView tvVotes = buildBadge("👍 " + voteCount,
-                    R.color.color_green_header, android.R.color.white);
-            LinearLayout.LayoutParams vp =
-                    new LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT);
-            vp.setMarginStart(dpToPx(6));
-            tvVotes.setLayoutParams(vp);
-            bottomRow.addView(tvVotes);
-        }
-
-        inner.addView(bottomRow);
         card.addView(inner);
         return card;
     }
@@ -359,47 +330,18 @@ public class FeedFragment extends Fragment {
                                 doc.getTimestamp("timestamp")));
                     }
                 })
-                .addOnFailureListener(e ->
-                        list.addView(buildEmptyLabel("Could not load tips.")));
-    }
-
-    // ─────────────────────────────────────────────────
-    // CHALLENGES TAB
-    // ─────────────────────────────────────────────────
-
-    private void loadChallengesContent() {
-        getChildFragmentManager()
-                .beginTransaction()
-                .replace(R.id.feed_content_container, new ChallengesFragment())
-                .commit();
-    }
-
-    // ─────────────────────────────────────────────────
-    // VIEW BUILDERS
-    // ─────────────────────────────────────────────────
-
-    private LinearLayout buildScrollList() {
-        NestedScrollView scroll = new NestedScrollView(requireContext());
-        scroll.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-
-        LinearLayout list = new LinearLayout(requireContext());
-        list.setOrientation(LinearLayout.VERTICAL);
-        int pad = dpToPx(16);
-        list.setPadding(pad, pad, pad, pad);
-        scroll.addView(list);
-        contentContainer.addView(scroll);
-        return list;
+                .addOnFailureListener(e -> {
+                    list.removeAllViews();
+                    list.addView(buildEmptyLabel("Could not load tips."));
+                });
     }
 
     private View buildTipCard(String title, String body,
                               String category, Timestamp ts) {
         CardView card = new CardView(requireContext());
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, 0, 0, dpToPx(10));
+                dpToPx(280), ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(dpToPx(16), 0, 0, dpToPx(10)); // Margin start only for spacing
         card.setLayoutParams(lp);
         card.setRadius(dpToPx(14));
         card.setCardElevation(dpToPx(2));
@@ -409,15 +351,13 @@ public class FeedFragment extends Fragment {
         inner.setOrientation(LinearLayout.VERTICAL);
         inner.setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(14));
 
-        // Category + date row
         LinearLayout metaRow = new LinearLayout(requireContext());
         metaRow.setOrientation(LinearLayout.HORIZONTAL);
         metaRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
 
         if (category != null) {
-            TextView tvCat = buildBadge("💡 " + category,
-                    R.color.color_green_header, android.R.color.white);
-            metaRow.addView(tvCat);
+            metaRow.addView(buildBadge("💡 " + category,
+                    R.color.color_green_header, android.R.color.white));
         }
 
         if (ts != null) {
@@ -437,7 +377,7 @@ public class FeedFragment extends Fragment {
         LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
-        titleLp.topMargin = dpToPx(8);
+        titleLp.topMargin    = dpToPx(8);
         titleLp.bottomMargin = dpToPx(4);
         tvTitle.setLayoutParams(titleLp);
 
@@ -454,6 +394,85 @@ public class FeedFragment extends Fragment {
         return card;
     }
 
+    // ─────────────────────────────────────────────────
+    // CHALLENGES TAB — embeds ChallengesFragment
+    // ─────────────────────────────────────────────────
+
+    private void loadExploreContent() {
+        // 1. Create a parent vertical layout
+        LinearLayout parent = new LinearLayout(requireContext());
+        parent.setOrientation(LinearLayout.VERTICAL);
+        parent.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+        // 2. Create the Horizontal Scroll for Tips
+        HorizontalScrollView tipScroll = new HorizontalScrollView(requireContext());
+        tipScroll.setPadding(0, dpToPx(16), 0, dpToPx(16));
+        tipScroll.setClipToPadding(false);
+        tipScroll.setScrollBarSize(0); // Hide scrollbar
+
+        LinearLayout tipRow = new LinearLayout(requireContext());
+        tipRow.setOrientation(LinearLayout.HORIZONTAL);
+        tipScroll.addView(tipRow);
+        parent.addView(tipScroll);
+
+        // 3. Create a FrameLayout to hold the ChallengesFragment
+        FrameLayout challengeFrame = new FrameLayout(requireContext());
+        challengeFrame.setId(View.generateViewId()); // Unique ID for transaction
+        parent.addView(challengeFrame);
+
+        contentContainer.addView(parent);
+
+        // 4. Fetch Random Tips for the row
+        db.collection("tips").get().addOnSuccessListener(snapshots -> {
+            List<DocumentSnapshot> tipDocs = new ArrayList<>(snapshots.getDocuments());
+            java.util.Collections.shuffle(tipDocs); // Randomize for every open
+
+            for (DocumentSnapshot doc : tipDocs) {
+                tipRow.addView(buildTipCard(
+                        doc.getString("title"),
+                        doc.getString("body"),
+                        doc.getString("category"),
+                        doc.getTimestamp("timestamp")
+                ));
+            }
+        });
+        ChallengesFragment fragment = new ChallengesFragment();
+        Bundle args = new Bundle();
+        args.putString("mode", "browse"); // Triggers fragment_challenges_browse.xml
+        fragment.setArguments(args);
+
+        // 5. Load Challenges Fragment into the inner frame
+        getChildFragmentManager()
+                .beginTransaction()
+                .replace(challengeFrame.getId(), new ChallengesFragment())
+                .commit();
+    }
+
+    // ─────────────────────────────────────────────────
+    // VIEW BUILDERS
+    // ─────────────────────────────────────────────────
+
+    /**
+     * Creates a NestedScrollView wrapping a padded vertical LinearLayout,
+     * adds it to the content container, and returns the inner list so
+     * callers can append cards to it directly.
+     */
+    private LinearLayout buildScrollList() {
+        NestedScrollView scroll = new NestedScrollView(requireContext());
+        scroll.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+
+        LinearLayout list = new LinearLayout(requireContext());
+        list.setOrientation(LinearLayout.VERTICAL);
+        int pad = dpToPx(16);
+        list.setPadding(pad, pad, pad, pad);
+        scroll.addView(list);
+        contentContainer.addView(scroll);
+        return list;
+    }
+
     private TextView buildBadge(String text, int bgColorRes, int textColorRes) {
         TextView tv = new TextView(requireContext());
         tv.setText(text);
@@ -461,7 +480,6 @@ public class FeedFragment extends Fragment {
         tv.setTextColor(requireContext().getColor(textColorRes));
         tv.setBackground(requireContext().getDrawable(R.drawable.bg_header_green));
         tv.setPadding(dpToPx(8), dpToPx(3), dpToPx(8), dpToPx(3));
-        // Tint background to the requested colour
         tv.getBackground().setTint(requireContext().getColor(bgColorRes));
         return tv;
     }
@@ -503,24 +521,6 @@ public class FeedFragment extends Fragment {
         if (mins < 60)  return mins + " min ago";
         if (hours < 24) return hours + " hr" + (hours == 1 ? "" : "s") + " ago";
         return days + " day" + (days == 1 ? "" : "s") + " ago";
-    }
-
-    /**
-     * Returns an emoji for the given activity type string.
-     */
-    private String getActivityEmoji(String activityType) {
-        if (activityType == null) return "🌿";
-        switch (activityType) {
-            case "Cycling":          return "🚲";
-            case "Public Transit":   return "🚌";
-            case "Recycling":        return "♻️";
-            case "Plant-based meal": return "🥗";
-            case "Reusable cup":     return "☕";
-            case "Composting":       return "🍂";
-            case "Walked":           return "🚶";
-            case "Energy saving":    return "💡";
-            default:                 return "🌿";
-        }
     }
 
     private int dpToPx(int dp) {
