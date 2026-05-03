@@ -104,9 +104,9 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="12dp"
                     android:layout_marginEnd="10dp"
+                    android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
@@ -127,6 +127,7 @@
                         android:progress="0"
                         android:progressBackgroundTint="#40FFFFFF"
                         android:progressTint="@color/color_amber" />
+
                 </LinearLayout>
 
                 <TextView
@@ -150,160 +151,25 @@
             android:paddingEnd="16dp"
             android:paddingBottom="16dp">
 
-            <!-- Activity cards -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="185dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:id="@+id/card_recent_1"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="7dp"
-                    android:background="@drawable/bg_card_amber"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:orientation="vertical"
-                    android:padding="18dp">
-
-                    <TextView
-                        android:id="@+id/tv_recent_1_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:maxLines="2"
-                        android:text="MOST FREQUENT"
-                        android:textColor="@color/white"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tv_recent_1_subtitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="Your most frequent activity will appear here. Try logging something."
-                        android:textColor="#CCFFFFFF"
-                        android:textSize="12sp" />
-
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:layout_weight="1" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/tv_recent_1_icon"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="10dp"
-                            android:text="🌿"
-                            android:textSize="24sp" />
-
-                        <TextView
-                            android:id="@+id/btn_recent_1"
-                            android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_button_log_it"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:gravity="center"
-                            android:paddingStart="18dp"
-                            android:paddingEnd="18dp"
-                            android:text="Log now"
-                            android:textColor="@color/white"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/card_recent_2"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:layout_marginStart="7dp"
-                    android:background="@drawable/bg_card_forest"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:orientation="vertical"
-                    android:padding="18dp">
-
-                    <TextView
-                        android:id="@+id/tv_recent_2_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:maxLines="2"
-                        android:text="RECENT ACTIVITY"
-                        android:textColor="@color/white"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tv_recent_2_subtitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="Your latest activity will appear here once you log one."
-                        android:textColor="#CCFFFFFF"
-                        android:textSize="12sp" />
-
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:layout_weight="1" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/tv_recent_2_icon"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="10dp"
-                            android:text="🌿"
-                            android:textSize="24sp" />
-
-                        <TextView
-                            android:id="@+id/btn_recent_2"
-                            android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_button_log_it"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:gravity="center"
-                            android:paddingStart="18dp"
-                            android:paddingEnd="18dp"
-                            android:text="Log now"
-                            android:textColor="@color/white"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Campus Impact Card (US-13) -->
+            <!-- Impact Dashboard -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/card_monthly_stats"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                app:cardBackgroundColor="@color/color_green_header"
-                app:cardCornerRadius="16dp"
+                android:layout_marginBottom="14dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="22dp"
                 app:cardElevation="3dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
+                    android:paddingStart="18dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="18dp"
+                    android:paddingBottom="16dp">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -314,192 +180,560 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="🌍  Campus Impact"
-                            android:textColor="#CCFFFFFF"
-                            android:textSize="12sp"
-                            android:textAllCaps="true" />
+                            android:text="Impact Dashboard"
+                            android:textColor="@color/color_green_text"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
 
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:gravity="center"
+                                android:text="🌱"
+                                android:textSize="16sp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tv_stats_current_streak"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:maxLines="1"
+                                    android:text="0"
+                                    android:textColor="@color/color_text_primary"
+                                    android:textSize="17sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Current streak"
+                                    android:textColor="@color/color_text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:gravity="center"
+                                android:text="🔥"
+                                android:textSize="16sp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tv_bottom_streak_days"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:maxLines="1"
+                                    android:text="0"
+                                    android:textColor="@color/color_text_primary"
+                                    android:textSize="17sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Best streak"
+                                    android:textColor="@color/color_text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:gravity="center"
+                                android:text="⭐"
+                                android:textSize="16sp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tv_points_value"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:maxLines="1"
+                                    android:text="0"
+                                    android:textColor="@color/color_text_primary"
+                                    android:textSize="17sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Points"
+                                    android:textColor="@color/color_text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <FrameLayout
+                        android:layout_width="150dp"
+                        android:layout_height="150dp"
+                        android:layout_marginStart="8dp">
+
+                        <com.example.klimate.DoubleProgressRingView
+                            android:id="@+id/progress_ring_monthly"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                        <LinearLayout
+                            android:layout_width="96dp"
+                            android:layout_height="96dp"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_co2_saved"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:maxLines="1"
+                                android:text="0.0 kg"
+                                android:textColor="@color/color_text_primary"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:text="CO₂ saved"
+                                android:textColor="@color/color_text_secondary"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_co2_equivalent"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:gravity="center"
+                                android:text=""
+                                android:textColor="@color/color_green_text"
+                                android:textSize="8sp"
+                                android:visibility="gone" />
+                        </LinearLayout>
+                    </FrameLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Suggested quick logs -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Suggested quick logs"
+                        android:textColor="@color/color_text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_see_more_logs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:text="See more"
+                        android:textColor="@color/color_green_text"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/card_recent_1"
+                            android:layout_width="218dp"
+                            android:layout_height="72dp"
+                            android:layout_marginEnd="12dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            app:cardBackgroundColor="#FBF6EA"
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp">
+
+                                <androidx.cardview.widget.CardView
+                                    android:layout_width="42dp"
+                                    android:layout_height="42dp"
+                                    app:cardBackgroundColor="#F3E3B8"
+                                    app:cardCornerRadius="21dp"
+                                    app:cardElevation="0dp">
+
+                                    <TextView
+                                        android:id="@+id/tv_recent_1_icon"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:text="🚌"
+                                        android:textSize="20sp" />
+                                </androidx.cardview.widget.CardView>
+
+                                <TextView
+                                    android:id="@+id/tv_recent_1_title"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="12dp"
+                                    android:layout_marginEnd="12dp"
+                                    android:layout_weight="1"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:text="Public Transit"
+                                    android:textColor="@color/color_text_primary"
+                                    android:textSize="15sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/tv_recent_1_subtitle"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text=""
+                                    android:visibility="gone" />
+
+                                <TextView
+                                    android:id="@+id/btn_recent_1"
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:background="@drawable/bg_avatar_amber"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:gravity="center"
+                                    android:text="+"
+                                    android:textColor="@color/white"
+                                    android:textSize="24sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/card_recent_2"
+                            android:layout_width="218dp"
+                            android:layout_height="72dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            app:cardBackgroundColor="#F3F7EC"
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp">
+
+                                <androidx.cardview.widget.CardView
+                                    android:layout_width="42dp"
+                                    android:layout_height="42dp"
+                                    app:cardBackgroundColor="#DCE7CF"
+                                    app:cardCornerRadius="21dp"
+                                    app:cardElevation="0dp">
+
+                                    <TextView
+                                        android:id="@+id/tv_recent_2_icon"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:text="🚲"
+                                        android:textSize="20sp" />
+                                </androidx.cardview.widget.CardView>
+
+                                <TextView
+                                    android:id="@+id/tv_recent_2_title"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="12dp"
+                                    android:layout_marginEnd="12dp"
+                                    android:layout_weight="1"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:text="Cycling"
+                                    android:textColor="@color/color_text_primary"
+                                    android:textSize="15sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/tv_recent_2_subtitle"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text=""
+                                    android:visibility="gone" />
+
+                                <TextView
+                                    android:id="@+id/btn_recent_2"
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:background="@drawable/bg_avatar_amber"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:gravity="center"
+                                    android:text="+"
+                                    android:textColor="@color/white"
+                                    android:textSize="24sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+                    </LinearLayout>
+                </HorizontalScrollView>
+            </LinearLayout>
+
+            <!-- Eco widgets row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="18dp"
+                android:orientation="horizontal">
+
+                <!-- Campus Impact -->
+                <!-- Campus Impact -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/card_campus_impact_compact"
+                    android:layout_width="0dp"
+                    android:layout_height="180dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="@color/color_green_header"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:padding="18dp">
+
+                        <!-- Top title -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Campus Impact"
+                            android:textColor="@color/white"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <!-- Spacer -->
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                        <!-- Middle big number -->
                         <TextView
                             android:id="@+id/tv_campus_co2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Loading..."
+                            android:layout_gravity="center_horizontal"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:text="14.8 kg"
                             android:textColor="@color/white"
-                            android:textSize="22sp"
+                            android:textSize="28sp"
                             android:textStyle="bold" />
 
+                        <!-- Bottom small label -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginTop="4dp"
+                            android:text="CO₂ saved"
+                            android:textColor="#EAF4E5"
+                            android:textSize="12sp" />
+
+                        <!-- Keep this hidden so existing code doesn't crash -->
                         <TextView
                             android:id="@+id/tv_campus_students"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text=""
-                            android:textColor="#CCFFFFFF"
-                            android:textSize="12sp" />
-                    </LinearLayout>
+                            android:visibility="gone" />
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:gravity="center_horizontal">
-
+                        <!-- Spacer -->
                         <View
-                            android:layout_width="6dp"
-                            android:layout_height="6dp"
-                            android:background="@drawable/bg_notification_dot" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="live"
-                            android:textColor="#CCFFFFFF"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Stats row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:orientation="horizontal">
-
-                <androidx.cardview.widget.CardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="5dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🔥"
-                            android:textSize="26sp" />
-
-                        <TextView
-                            android:id="@+id/tv_bottom_streak_days"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="0"
-                            android:textColor="@color/color_text_primary"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Best Streak"
-                            android:textColor="@color/color_text_secondary"
-                            android:textSize="11sp" />
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
-
+                <!-- EcoPicks Near You -->
+                <!-- EcoPicks Near You -->
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/card_ecopicks_widget"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="180dp"
+                    android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:layout_marginStart="3dp"
-                    android:layout_marginEnd="3dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:transitionName="ecopicks_card"
                     app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
+                    app:cardCornerRadius="24dp"
                     app:cardElevation="2dp">
 
-                    <LinearLayout
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="14dp">
+                        android:layout_height="match_parent">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🌍"
-                            android:textSize="26sp" />
+                        <!-- Map background -->
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="EcoPicks map preview"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ecopicks_map_preview" />
 
-                        <TextView
-                            android:id="@+id/tv_co2_saved"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="0.0 kg"
-                            android:textColor="@color/color_text_primary"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                        <!-- Overlay content -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:paddingStart="14dp"
+                            android:paddingTop="14dp"
+                            android:paddingEnd="14dp"
+                            android:paddingBottom="12dp">
 
-                        <TextView
-                            android:id="@+id/tv_co2_equivalent"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
-                            android:gravity="center"
-                            android:text=""
-                            android:textColor="@color/color_green_text"
-                            android:textSize="9sp" />
+                            <!-- Title/subtitle + arrow -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="top"
+                                android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="CO₂ saved"
-                            android:textColor="@color/color_text_secondary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                                <!-- Readable background behind title/subtitle -->
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="8dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/bg_ecopicks_text_backdrop"
+                                    android:orientation="vertical"
+                                    android:paddingStart="10dp"
+                                    android:paddingTop="8dp"
+                                    android:paddingEnd="10dp"
+                                    android:paddingBottom="8dp">
 
-                <androidx.cardview.widget.CardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="5dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="EcoPicks"
+                                        android:textColor="@color/color_text_primary"
+                                        android:textSize="20sp"
+                                        android:textStyle="bold" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="14dp">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:maxLines="2"
+                                        android:text="Sustainable tips on campus"
+                                        android:textColor="@color/color_text_secondary"
+                                        android:textSize="12sp" />
+                                </LinearLayout>
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⭐"
-                            android:textSize="26sp" />
+                                <TextView
+                                    android:layout_width="38dp"
+                                    android:layout_height="38dp"
+                                    android:background="@drawable/bg_info_circle"
+                                    android:gravity="center"
+                                    android:text="›"
+                                    android:textColor="@color/color_green_text"
+                                    android:textSize="24sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/tv_points_value"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="0"
-                            android:textColor="@color/color_text_primary"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="0dp"
+                                android:layout_weight="1" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Points"
-                            android:textColor="@color/color_text_secondary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
+                            <!-- Open map pill -->
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:background="@drawable/bg_ecopicks_open_map_pill"
+                                android:gravity="center"
+                                android:paddingStart="18dp"
+                                android:paddingEnd="18dp"
+                                android:text="View map"
+                                android:textColor="@color/color_text_primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </FrameLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
@@ -507,7 +741,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="26dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginBottom="6dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
@@ -623,6 +857,7 @@
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>
+
                     <TextView
                         android:id="@+id/tv_goal_status"
                         android:layout_width="wrap_content"
@@ -644,75 +879,44 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card_amber"
-                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
                 android:text="↗  Share My Progress"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true" />
-            <TextView
-                android:id="@+id/btn_view_feed"
-                android:layout_width="match_parent"
-                android:visibility="gone"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_card_forest"
-                android:gravity="center"
-                android:text="🌍  Community Feed"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true" />
+                android:visibility="gone" />
 
             <TextView
-                android:id="@+id/btn_view_challenges"
+                android:id="@+id/btn_browse_more_challenges"
                 android:layout_width="match_parent"
-                android:visibility="gone"
-                android:layout_height="48dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card_forest"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
-                android:text="🏆  View Challenges"
+                android:text="🏆  Browse More Challenges"
                 android:textColor="@color/white"
                 android:textSize="14sp"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true" />
-
-            <TextView
-                android:id="@+id/btn_eco_picks"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_card_amber"
-                android:gravity="center"
-                android:text="🌿  Eco Picks @ LUMS"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true" />
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/btn_staff_manage_challenges"
                 android:layout_width="match_parent"
-                android:visibility="gone"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_header_green"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
-                android:text="🛠  ]
-                : Manage Challenges"
+                android:text="🛠  Manage Challenges"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true" />
+                android:visibility="gone" />
 
-            <!-- Staff Tips button — only shown to staff users -->
             <TextView
                 android:id="@+id/btn_staff_tips"
                 android:layout_width="match_parent"
@@ -720,14 +924,14 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="16dp"
                 android:background="@drawable/bg_header_green"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
                 android:text="📋  Staff: Manage Tips"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:visibility="gone"
-                android:clickable="true"
-                android:focusable="true" />
+                android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

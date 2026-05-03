@@ -506,7 +506,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (viewPager != null) {
             showPager();
-            viewPager.setCurrentItem(1, true);
+            viewPager.setCurrentItem(2, true);
         }
     }
 

@@ -6,32 +6,31 @@
  * monthly challenge progress. Reads live data directly from Firestore.
  *
  * Role in design: Part of the View layer (MVVM). Observes Firestore
- * in real time to keep dashboard stats current. Navigates to
- * LogFragment via the cycling and recycling action cards, and to
- * HistoryFragment via the activity history card.
+ * in real time to keep dashboard stats current.
  *
- * Outstanding issues: time period filter (weekly/monthly) not yet
- * connected to UI, currently shows all-time stats.
+ * Outstanding issues: multiple monthly challenge rings are supported by
+ * DoubleProgressRingView, but HomeFragment currently sends one default
+ * monthly challenge progress value.
  *
  * @author Maryam Ali
  */
 package com.example.klimate;
 
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.EditText;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -56,12 +55,24 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
-import java.util.Map;
 
 public class HomeFragment extends Fragment {
 
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
+
+    private DoubleProgressRingView progressRingMonthly;
+    private TextView tvStatsCurrentStreak;
+
+    private float impactCo2SavedKg = 0f;
+    private float impactPersonalGoalKg = 0f;
+    private float impactChallengeProgress = 0f;
+
+    private boolean impactHasMonthlyChallenge = true;
+
+    private interface Co2ResultCallback {
+        void onResult(double monthlyCo2);
+    }
 
     @Nullable
     @Override
@@ -84,6 +95,8 @@ public class HomeFragment extends Fragment {
         ProgressBar progressStreak = view.findViewById(R.id.progress_streak);
 
         TextView tvBottomStreakDays = view.findViewById(R.id.tv_bottom_streak_days);
+        tvStatsCurrentStreak = view.findViewById(R.id.tv_stats_current_streak);
+        progressRingMonthly = view.findViewById(R.id.progress_ring_monthly);
 
         TextView tvRecent1Icon = view.findViewById(R.id.tv_recent_1_icon);
         TextView tvRecent1Title = view.findViewById(R.id.tv_recent_1_title);
@@ -95,10 +108,10 @@ public class HomeFragment extends Fragment {
 
         TextView btnRecent1 = view.findViewById(R.id.btn_recent_1);
         TextView btnRecent2 = view.findViewById(R.id.btn_recent_2);
-
         View cardRecent1 = view.findViewById(R.id.card_recent_1);
         View cardRecent2 = view.findViewById(R.id.card_recent_2);
 
+        TextView tvSeeMoreLogs = view.findViewById(R.id.tv_see_more_logs);
         TextView tvChallengeHelp = view.findViewById(R.id.tv_challenge_help);
         TextView tvSetGoal = view.findViewById(R.id.tv_set_goal);
 
@@ -110,46 +123,99 @@ public class HomeFragment extends Fragment {
 
         setRandomGreeting(tvGreetingMessage);
 
-        profileAvatarContainer.setOnClickListener(v -> navigateToProfile());
+        if (profileAvatarContainer != null) {
+            profileAvatarContainer.setOnClickListener(v -> navigateToProfile());
+        }
 
-        btnRecent1.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent1Title.getText().toString()));
-        btnRecent2.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent2Title.getText().toString()));
+        if (tvSeeMoreLogs != null) {
+            tvSeeMoreLogs.setOnClickListener(v -> navigateToLog());
+        }
+
+        if (btnRecent1 != null) {
+            btnRecent1.setOnClickListener(v ->
+                    showHomeLogChoiceDialog(tvRecent1Title.getText().toString()));
+        }
+
+        if (btnRecent2 != null) {
+            btnRecent2.setOnClickListener(v ->
+                    showHomeLogChoiceDialog(tvRecent2Title.getText().toString()));
+        }
 
         if (cardRecent1 != null) {
-            cardRecent1.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent1Title.getText().toString()));
+            cardRecent1.setOnClickListener(v ->
+                    showHomeLogChoiceDialog(tvRecent1Title.getText().toString()));
         }
 
         if (cardRecent2 != null) {
-            cardRecent2.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent2Title.getText().toString()));
+            cardRecent2.setOnClickListener(v ->
+                    showHomeLogChoiceDialog(tvRecent2Title.getText().toString()));
         }
 
-        tvChallengeHelp.setOnClickListener(v -> showMonthlyChallengesHelp());
-        tvSetGoal.setOnClickListener(v -> showSetGoalDialog());
-        btnChallengeInfo.setOnClickListener(v -> showZeroWasteInfo());
+        if (tvChallengeHelp != null) {
+            tvChallengeHelp.setOnClickListener(v -> showMonthlyChallengesHelp());
+        }
 
-        // Show student-only buttons after confirming student role
+        if (tvSetGoal != null) {
+            tvSetGoal.setOnClickListener(v -> showSetGoalDialog());
+        }
+
+        if (btnChallengeInfo != null) {
+            btnChallengeInfo.setOnClickListener(v -> showZeroWasteInfo());
+        }
+
+        TextView btnShare = view.findViewById(R.id.btn_share_progress);
+        TextView btnBrowseMoreChallenges = view.findViewById(R.id.btn_browse_more_challenges);
+        TextView btnStaffManageChallenges = view.findViewById(R.id.btn_staff_manage_challenges);
+        TextView btnStaffTips = view.findViewById(R.id.btn_staff_tips);
+
         if (currentUser != null) {
             db.collection("users").document(currentUser.getUid()).get()
                     .addOnSuccessListener(roleDoc -> {
                         if (!isAdded()) return;
-                        String role = roleDoc.getString("role");
-                        boolean isStudentUser = !"staff".equals(role);
 
-                        if (isStudentUser) {
-                            TextView btnShare = view.findViewById(R.id.btn_share_progress);
+                        String role = roleDoc.getString("role");
+                        boolean isStaffUser = "staff".equals(role);
+
+                        if (isStaffUser) {
+                            if (btnShare != null) {
+                                btnShare.setVisibility(View.GONE);
+                            }
+
+                            if (btnBrowseMoreChallenges != null) {
+                                btnBrowseMoreChallenges.setVisibility(View.GONE);
+                            }
+
+                            if (btnStaffManageChallenges != null) {
+                                btnStaffManageChallenges.setVisibility(View.VISIBLE);
+                                btnStaffManageChallenges.setOnClickListener(v -> {
+                                    if (getActivity() instanceof MainActivity) {
+                                        ((MainActivity) getActivity()).navigateToStaffManage();
+                                    }
+                                });
+                            }
+
+                            if (btnStaffTips != null) {
+                                btnStaffTips.setVisibility(View.VISIBLE);
+                                btnStaffTips.setOnClickListener(v -> navigateToStaffTips());
+                            }
+
+                        } else {
                             if (btnShare != null) {
                                 btnShare.setVisibility(View.VISIBLE);
                                 btnShare.setOnClickListener(v -> shareProgress());
                             }
-                            TextView btnChallenges = view.findViewById(R.id.btn_view_challenges);
-                            if (btnChallenges != null) {
-                                btnChallenges.setVisibility(View.VISIBLE);
-                                btnChallenges.setOnClickListener(v -> navigateToChallenges());
+
+                            if (btnBrowseMoreChallenges != null) {
+                                btnBrowseMoreChallenges.setVisibility(View.VISIBLE);
+                                btnBrowseMoreChallenges.setOnClickListener(v -> navigateToFeedExplore());
                             }
-                            TextView btnFeed = view.findViewById(R.id.btn_view_feed);
-                            if (btnFeed != null) {
-                                btnFeed.setVisibility(View.VISIBLE);
-                                btnFeed.setOnClickListener(v -> navigateToFeed());
+
+                            if (btnStaffManageChallenges != null) {
+                                btnStaffManageChallenges.setVisibility(View.GONE);
+                            }
+
+                            if (btnStaffTips != null) {
+                                btnStaffTips.setVisibility(View.GONE);
                             }
                         }
                     });
@@ -173,8 +239,15 @@ public class HomeFragment extends Fragment {
                 tvChallengePercent
         );
 
+        if (tvStatsCurrentStreak != null) {
+            tvStatsCurrentStreak.setText("0");
+        }
+
+        refreshImpactRing();
+
         if (currentUser != null) {
             loadUserHeader(tvUserName, tvProfileInitial);
+
             loadUserStreakFromLogs(
                     tvStreakNumber,
                     tvStreakMessage,
@@ -182,40 +255,33 @@ public class HomeFragment extends Fragment {
                     progressStreak,
                     tvBottomStreakDays
             );
+
             loadActivityCards(
-                    tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
-                    tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
+                    tvRecent1Icon,
+                    tvRecent1Title,
+                    tvRecent1Subtitle,
+                    tvRecent2Icon,
+                    tvRecent2Title,
+                    tvRecent2Subtitle
             );
-            loadMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
+
+            loadMonthlyChallenge(
+                    tvChallengeTitle,
+                    progressChallenge,
+                    tvChallengeDays,
+                    tvChallengePercent
+            );
+
             loadOptionalStats(view);
-            // Show staff tips button only if user is staff
-            TextView btnStaffTips = view.findViewById(R.id.btn_staff_tips);
-            if (btnStaffTips != null && currentUser != null) {
-                db.collection("users").document(currentUser.getUid()).get()
-                        .addOnSuccessListener(doc -> {
-                            String role = doc.getString("role");
-                            if ("staff".equals(role)) {
-                                btnStaffTips.setVisibility(View.VISIBLE);
-                                btnStaffTips.setOnClickListener(v -> navigateToStaffTips());
-                            }
-                        });
-            }
             loadCampusImpact(view);
             loadGoalStatus(view);
         }
-        TextView btnEcoPicks = view.findViewById(R.id.btn_eco_picks);
-        if (btnEcoPicks != null) {
-            btnEcoPicks.setOnClickListener(v -> {
+
+        View ecoPicksWidget = view.findViewById(R.id.card_ecopicks_widget);
+        if (ecoPicksWidget != null) {
+            ecoPicksWidget.setOnClickListener(v -> {
                 if (getActivity() instanceof MainActivity) {
                     ((MainActivity) getActivity()).navigateToEcoPicks();
-                }
-            });
-        }
-        TextView btnStaffManageChallenges = view.findViewById(R.id.btn_staff_manage_challenges);
-        if (btnStaffManageChallenges != null) {
-            btnStaffManageChallenges.setOnClickListener(v -> {
-                if (getActivity() instanceof MainActivity) {
-                    ((MainActivity) getActivity()).navigateToStaffManage();
                 }
             });
         }
@@ -229,6 +295,9 @@ public class HomeFragment extends Fragment {
 
         View view = getView();
         if (view == null || currentUser == null) return;
+
+        progressRingMonthly = view.findViewById(R.id.progress_ring_monthly);
+        tvStatsCurrentStreak = view.findViewById(R.id.tv_stats_current_streak);
 
         TextView tvUserName = view.findViewById(R.id.tv_user_name);
         TextView tvProfileInitial = view.findViewById(R.id.tv_profile_initial);
@@ -253,6 +322,7 @@ public class HomeFragment extends Fragment {
         TextView tvChallengePercent = view.findViewById(R.id.tv_challenge_percent);
 
         loadUserHeader(tvUserName, tvProfileInitial);
+
         loadUserStreakFromLogs(
                 tvStreakNumber,
                 tvStreakMessage,
@@ -260,10 +330,12 @@ public class HomeFragment extends Fragment {
                 progressStreak,
                 tvBottomStreakDays
         );
+
         loadActivityCards(
                 tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
                 tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
         );
+
         loadMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
         loadOptionalStats(view);
         loadCampusImpact(view);
@@ -271,17 +343,10 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadOptionalStats(View view) {
-        int pointsId = requireContext().getResources().getIdentifier(
-                "tv_points_value", "id", requireContext().getPackageName()
-        );
-        int co2Id = requireContext().getResources().getIdentifier(
-                "tv_co2_saved", "id", requireContext().getPackageName()
-        );
+        TextView tvPoints = view.findViewById(R.id.tv_points_value);
+        TextView tvCo2Saved = view.findViewById(R.id.tv_co2_saved);
 
-        TextView tvPoints = pointsId != 0 ? view.findViewById(pointsId) : null;
-        TextView tvCo2Saved = co2Id != 0 ? view.findViewById(co2Id) : null;
-
-        if (tvPoints == null && tvCo2Saved == null) {
+        if (tvPoints == null && tvCo2Saved == null && progressRingMonthly == null) {
             return;
         }
 
@@ -292,21 +357,86 @@ public class HomeFragment extends Fragment {
                     if (!document.exists()) return;
 
                     Long totalPoints = document.getLong("totalPoints");
-                    Double co2SavedKg = document.getDouble("co2SavedKg");
+                    Double monthlyGoalKg = document.getDouble("monthlyGoalKg");
+                    Boolean joinedMonthlyChallenge = document.getBoolean("joinedMonthlyChallenge");
 
                     if (tvPoints != null) {
-                        tvPoints.setText(String.valueOf(totalPoints != null ? totalPoints : 0));
+                        long pointsValue = totalPoints != null ? totalPoints : 0L;
+                        tvPoints.setText(formatWholeNumber(pointsValue));
                     }
 
-                    if (tvCo2Saved != null) {
-                        double value = co2SavedKg != null ? co2SavedKg : 0.0;
-                        tvCo2Saved.setText(String.format(Locale.getDefault(), "%.1f kg", value));
+                    if (monthlyGoalKg != null && monthlyGoalKg > 0) {
+                        impactPersonalGoalKg = monthlyGoalKg.floatValue();
+                    } else if (getContext() != null) {
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+                        impactPersonalGoalKg = prefs.getFloat("monthly_goal_kg", 0f);
+                    }
 
-                        // Show real-world equivalent below the CO₂ value
-                        TextView tvEquiv = view.findViewById(R.id.tv_co2_equivalent);
-                        if (tvEquiv != null && value > 0) {
-                            tvEquiv.setText(CarbonEquivalentHelper.buildEquivalentString(value));
+                    if (joinedMonthlyChallenge != null) {
+                        impactHasMonthlyChallenge = joinedMonthlyChallenge;
+                    } else {
+                        impactHasMonthlyChallenge = true;
+                    }
+
+                    loadCurrentMonthCo2ForDashboard(view, tvCo2Saved);
+                });
+    }
+
+    private void loadCurrentMonthCo2ForDashboard(View view, TextView tvCo2Saved) {
+        calculateCurrentMonthCo2(monthlyCo2 -> {
+            if (!isAdded()) return;
+
+            impactCo2SavedKg = (float) monthlyCo2;
+
+            if (tvCo2Saved != null) {
+                tvCo2Saved.setText(String.format(Locale.getDefault(), "%.1f kg", monthlyCo2));
+            }
+
+            TextView tvEquiv = view.findViewById(R.id.tv_co2_equivalent);
+            if (tvEquiv != null) {
+                if (monthlyCo2 > 0) {
+                    tvEquiv.setText(CarbonEquivalentHelper.buildEquivalentString(monthlyCo2));
+                } else {
+                    tvEquiv.setText("");
+                }
+            }
+
+            refreshImpactRing();
+        });
+    }
+
+    private void calculateCurrentMonthCo2(Co2ResultCallback callback) {
+        long monthStartMillis = getStartOfCurrentMonthMillis();
+
+        db.collection("activity_logs")
+                .whereEqualTo("userId", currentUser.getUid())
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    double monthlyCo2 = 0.0;
+
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        Timestamp ts = doc.getTimestamp("timestamp");
+                        if (ts == null) continue;
+
+                        if (ts.toDate().getTime() < monthStartMillis) {
+                            continue;
                         }
+
+                        Double savedFromLog = doc.getDouble("co2SavedKg");
+                        if (savedFromLog != null) {
+                            monthlyCo2 += savedFromLog;
+                        } else {
+                            monthlyCo2 += getCo2SavedForActivity(doc.getString("activityType"));
+                        }
+                    }
+
+                    if (callback != null) {
+                        callback.onResult(monthlyCo2);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (callback != null) {
+                        callback.onResult(0.0);
                     }
                 });
     }
@@ -355,7 +485,7 @@ public class HomeFragment extends Fragment {
                     SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        com.google.firebase.Timestamp ts = doc.getTimestamp("timestamp");
+                        Timestamp ts = doc.getTimestamp("timestamp");
                         if (ts == null) continue;
                         uniqueDays.add(formatter.format(ts.toDate()));
                     }
@@ -364,7 +494,11 @@ public class HomeFragment extends Fragment {
                     int bestStreak = calculateBestStreakFromDays(uniqueDays);
 
                     tvStreakNumber.setText(String.valueOf(currentStreak));
-                    tvBottomStreakDays.setText(String.valueOf(bestStreak));
+                    tvBottomStreakDays.setText(formatWholeNumber(bestStreak));
+
+                    if (tvStatsCurrentStreak != null) {
+                        tvStatsCurrentStreak.setText(formatWholeNumber(currentStreak));
+                    }
 
                     if (currentStreak <= 0) {
                         tvStreakMessage.setText("Log to start your streak");
@@ -383,6 +517,11 @@ public class HomeFragment extends Fragment {
                 .addOnFailureListener(e -> {
                     tvStreakNumber.setText("0");
                     tvBottomStreakDays.setText("0");
+
+                    if (tvStatsCurrentStreak != null) {
+                        tvStatsCurrentStreak.setText("0");
+                    }
+
                     tvStreakMessage.setText("Couldn't load streak");
                     tvStreakPercent.setText("0%");
                     progressStreak.setMax(7);
@@ -481,85 +620,129 @@ public class HomeFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<QueryDocumentSnapshot> docs = new ArrayList<>();
+
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         docs.add(doc);
                     }
 
+                    // New user: show two random suggested activities.
+                    if (docs.isEmpty()) {
+                        List<String> suggestions = getRandomSuggestedActivities(2);
+
+                        String first = suggestions.get(0);
+                        String second = suggestions.get(1);
+
+                        tvRecent1Icon.setText(getActivityEmoji(first));
+                        tvRecent1Title.setText(first);
+                        tvRecent1Subtitle.setText("");
+
+                        tvRecent2Icon.setText(getActivityEmoji(second));
+                        tvRecent2Title.setText(second);
+                        tvRecent2Subtitle.setText("");
+
+                        return;
+                    }
+
+                    // Sort newest first.
                     docs.sort((a, b) -> {
-                        com.google.firebase.Timestamp ta = a.getTimestamp("timestamp");
-                        com.google.firebase.Timestamp tb = b.getTimestamp("timestamp");
+                        Timestamp ta = a.getTimestamp("timestamp");
+                        Timestamp tb = b.getTimestamp("timestamp");
 
                         if (ta == null && tb == null) return 0;
                         if (ta == null) return 1;
                         if (tb == null) return -1;
+
                         return tb.toDate().compareTo(ta.toDate());
                     });
 
-                    if (docs.isEmpty()) {
-                        tvRecent1Icon.setText("");
-                        tvRecent1Title.setText("MOST FREQUENT");
-                        tvRecent1Subtitle.setText("Your most frequent activity will appear here.\nTry logging something.");
-
-                        tvRecent2Icon.setText("");
-                        tvRecent2Title.setText("RECENT ACTIVITY");
-                        tvRecent2Subtitle.setText("Your latest activity will appear here once you log one.");
-                        return;
-                    }
-
-                    HashMap<String, Integer> frequencyMap = new HashMap<>();
+                    // Most recent valid activity.
+                    String mostRecent = null;
                     for (QueryDocumentSnapshot doc : docs) {
                         String activityType = doc.getString("activityType");
-                        if (activityType == null || activityType.trim().isEmpty()) continue;
+                        if (isValidLoggableActivity(activityType)) {
+                            mostRecent = activityType;
+                            break;
+                        }
+                    }
 
-                        int count = frequencyMap.containsKey(activityType) ? frequencyMap.get(activityType) : 0;
+                    // Most frequent valid activity.
+                    HashMap<String, Integer> frequencyMap = new HashMap<>();
+
+                    for (QueryDocumentSnapshot doc : docs) {
+                        String activityType = doc.getString("activityType");
+                        if (!isValidLoggableActivity(activityType)) continue;
+
+                        int count = frequencyMap.containsKey(activityType)
+                                ? frequencyMap.get(activityType)
+                                : 0;
+
                         frequencyMap.put(activityType, count + 1);
                     }
 
                     String mostFrequent = null;
                     int maxCount = 0;
 
-                    for (String key : frequencyMap.keySet()) {
-                        int count = frequencyMap.get(key);
+                    for (String activity : frequencyMap.keySet()) {
+                        int count = frequencyMap.get(activity);
+
                         if (count > maxCount) {
                             maxCount = count;
-                            mostFrequent = key;
+                            mostFrequent = activity;
                         }
                     }
 
-                    String recentDifferent = null;
-                    for (QueryDocumentSnapshot doc : docs) {
-                        String activityType = doc.getString("activityType");
-                        if (activityType == null || activityType.trim().isEmpty()) continue;
+                    // Fallback if something strange happened with the logs.
+                    if (mostFrequent == null || mostRecent == null) {
+                        List<String> suggestions = getRandomSuggestedActivities(2);
 
-                        if (!activityType.equals(mostFrequent)) {
-                            recentDifferent = activityType;
-                            break;
+                        mostFrequent = suggestions.get(0);
+                        mostRecent = suggestions.get(1);
+                    }
+
+                    // Avoid showing duplicate cards if possible.
+                    if (mostRecent.equals(mostFrequent)) {
+                        String differentRecent = null;
+
+                        for (QueryDocumentSnapshot doc : docs) {
+                            String activityType = doc.getString("activityType");
+
+                            if (isValidLoggableActivity(activityType)
+                                    && !activityType.equals(mostFrequent)) {
+                                differentRecent = activityType;
+                                break;
+                            }
+                        }
+
+                        if (differentRecent != null) {
+                            mostRecent = differentRecent;
+                        } else {
+                            mostRecent = getRandomSuggestedActivity(mostFrequent);
                         }
                     }
 
+                    // Card 1: most frequent
                     tvRecent1Icon.setText(getActivityEmoji(mostFrequent));
                     tvRecent1Title.setText(mostFrequent);
-                    tvRecent1Subtitle.setText("You're on a roll with this activity");
+                    tvRecent1Subtitle.setText("");
 
-                    if (recentDifferent != null) {
-                        tvRecent2Icon.setText(getActivityEmoji(recentDifferent));
-                        tvRecent2Title.setText(recentDifferent);
-                        tvRecent2Subtitle.setText("Want to log this activity again?");
-                    } else {
-                        String suggestion = getRandomSuggestedActivity(mostFrequent);
-                        tvRecent2Icon.setText(getActivityEmoji(suggestion));
-                        tvRecent2Title.setText(suggestion);
-                        tvRecent2Subtitle.setText("Try this activity too");
-                    }
+                    // Card 2: most recent
+                    tvRecent2Icon.setText(getActivityEmoji(mostRecent));
+                    tvRecent2Title.setText(mostRecent);
+                    tvRecent2Subtitle.setText("");
                 })
                 .addOnFailureListener(e -> {
-                    tvRecent1Icon.setText("");
-                    tvRecent1Title.setText("MOST FREQUENT");
-                    tvRecent1Subtitle.setText("Couldn't load activity data");
+                    List<String> suggestions = getRandomSuggestedActivities(2);
 
-                    tvRecent2Icon.setText("");
-                    tvRecent2Title.setText("RECENT ACTIVITY");
-                    tvRecent2Subtitle.setText("Couldn't load activity data");
+                    String first = suggestions.get(0);
+                    String second = suggestions.get(1);
+
+                    tvRecent1Icon.setText(getActivityEmoji(first));
+                    tvRecent1Title.setText(first);
+                    tvRecent1Subtitle.setText("");
+
+                    tvRecent2Icon.setText(getActivityEmoji(second));
+                    tvRecent2Title.setText(second);
+                    tvRecent2Subtitle.setText("");
                 });
     }
 
@@ -618,10 +801,24 @@ public class HomeFragment extends Fragment {
                 .whereEqualTo("userId", currentUser.getUid())
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    int logCount = queryDocumentSnapshots.size();
+                    long monthStartMillis = getStartOfCurrentMonthMillis();
+                    int logCount = 0;
+
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        Timestamp ts = doc.getTimestamp("timestamp");
+                        if (ts == null) continue;
+
+                        if (ts.toDate().getTime() >= monthStartMillis) {
+                            logCount++;
+                        }
+                    }
+
                     int target = 20;
                     int progress = Math.min(logCount, target);
                     int percent = (int) ((progress / (double) target) * 100);
+
+                    impactChallengeProgress = progress / (float) target;
+                    refreshImpactRing();
 
                     tvChallengeTitle.setText("Zero Waste February ♻️");
                     progressChallenge.setMax(target);
@@ -635,6 +832,9 @@ public class HomeFragment extends Fragment {
                     }
                 })
                 .addOnFailureListener(e -> {
+                    impactChallengeProgress = 0f;
+                    refreshImpactRing();
+
                     tvChallengeTitle.setText("Zero Waste February ♻️");
                     progressChallenge.setMax(20);
                     progressChallenge.setProgress(0);
@@ -741,10 +941,10 @@ public class HomeFragment extends Fragment {
                 .addOnSuccessListener(unused -> {
                     new PointsManager().awardBasePoints(user.getUid(), basePoints);
                     Toast.makeText(getContext(), activityName + " logged successfully ✅", Toast.LENGTH_SHORT).show();
+
                     View view = getView();
                     if (view != null) {
                         loadOptionalStats(view);
-
 
                         TextView tvStreakNumber = view.findViewById(R.id.tv_streak_number);
                         TextView tvStreakMessage = view.findViewById(R.id.tv_streak_message);
@@ -772,10 +972,12 @@ public class HomeFragment extends Fragment {
                                 progressStreak,
                                 tvBottomStreakDays
                         );
+
                         loadActivityCards(
                                 tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
                                 tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
                         );
+
                         loadMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
                     }
                 })
@@ -900,14 +1102,6 @@ public class HomeFragment extends Fragment {
         cal.set(Calendar.MILLISECOND, 0);
     }
 
-    /**
-     * Loads the live campus-wide CO₂ impact summary.
-     * Queries ALL activity_logs (no userId filter) to aggregate
-     * total co2SavedKg and count distinct active users.
-     * US-13 implementation.
-     *
-     * @param view the root view of the fragment
-     */
     private void loadCampusImpact(View view) {
         TextView tvCampusCo2 = view.findViewById(R.id.tv_campus_co2);
         TextView tvCampusStudents = view.findViewById(R.id.tv_campus_students);
@@ -918,43 +1112,37 @@ public class HomeFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     double totalCo2 = 0.0;
-                    Set<String> activeUsers = new HashSet<>();
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         Double co2 = doc.getDouble("co2SavedKg");
                         if (co2 != null) totalCo2 += co2;
-
-                        // Count points-based contribution as proxy if co2SavedKg absent
-                        String uid = doc.getString("userId");
-                        if (uid != null) activeUsers.add(uid);
                     }
 
-                    double finalCo2 = totalCo2;
-                    String co2Text;
-                    if (finalCo2 >= 1000) {
-                        co2Text = String.format(Locale.getDefault(), "%.1f tonnes CO₂ saved", finalCo2 / 1000.0);
+                    String amountText;
+                    if (totalCo2 >= 1000) {
+                        amountText = String.format(Locale.getDefault(), "%.1f t", totalCo2 / 1000.0);
                     } else {
-                        co2Text = String.format(Locale.getDefault(), "%.1f kg CO₂ saved", finalCo2);
+                        amountText = String.format(Locale.getDefault(), "%.1f kg", totalCo2);
                     }
 
-                    tvCampusCo2.setText(co2Text);
+                    tvCampusCo2.setText(amountText);
+
                     if (tvCampusStudents != null) {
-                        int count = activeUsers.size();
-                        tvCampusStudents.setText(count + (count == 1 ? " student logging" : " students logging"));
+                        tvCampusStudents.setText("");
                     }
                 })
                 .addOnFailureListener(e -> {
-                    if (tvCampusCo2 != null) tvCampusCo2.setText("Campus data unavailable");
+                    if (tvCampusCo2 != null) {
+                        tvCampusCo2.setText("--");
+                    }
+                    if (tvCampusStudents != null) {
+                        tvCampusStudents.setText("");
+                    }
                 });
     }
 
-    /**
-     * Shows a dialog letting the user set their monthly CO₂ goal in kg.
-     * Saves the goal locally in SharedPreferences and to Firestore.
-     * US-14 implementation.
-     */
     private void showSetGoalDialog() {
-        if (getContext() == null) return;
+        if (getContext() == null || currentUser == null) return;
 
         EditText input = new EditText(requireContext());
         input.setHint("e.g. 20");
@@ -962,9 +1150,9 @@ public class HomeFragment extends Fragment {
                 | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         input.setPadding(50, 30, 50, 10);
 
-        // Pre-fill with existing goal if set
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
         float existing = prefs.getFloat("monthly_goal_kg", 0f);
+
         if (existing > 0) {
             input.setText(String.valueOf((int) existing));
         }
@@ -976,28 +1164,34 @@ public class HomeFragment extends Fragment {
                 .setPositiveButton("Save", (dialog, which) -> {
                     String raw = input.getText().toString().trim();
                     if (raw.isEmpty()) return;
+
                     try {
                         float goalKg = Float.parseFloat(raw);
                         if (goalKg <= 0) {
                             Toast.makeText(getContext(), "Please enter a value above 0", Toast.LENGTH_SHORT).show();
                             return;
                         }
-                        // Save locally
-                        prefs.edit().putFloat("monthly_goal_kg", goalKg).apply();
 
-                        // Save to Firestore
+                        prefs.edit().putFloat("monthly_goal_kg", goalKg).apply();
+                        impactPersonalGoalKg = goalKg;
+                        refreshImpactRing();
+
                         db.collection("users")
                                 .document(currentUser.getUid())
                                 .update("monthlyGoalKg", goalKg)
                                 .addOnSuccessListener(unused ->
-                                        Toast.makeText(getContext(),
+                                        Toast.makeText(
+                                                getContext(),
                                                 "Goal set: " + goalKg + " kg CO₂ this month 🌿",
-                                                Toast.LENGTH_SHORT).show()
+                                                Toast.LENGTH_SHORT
+                                        ).show()
                                 );
 
-                        // Update the goal status label immediately
                         View view = getView();
-                        if (view != null) updateGoalStatus(view, goalKg);
+                        if (view != null) {
+                            updateGoalStatus(view, goalKg);
+                            loadOptionalStats(view);
+                        }
 
                     } catch (NumberFormatException e) {
                         Toast.makeText(getContext(), "Please enter a valid number", Toast.LENGTH_SHORT).show();
@@ -1007,47 +1201,37 @@ public class HomeFragment extends Fragment {
                 .show();
     }
 
-    /**
-     * Updates the goal status label below the challenge progress bar.
-     * Shows how far the user is toward their monthly CO₂ goal.
-     *
-     * @param view   the root view of the fragment
-     * @param goalKg the user's monthly CO₂ goal in kg
-     */
     private void updateGoalStatus(View view, float goalKg) {
         TextView tvGoalStatus = view.findViewById(R.id.tv_goal_status);
         if (tvGoalStatus == null) return;
 
-        db.collection("users")
-                .document(currentUser.getUid())
-                .get()
-                .addOnSuccessListener(doc -> {
-                    Double saved = doc.getDouble("co2SavedKg");
-                    float savedKg = saved != null ? saved.floatValue() : 0f;
-                    int percent = goalKg > 0 ? (int) ((savedKg / goalKg) * 100) : 0;
-                    percent = Math.min(percent, 100);
-                    tvGoalStatus.setText(String.format(Locale.getDefault(),
-                            "Personal goal: %.1f / %.1f kg  (%d%%)", savedKg, goalKg, percent));
-                });
+        calculateCurrentMonthCo2(monthlyCo2 -> {
+            int percent = goalKg > 0 ? (int) ((monthlyCo2 / goalKg) * 100) : 0;
+            percent = Math.min(percent, 100);
+
+            tvGoalStatus.setText(String.format(
+                    Locale.getDefault(),
+                    "Personal goal: %.1f / %.1f kg  (%d%%)",
+                    monthlyCo2,
+                    goalKg,
+                    percent
+            ));
+        });
     }
 
-    /**
-     * Loads the user's saved monthly goal and updates the status label.
-     *
-     * @param view the root view of the fragment
-     */
     private void loadGoalStatus(View view) {
+        if (getContext() == null) return;
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
         float goalKg = prefs.getFloat("monthly_goal_kg", 0f);
+
         if (goalKg > 0) {
+            impactPersonalGoalKg = goalKg;
+            refreshImpactRing();
             updateGoalStatus(view, goalKg);
         }
     }
 
-    /**
-     * Navigates to the Staff Tips management screen.
-     * Only visible/usable by staff-role users.
-     */
     private void navigateToStaffTips() {
         if (getActivity() != null) {
             getActivity().getSupportFragmentManager()
@@ -1068,12 +1252,6 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    /**
-     * Builds a formatted progress string from the user's Firestore stats
-     * and fires an Intent.ACTION_SEND so the user can share to WhatsApp,
-     * clipboard, or any installed app.
-     * Share progress feature implementation.
-     */
     private void shareProgress() {
         if (currentUser == null || getContext() == null) return;
 
@@ -1089,12 +1267,12 @@ public class HomeFragment extends Fragment {
                     Long streak = doc.getLong("streakDays");
 
                     String firstName = (name != null && !name.isEmpty())
-                            ? name.split("\\s+")[0] : "I";
+                            ? name.split("\\s+")[0]
+                            : "I";
 
                     double co2Val = co2 != null ? co2 : 0.0;
                     long pts = points != null ? points : 0;
 
-                    // Build equivalents string
                     String equiv = co2Val > 0
                             ? " (" + CarbonEquivalentHelper.buildEquivalentString(co2Val) + ")"
                             : "";
@@ -1114,9 +1292,11 @@ public class HomeFragment extends Fragment {
                             shareIntent, "Share your progress"));
                 })
                 .addOnFailureListener(e ->
-                        Toast.makeText(getContext(),
+                        Toast.makeText(
+                                getContext(),
                                 "Could not load stats to share",
-                                Toast.LENGTH_SHORT).show()
+                                Toast.LENGTH_SHORT
+                        ).show()
                 );
     }
 
@@ -1130,4 +1310,94 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    private void navigateToFeedExplore() {
+        if (getActivity() != null) {
+            Bundle args = new Bundle();
+            args.putString("start_tab", "explore");
+
+            FeedFragment feedFragment = new FeedFragment();
+            feedFragment.setArguments(args);
+
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, feedFragment)
+                    .addToBackStack(null)
+                    .commit();
+        }
+    }
+
+    private void refreshImpactRing() {
+        if (progressRingMonthly == null) return;
+
+        boolean hasPersonalGoal = impactPersonalGoalKg > 0f;
+        float personalProgress = hasPersonalGoal
+                ? impactCo2SavedKg / impactPersonalGoalKg
+                : 0f;
+
+        progressRingMonthly.setProgressState(
+                hasPersonalGoal,
+                personalProgress,
+                impactHasMonthlyChallenge,
+                impactChallengeProgress
+        );
+    }
+
+    private long getStartOfCurrentMonthMillis() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        resetTime(cal);
+        return cal.getTimeInMillis();
+    }
+
+    private double getCo2SavedForActivity(String activityType) {
+        if (activityType == null) return 0.0;
+
+        switch (activityType) {
+            case "Cycling":
+                return 2.6;
+            case "Public Transit":
+                return 1.8;
+            case "Recycling":
+                return 0.7;
+            case "Plant-based meal":
+                return 1.5;
+            case "Reusable cup":
+                return 0.2;
+            case "Composting":
+                return 0.5;
+            case "Walked":
+                return 1.2;
+            case "Energy saving":
+                return 0.8;
+            default:
+                return 0.0;
+        }
+    }
+
+    private String formatWholeNumber(long value) {
+        return String.format(Locale.getDefault(), "%,d", value);
+    }
+
+    private List<String> getRandomSuggestedActivities(int count) {
+        List<String> activities = new ArrayList<>(Arrays.asList(
+                "Cycling",
+                "Public Transit",
+                "Recycling",
+                "Plant-based meal",
+                "Reusable cup",
+                "Composting",
+                "Walked",
+                "Energy saving"
+        ));
+
+        List<String> selected = new ArrayList<>();
+        Random random = new Random();
+
+        while (!activities.isEmpty() && selected.size() < count) {
+            int index = random.nextInt(activities.size());
+            selected.add(activities.remove(index));
+        }
+
+        return selected;
+    }
 }
