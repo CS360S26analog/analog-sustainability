@@ -184,6 +184,15 @@ public class RankingsFragment extends Fragment {
                     List<LeaderboardUser> users = new ArrayList<>();
 
                     for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                        String role = doc.getString("role");
+
+
+                        // Exclude staff accounts. Users with no role field are treated as students
+                        // (accounts created before role field was introduced).
+                        if ("staff".equalsIgnoreCase(role != null ? role.trim() : "")) {
+                            continue;
+                        }
+
                         String uid = doc.getId();
                         String displayName = doc.getString("displayName");
 

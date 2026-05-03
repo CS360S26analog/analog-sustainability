@@ -127,19 +127,32 @@ public class HomeFragment extends Fragment {
         tvSetGoal.setOnClickListener(v -> showSetGoalDialog());
         btnChallengeInfo.setOnClickListener(v -> showZeroWasteInfo());
 
-        TextView btnShare = view.findViewById(R.id.btn_share_progress);
-        if (btnShare != null) {
-            btnShare.setOnClickListener(v -> shareProgress());
-        }
+        // Show student-only buttons after confirming student role
+        if (currentUser != null) {
+            db.collection("users").document(currentUser.getUid()).get()
+                    .addOnSuccessListener(roleDoc -> {
+                        if (!isAdded()) return;
+                        String role = roleDoc.getString("role");
+                        boolean isStudentUser = !"staff".equals(role);
 
-        TextView btnChallenges = view.findViewById(R.id.btn_view_challenges);
-        if (btnChallenges != null) {
-            btnChallenges.setOnClickListener(v -> navigateToChallenges());
-        }
-
-        TextView btnFeed = view.findViewById(R.id.btn_view_feed);
-        if (btnFeed != null) {
-            btnFeed.setOnClickListener(v -> navigateToFeed());
+                        if (isStudentUser) {
+                            TextView btnShare = view.findViewById(R.id.btn_share_progress);
+                            if (btnShare != null) {
+                                btnShare.setVisibility(View.VISIBLE);
+                                btnShare.setOnClickListener(v -> shareProgress());
+                            }
+                            TextView btnChallenges = view.findViewById(R.id.btn_view_challenges);
+                            if (btnChallenges != null) {
+                                btnChallenges.setVisibility(View.VISIBLE);
+                                btnChallenges.setOnClickListener(v -> navigateToChallenges());
+                            }
+                            TextView btnFeed = view.findViewById(R.id.btn_view_feed);
+                            if (btnFeed != null) {
+                                btnFeed.setVisibility(View.VISIBLE);
+                                btnFeed.setOnClickListener(v -> navigateToFeed());
+                            }
+                        }
+                    });
         }
 
         setDefaultDashboard(

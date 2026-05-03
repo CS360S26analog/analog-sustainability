@@ -9,8 +9,8 @@
     <item android:id="@+id/staff_nav_reports"
         android:title="Reports"
         android:icon="@drawable/ic_rankings"/>
-    <item android:id="@+id/staff_nav_community"
-        android:title="Community"
+    <item android:id="@+id/staff_nav_feed"
+        android:title="Feed"
         android:icon="@drawable/ic_friends"/>
     <item android:id="@+id/staff_nav_profile"
         android:title="Profile"

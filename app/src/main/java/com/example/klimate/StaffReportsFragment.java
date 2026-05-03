@@ -20,6 +20,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -130,6 +131,7 @@ public class StaffReportsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_staff_reports, container, false);
 
         db = FirebaseFirestore.getInstance();
+        forceGreenHeaderColor();
         auth = FirebaseAuth.getInstance();
 
         reportsContentContainer = view.findViewById(R.id.reports_content_container);
@@ -148,6 +150,13 @@ public class StaffReportsFragment extends Fragment {
         checkStaffAccess();
 
         return view;
+    }
+
+    private void forceGreenHeaderColor() {
+        if (getActivity() == null) return;
+
+        Window window = getActivity().getWindow();
+        window.setStatusBarColor(ContextCompat.getColor(requireContext(), R.color.color_green_header));
     }
 
     private void checkStaffAccess() {
@@ -218,6 +227,13 @@ public class StaffReportsFragment extends Fragment {
                     latestUsers.clear();
 
                     for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                        String role = doc.getString("role");
+
+                        // Staff reports leaderboard should show students only.
+                        if (!"student".equalsIgnoreCase(role != null ? role.trim() : "")) {
+                            continue;
+                        }
+
                         String uid = doc.getId();
                         String name = doc.getString("displayName");
 
@@ -250,7 +266,7 @@ public class StaffReportsFragment extends Fragment {
                     latestTotalLogs = snapshots.size();
                     latestTotalCo2 = 0.0;
 
-                    List<DocumentSnapshot> pendingLogs = new ArrayList<>();
+                    List<DocumentSnapshot> reportedLogs = new ArrayList<>();
 
                     for (DocumentSnapshot doc : snapshots.getDocuments()) {
                         String userId = doc.getString("userId");
@@ -264,15 +280,17 @@ public class StaffReportsFragment extends Fragment {
 
                         latestTotalCo2 += readDouble(doc, "co2SavedKg");
 
+                        Boolean reported = doc.getBoolean("reported");
                         String status = doc.getString("status");
-                        if ("pending_verification".equals(status)) {
-                            pendingLogs.add(doc);
+
+                        if (Boolean.TRUE.equals(reported) || "reported".equals(status)) {
+                            reportedLogs.add(doc);
                         }
                     }
 
                     renderMetrics();
                     renderLeaderboard();
-                    loadFlaggedLogs(pendingLogs);
+                    loadFlaggedLogs(reportedLogs);
                 });
     }
 
@@ -356,74 +374,43 @@ public class StaffReportsFragment extends Fragment {
         return row;
     }
 
-    private void loadFlaggedLogs(List<DocumentSnapshot> pendingLogs) {
+    private void loadFlaggedLogs(List<DocumentSnapshot> reportedLogs) {
         if (flaggedLogsContainer == null || getContext() == null) return;
 
         flaggedLogsContainer.removeAllViews();
 
-        if (pendingLogs.isEmpty()) {
+        if (reportedLogs.isEmpty()) {
             showNoFlaggedLogs(0);
             return;
         }
 
-        AtomicInteger remaining = new AtomicInteger(pendingLogs.size());
-        AtomicInteger flaggedCount = new AtomicInteger(0);
+        int reportedCount = 0;
 
-        for (DocumentSnapshot logDoc : pendingLogs) {
+        for (DocumentSnapshot logDoc : reportedLogs) {
             String logId = logDoc.getString("logId");
 
             if (TextUtils.isEmpty(logId)) {
                 logId = logDoc.getId();
             }
 
-            String finalLogId = logId;
+            FlaggedLogRow reportedLog = new FlaggedLogRow(
+                    logDoc.getId(),
+                    logId,
+                    logDoc.getString("userId"),
+                    safeText(logDoc.getString("activityType"), "Unknown activity"),
+                    safeText(logDoc.getString("status"), "reported"),
+                    readLong(logDoc, "points"),
+                    readLong(logDoc, "bonusPoints"),
+                    readLong(logDoc, "upvotes"),
+                    readLong(logDoc, "downvotes"),
+                    logDoc.getTimestamp("timestamp")
+            );
 
-            db.collection("votes")
-                    .whereEqualTo("logId", finalLogId)
-                    .get()
-                    .addOnSuccessListener(voteSnapshots -> {
-                        long upvotes = 0;
-                        long downvotes = 0;
-
-                        for (QueryDocumentSnapshot voteDoc : voteSnapshots) {
-                            Boolean isUpvote = voteDoc.getBoolean("isUpvote");
-
-                            if (Boolean.TRUE.equals(isUpvote)) {
-                                upvotes++;
-                            } else {
-                                downvotes++;
-                            }
-                        }
-
-                        if (downvotes >= 5) {
-                            flaggedCount.incrementAndGet();
-
-                            FlaggedLogRow flaggedLog = new FlaggedLogRow(
-                                    logDoc.getId(),
-                                    finalLogId,
-                                    logDoc.getString("userId"),
-                                    safeText(logDoc.getString("activityType"), "Unknown activity"),
-                                    safeText(logDoc.getString("status"), "pending_verification"),
-                                    readLong(logDoc, "points"),
-                                    readLong(logDoc, "bonusPoints"),
-                                    upvotes,
-                                    downvotes,
-                                    logDoc.getTimestamp("timestamp")
-                            );
-
-                            flaggedLogsContainer.addView(createFlaggedLogCard(flaggedLog));
-                        }
-
-                        if (remaining.decrementAndGet() == 0) {
-                            showNoFlaggedLogs(flaggedCount.get());
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        if (remaining.decrementAndGet() == 0) {
-                            showNoFlaggedLogs(flaggedCount.get());
-                        }
-                    });
+            flaggedLogsContainer.addView(createFlaggedLogCard(reportedLog));
+            reportedCount++;
         }
+
+        showNoFlaggedLogs(reportedCount);
     }
 
     private void showNoFlaggedLogs(int flaggedCount) {
@@ -479,19 +466,71 @@ public class StaffReportsFragment extends Fragment {
         buttonRow.setGravity(Gravity.END);
         buttonRow.setPadding(0, dpToPx(12), 0, 0);
 
-        TextView approveButton = createActionButton("Approve", true);
-        TextView rejectButton = createActionButton("Reject", false);
+        TextView keepButton = createActionButton("Keep", true);
+        TextView deleteButton = createActionButton("Delete", false);
 
-        approveButton.setOnClickListener(v -> confirmApprove(log));
-        rejectButton.setOnClickListener(v -> confirmReject(log));
+        keepButton.setOnClickListener(v -> confirmKeep(log));
+        deleteButton.setOnClickListener(v -> confirmDelete(log));
 
-        buttonRow.addView(approveButton);
-        buttonRow.addView(rejectButton);
+        buttonRow.addView(keepButton);
+        buttonRow.addView(deleteButton);
 
         content.addView(buttonRow);
         card.addView(content);
 
         return card;
+    }
+
+    private void confirmKeep(FlaggedLogRow log) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Keep log?")
+                .setMessage("This will remove the report flag and keep the log visible.")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Keep", (dialog, which) -> keepLog(log))
+                .show();
+    }
+
+    private void keepLog(FlaggedLogRow log) {
+        FirebaseUser reviewer = auth.getCurrentUser();
+        String reviewerId = reviewer != null ? reviewer.getUid() : "unknown";
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("reported", false);
+        updates.put("status", "pending_verification");
+        updates.put("reviewDecision", "kept");
+        updates.put("reviewedBy", reviewerId);
+        updates.put("reviewedAt", Timestamp.now());
+
+        db.collection("activity_logs")
+                .document(log.documentId)
+                .update(updates)
+                .addOnSuccessListener(unused ->
+                        Toast.makeText(getContext(), "Log kept", Toast.LENGTH_SHORT).show()
+                )
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Could not keep log", Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    private void confirmDelete(FlaggedLogRow log) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Delete reported log?")
+                .setMessage("This will permanently delete this activity log.")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Delete", (dialog, which) -> deleteReportedLog(log))
+                .show();
+    }
+
+    private void deleteReportedLog(FlaggedLogRow log) {
+        db.collection("activity_logs")
+                .document(log.documentId)
+                .delete()
+                .addOnSuccessListener(unused ->
+                        Toast.makeText(getContext(), "Log deleted", Toast.LENGTH_SHORT).show()
+                )
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Delete failed", Toast.LENGTH_SHORT).show()
+                );
     }
 
     private TextView createActionButton(String text, boolean positive) {
