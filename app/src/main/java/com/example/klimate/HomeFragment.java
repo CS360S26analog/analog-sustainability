@@ -108,10 +108,10 @@ public class HomeFragment extends Fragment {
 
         TextView btnRecent1 = view.findViewById(R.id.btn_recent_1);
         TextView btnRecent2 = view.findViewById(R.id.btn_recent_2);
-
         View cardRecent1 = view.findViewById(R.id.card_recent_1);
         View cardRecent2 = view.findViewById(R.id.card_recent_2);
 
+        TextView tvSeeMoreLogs = view.findViewById(R.id.tv_see_more_logs);
         TextView tvChallengeHelp = view.findViewById(R.id.tv_challenge_help);
         TextView tvSetGoal = view.findViewById(R.id.tv_set_goal);
 
@@ -123,22 +123,50 @@ public class HomeFragment extends Fragment {
 
         setRandomGreeting(tvGreetingMessage);
 
-        profileAvatarContainer.setOnClickListener(v -> navigateToProfile());
+        if (profileAvatarContainer != null) {
+            profileAvatarContainer.setOnClickListener(v -> navigateToProfile());
+        }
 
-        btnRecent1.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent1Title.getText().toString()));
-        btnRecent2.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent2Title.getText().toString()));
+        if (tvSeeMoreLogs != null) {
+            tvSeeMoreLogs.setOnClickListener(v -> navigateToLog());
+        }
+
+        if (btnRecent1 != null) {
+            btnRecent1.setOnClickListener(v ->
+                    showHomeLogChoiceDialog(tvRecent1Title.getText().toString()));
+        }
+
+        if (btnRecent2 != null) {
+            btnRecent2.setOnClickListener(v ->
+                    showHomeLogChoiceDialog(tvRecent2Title.getText().toString()));
+        }
 
         if (cardRecent1 != null) {
-            cardRecent1.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent1Title.getText().toString()));
+            cardRecent1.setOnClickListener(v ->
+                    showHomeLogChoiceDialog(tvRecent1Title.getText().toString()));
         }
 
         if (cardRecent2 != null) {
-            cardRecent2.setOnClickListener(v -> showHomeLogChoiceDialog(tvRecent2Title.getText().toString()));
+            cardRecent2.setOnClickListener(v ->
+                    showHomeLogChoiceDialog(tvRecent2Title.getText().toString()));
         }
 
-        tvChallengeHelp.setOnClickListener(v -> showMonthlyChallengesHelp());
-        tvSetGoal.setOnClickListener(v -> showSetGoalDialog());
-        btnChallengeInfo.setOnClickListener(v -> showZeroWasteInfo());
+        if (tvChallengeHelp != null) {
+            tvChallengeHelp.setOnClickListener(v -> showMonthlyChallengesHelp());
+        }
+
+        if (tvSetGoal != null) {
+            tvSetGoal.setOnClickListener(v -> showSetGoalDialog());
+        }
+
+        if (btnChallengeInfo != null) {
+            btnChallengeInfo.setOnClickListener(v -> showZeroWasteInfo());
+        }
+
+        TextView btnShare = view.findViewById(R.id.btn_share_progress);
+        TextView btnBrowseMoreChallenges = view.findViewById(R.id.btn_browse_more_challenges);
+        TextView btnStaffManageChallenges = view.findViewById(R.id.btn_staff_manage_challenges);
+        TextView btnStaffTips = view.findViewById(R.id.btn_staff_tips);
 
         if (currentUser != null) {
             db.collection("users").document(currentUser.getUid()).get()
@@ -146,25 +174,48 @@ public class HomeFragment extends Fragment {
                         if (!isAdded()) return;
 
                         String role = roleDoc.getString("role");
-                        boolean isStudentUser = !"staff".equals(role);
+                        boolean isStaffUser = "staff".equals(role);
 
-                        if (isStudentUser) {
-                            TextView btnShare = view.findViewById(R.id.btn_share_progress);
+                        if (isStaffUser) {
+                            if (btnShare != null) {
+                                btnShare.setVisibility(View.GONE);
+                            }
+
+                            if (btnBrowseMoreChallenges != null) {
+                                btnBrowseMoreChallenges.setVisibility(View.GONE);
+                            }
+
+                            if (btnStaffManageChallenges != null) {
+                                btnStaffManageChallenges.setVisibility(View.VISIBLE);
+                                btnStaffManageChallenges.setOnClickListener(v -> {
+                                    if (getActivity() instanceof MainActivity) {
+                                        ((MainActivity) getActivity()).navigateToStaffManage();
+                                    }
+                                });
+                            }
+
+                            if (btnStaffTips != null) {
+                                btnStaffTips.setVisibility(View.VISIBLE);
+                                btnStaffTips.setOnClickListener(v -> navigateToStaffTips());
+                            }
+
+                        } else {
                             if (btnShare != null) {
                                 btnShare.setVisibility(View.VISIBLE);
                                 btnShare.setOnClickListener(v -> shareProgress());
                             }
 
-                            TextView btnChallenges = view.findViewById(R.id.btn_view_challenges);
-                            if (btnChallenges != null) {
-                                btnChallenges.setVisibility(View.VISIBLE);
-                                btnChallenges.setOnClickListener(v -> navigateToChallenges());
+                            if (btnBrowseMoreChallenges != null) {
+                                btnBrowseMoreChallenges.setVisibility(View.VISIBLE);
+                                btnBrowseMoreChallenges.setOnClickListener(v -> navigateToFeedExplore());
                             }
 
-                            TextView btnFeed = view.findViewById(R.id.btn_view_feed);
-                            if (btnFeed != null) {
-                                btnFeed.setVisibility(View.VISIBLE);
-                                btnFeed.setOnClickListener(v -> navigateToFeed());
+                            if (btnStaffManageChallenges != null) {
+                                btnStaffManageChallenges.setVisibility(View.GONE);
+                            }
+
+                            if (btnStaffTips != null) {
+                                btnStaffTips.setVisibility(View.GONE);
                             }
                         }
                     });
@@ -206,43 +257,31 @@ public class HomeFragment extends Fragment {
             );
 
             loadActivityCards(
-                    tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
-                    tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
+                    tvRecent1Icon,
+                    tvRecent1Title,
+                    tvRecent1Subtitle,
+                    tvRecent2Icon,
+                    tvRecent2Title,
+                    tvRecent2Subtitle
             );
 
-            loadMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
+            loadMonthlyChallenge(
+                    tvChallengeTitle,
+                    progressChallenge,
+                    tvChallengeDays,
+                    tvChallengePercent
+            );
+
             loadOptionalStats(view);
-
-            TextView btnStaffTips = view.findViewById(R.id.btn_staff_tips);
-            if (btnStaffTips != null) {
-                db.collection("users").document(currentUser.getUid()).get()
-                        .addOnSuccessListener(doc -> {
-                            String role = doc.getString("role");
-                            if ("staff".equals(role)) {
-                                btnStaffTips.setVisibility(View.VISIBLE);
-                                btnStaffTips.setOnClickListener(v -> navigateToStaffTips());
-                            }
-                        });
-            }
-
             loadCampusImpact(view);
             loadGoalStatus(view);
         }
 
-        TextView btnEcoPicks = view.findViewById(R.id.btn_eco_picks);
-        if (btnEcoPicks != null) {
-            btnEcoPicks.setOnClickListener(v -> {
+        View ecoPicksWidget = view.findViewById(R.id.card_ecopicks_widget);
+        if (ecoPicksWidget != null) {
+            ecoPicksWidget.setOnClickListener(v -> {
                 if (getActivity() instanceof MainActivity) {
                     ((MainActivity) getActivity()).navigateToEcoPicks();
-                }
-            });
-        }
-
-        TextView btnStaffManageChallenges = view.findViewById(R.id.btn_staff_manage_challenges);
-        if (btnStaffManageChallenges != null) {
-            btnStaffManageChallenges.setOnClickListener(v -> {
-                if (getActivity() instanceof MainActivity) {
-                    ((MainActivity) getActivity()).navigateToStaffManage();
                 }
             });
         }
@@ -581,10 +620,30 @@ public class HomeFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<QueryDocumentSnapshot> docs = new ArrayList<>();
+
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         docs.add(doc);
                     }
 
+                    // New user: show two random suggested activities.
+                    if (docs.isEmpty()) {
+                        List<String> suggestions = getRandomSuggestedActivities(2);
+
+                        String first = suggestions.get(0);
+                        String second = suggestions.get(1);
+
+                        tvRecent1Icon.setText(getActivityEmoji(first));
+                        tvRecent1Title.setText(first);
+                        tvRecent1Subtitle.setText("");
+
+                        tvRecent2Icon.setText(getActivityEmoji(second));
+                        tvRecent2Title.setText(second);
+                        tvRecent2Subtitle.setText("");
+
+                        return;
+                    }
+
+                    // Sort newest first.
                     docs.sort((a, b) -> {
                         Timestamp ta = a.getTimestamp("timestamp");
                         Timestamp tb = b.getTimestamp("timestamp");
@@ -592,74 +651,98 @@ public class HomeFragment extends Fragment {
                         if (ta == null && tb == null) return 0;
                         if (ta == null) return 1;
                         if (tb == null) return -1;
+
                         return tb.toDate().compareTo(ta.toDate());
                     });
 
-                    if (docs.isEmpty()) {
-                        tvRecent1Icon.setText("");
-                        tvRecent1Title.setText("MOST FREQUENT");
-                        tvRecent1Subtitle.setText("Your most frequent activity will appear here.\nTry logging something.");
-
-                        tvRecent2Icon.setText("");
-                        tvRecent2Title.setText("RECENT ACTIVITY");
-                        tvRecent2Subtitle.setText("Your latest activity will appear here once you log one.");
-                        return;
-                    }
-
-                    HashMap<String, Integer> frequencyMap = new HashMap<>();
+                    // Most recent valid activity.
+                    String mostRecent = null;
                     for (QueryDocumentSnapshot doc : docs) {
                         String activityType = doc.getString("activityType");
-                        if (activityType == null || activityType.trim().isEmpty()) continue;
+                        if (isValidLoggableActivity(activityType)) {
+                            mostRecent = activityType;
+                            break;
+                        }
+                    }
 
-                        int count = frequencyMap.containsKey(activityType) ? frequencyMap.get(activityType) : 0;
+                    // Most frequent valid activity.
+                    HashMap<String, Integer> frequencyMap = new HashMap<>();
+
+                    for (QueryDocumentSnapshot doc : docs) {
+                        String activityType = doc.getString("activityType");
+                        if (!isValidLoggableActivity(activityType)) continue;
+
+                        int count = frequencyMap.containsKey(activityType)
+                                ? frequencyMap.get(activityType)
+                                : 0;
+
                         frequencyMap.put(activityType, count + 1);
                     }
 
                     String mostFrequent = null;
                     int maxCount = 0;
 
-                    for (String key : frequencyMap.keySet()) {
-                        int count = frequencyMap.get(key);
+                    for (String activity : frequencyMap.keySet()) {
+                        int count = frequencyMap.get(activity);
+
                         if (count > maxCount) {
                             maxCount = count;
-                            mostFrequent = key;
+                            mostFrequent = activity;
                         }
                     }
 
-                    String recentDifferent = null;
-                    for (QueryDocumentSnapshot doc : docs) {
-                        String activityType = doc.getString("activityType");
-                        if (activityType == null || activityType.trim().isEmpty()) continue;
+                    // Fallback if something strange happened with the logs.
+                    if (mostFrequent == null || mostRecent == null) {
+                        List<String> suggestions = getRandomSuggestedActivities(2);
 
-                        if (!activityType.equals(mostFrequent)) {
-                            recentDifferent = activityType;
-                            break;
+                        mostFrequent = suggestions.get(0);
+                        mostRecent = suggestions.get(1);
+                    }
+
+                    // Avoid showing duplicate cards if possible.
+                    if (mostRecent.equals(mostFrequent)) {
+                        String differentRecent = null;
+
+                        for (QueryDocumentSnapshot doc : docs) {
+                            String activityType = doc.getString("activityType");
+
+                            if (isValidLoggableActivity(activityType)
+                                    && !activityType.equals(mostFrequent)) {
+                                differentRecent = activityType;
+                                break;
+                            }
+                        }
+
+                        if (differentRecent != null) {
+                            mostRecent = differentRecent;
+                        } else {
+                            mostRecent = getRandomSuggestedActivity(mostFrequent);
                         }
                     }
 
+                    // Card 1: most frequent
                     tvRecent1Icon.setText(getActivityEmoji(mostFrequent));
                     tvRecent1Title.setText(mostFrequent);
-                    tvRecent1Subtitle.setText("You're on a roll with this activity");
+                    tvRecent1Subtitle.setText("");
 
-                    if (recentDifferent != null) {
-                        tvRecent2Icon.setText(getActivityEmoji(recentDifferent));
-                        tvRecent2Title.setText(recentDifferent);
-                        tvRecent2Subtitle.setText("Want to log this activity again?");
-                    } else {
-                        String suggestion = getRandomSuggestedActivity(mostFrequent);
-                        tvRecent2Icon.setText(getActivityEmoji(suggestion));
-                        tvRecent2Title.setText(suggestion);
-                        tvRecent2Subtitle.setText("Try this activity too");
-                    }
+                    // Card 2: most recent
+                    tvRecent2Icon.setText(getActivityEmoji(mostRecent));
+                    tvRecent2Title.setText(mostRecent);
+                    tvRecent2Subtitle.setText("");
                 })
                 .addOnFailureListener(e -> {
-                    tvRecent1Icon.setText("");
-                    tvRecent1Title.setText("MOST FREQUENT");
-                    tvRecent1Subtitle.setText("Couldn't load activity data");
+                    List<String> suggestions = getRandomSuggestedActivities(2);
 
-                    tvRecent2Icon.setText("");
-                    tvRecent2Title.setText("RECENT ACTIVITY");
-                    tvRecent2Subtitle.setText("Couldn't load activity data");
+                    String first = suggestions.get(0);
+                    String second = suggestions.get(1);
+
+                    tvRecent1Icon.setText(getActivityEmoji(first));
+                    tvRecent1Title.setText(first);
+                    tvRecent1Subtitle.setText("");
+
+                    tvRecent2Icon.setText(getActivityEmoji(second));
+                    tvRecent2Title.setText(second);
+                    tvRecent2Subtitle.setText("");
                 });
     }
 
@@ -1029,32 +1112,31 @@ public class HomeFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     double totalCo2 = 0.0;
-                    Set<String> activeUsers = new HashSet<>();
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         Double co2 = doc.getDouble("co2SavedKg");
                         if (co2 != null) totalCo2 += co2;
-
-                        String uid = doc.getString("userId");
-                        if (uid != null) activeUsers.add(uid);
                     }
 
-                    String co2Text;
+                    String amountText;
                     if (totalCo2 >= 1000) {
-                        co2Text = String.format(Locale.getDefault(), "%.1f tonnes CO₂ saved", totalCo2 / 1000.0);
+                        amountText = String.format(Locale.getDefault(), "%.1f t", totalCo2 / 1000.0);
                     } else {
-                        co2Text = String.format(Locale.getDefault(), "%.1f kg CO₂ saved", totalCo2);
+                        amountText = String.format(Locale.getDefault(), "%.1f kg", totalCo2);
                     }
 
-                    tvCampusCo2.setText(co2Text);
+                    tvCampusCo2.setText(amountText);
+
                     if (tvCampusStudents != null) {
-                        int count = activeUsers.size();
-                        tvCampusStudents.setText(count + (count == 1 ? " student logging" : " students logging"));
+                        tvCampusStudents.setText("");
                     }
                 })
                 .addOnFailureListener(e -> {
                     if (tvCampusCo2 != null) {
-                        tvCampusCo2.setText("Campus data unavailable");
+                        tvCampusCo2.setText("--");
+                    }
+                    if (tvCampusStudents != null) {
+                        tvCampusStudents.setText("");
                     }
                 });
     }
@@ -1228,6 +1310,22 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    private void navigateToFeedExplore() {
+        if (getActivity() != null) {
+            Bundle args = new Bundle();
+            args.putString("start_tab", "explore");
+
+            FeedFragment feedFragment = new FeedFragment();
+            feedFragment.setArguments(args);
+
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, feedFragment)
+                    .addToBackStack(null)
+                    .commit();
+        }
+    }
+
     private void refreshImpactRing() {
         if (progressRingMonthly == null) return;
 
@@ -1278,5 +1376,28 @@ public class HomeFragment extends Fragment {
 
     private String formatWholeNumber(long value) {
         return String.format(Locale.getDefault(), "%,d", value);
+    }
+
+    private List<String> getRandomSuggestedActivities(int count) {
+        List<String> activities = new ArrayList<>(Arrays.asList(
+                "Cycling",
+                "Public Transit",
+                "Recycling",
+                "Plant-based meal",
+                "Reusable cup",
+                "Composting",
+                "Walked",
+                "Energy saving"
+        ));
+
+        List<String> selected = new ArrayList<>();
+        Random random = new Random();
+
+        while (!activities.isEmpty() && selected.size() < count) {
+            int index = random.nextInt(activities.size());
+            selected.add(activities.remove(index));
+        }
+
+        return selected;
     }
 }
