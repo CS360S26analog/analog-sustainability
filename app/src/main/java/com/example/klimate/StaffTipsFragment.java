@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -29,6 +30,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.firebase.Timestamp;
@@ -66,6 +68,7 @@ public class StaffTipsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_staff_tips, container, false);
 
         db = FirebaseFirestore.getInstance();
+        forceGreenHeaderColor();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
         etTitle = view.findViewById(R.id.et_tip_title);
@@ -92,6 +95,13 @@ public class StaffTipsFragment extends Fragment {
         btnPost.setOnClickListener(v -> postOrUpdateTip());
 
         return view;
+    }
+
+    private void forceGreenHeaderColor() {
+        if (getActivity() == null) return;
+
+        Window window = getActivity().getWindow();
+        window.setStatusBarColor(ContextCompat.getColor(requireContext(), R.color.color_green_header));
     }
 
     /**
@@ -196,11 +206,14 @@ public class StaffTipsFragment extends Fragment {
     private void loadPublishedTips() {
         if (currentUser == null || llTipsList == null) return;
 
+        llTipsList.removeAllViews();
+
         db.collection("tips")
                 .whereEqualTo("authorUid", currentUser.getUid())
-                .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(querySnapshots -> {
+                    if (!isAdded() || getContext() == null) return;
+
                     llTipsList.removeAllViews();
 
                     if (querySnapshots.isEmpty()) {
@@ -212,13 +225,36 @@ public class StaffTipsFragment extends Fragment {
                         return;
                     }
 
+                    java.util.List<QueryDocumentSnapshot> tips = new java.util.ArrayList<>();
+
                     for (QueryDocumentSnapshot doc : querySnapshots) {
+                        tips.add(doc);
+                    }
+
+                    tips.sort((a, b) -> {
+                        Timestamp ta = a.getTimestamp("timestamp");
+                        Timestamp tb = b.getTimestamp("timestamp");
+
+                        if (ta == null && tb == null) return 0;
+                        if (ta == null) return 1;
+                        if (tb == null) return -1;
+
+                        return tb.compareTo(ta);
+                    });
+
+                    for (QueryDocumentSnapshot doc : tips) {
                         addTipCard(doc);
                     }
                 })
                 .addOnFailureListener(e -> {
+                    if (!isAdded() || getContext() == null) return;
+
+                    llTipsList.removeAllViews();
+
                     TextView err = new TextView(requireContext());
-                    err.setText("Could not load tips.");
+                    err.setText("Could not load tips: " + e.getMessage());
+                    err.setTextSize(13f);
+                    err.setTextColor(0xFF888888);
                     llTipsList.addView(err);
                 });
     }

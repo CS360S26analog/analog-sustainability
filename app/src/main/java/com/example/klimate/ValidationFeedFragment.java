@@ -56,6 +56,7 @@ public class ValidationFeedFragment extends Fragment {
     private FirebaseFirestore db;
     private LinearLayout validationFeedContainer;
     private View emptyStateCard;
+    private boolean currentUserIsStaff = false;
 
     /**
      * Inflates the validation feed screen, initializes Firebase,
@@ -83,9 +84,32 @@ public class ValidationFeedFragment extends Fragment {
                 .getSupportFragmentManager()
                 .popBackStack());
 
-        loadPendingLogs(inflater);
+        loadCurrentUserRoleThenLogs(inflater);
 
         return view;
+    }
+
+    private void loadCurrentUserRoleThenLogs(@NonNull LayoutInflater inflater) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (currentUser == null) {
+            currentUserIsStaff = false;
+            loadPendingLogs(inflater);
+            return;
+        }
+
+        db.collection("users")
+                .document(currentUser.getUid())
+                .get()
+                .addOnSuccessListener(doc -> {
+                    String role = doc.getString("role");
+                    currentUserIsStaff = "staff".equalsIgnoreCase(role);
+                    loadPendingLogs(inflater);
+                })
+                .addOnFailureListener(e -> {
+                    currentUserIsStaff = false;
+                    loadPendingLogs(inflater);
+                });
     }
 
     private void loadPendingLogs(@NonNull LayoutInflater inflater) {
@@ -142,6 +166,8 @@ public class ValidationFeedFragment extends Fragment {
         TextView textUpvoteCount = cardView.findViewById(R.id.text_upvote_count);
         TextView btnUpvote = cardView.findViewById(R.id.btn_upvote);
         TextView btnDownvote = cardView.findViewById(R.id.btn_downvote);
+
+        TextView btnReport = cardView.findViewById(R.id.btn_report_log);
 
         FrameLayout proofImageContainer = cardView.findViewById(R.id.proof_image_container);
         TextView textProofOverlay = cardView.findViewById(R.id.text_proof_overlay);
@@ -237,6 +263,14 @@ public class ValidationFeedFragment extends Fragment {
                 finalLogId, finalDocumentId, false,
                 textUpvoteCount, btnUpvote, btnDownvote
         ));
+
+        if (currentUserIsStaff) {
+            btnReport.setText("Delete");
+            btnReport.setOnClickListener(v -> confirmDeleteLog(finalDocumentId));
+        } else {
+            btnReport.setText("Report");
+            btnReport.setOnClickListener(v -> reportLog(finalDocumentId, finalLogId));
+        }
     }
 
     private void refreshVoteState(@NonNull String logId,
@@ -248,20 +282,35 @@ public class ValidationFeedFragment extends Fragment {
                 .whereEqualTo("logId", logId)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
-                    int upvoteCount = 0;
+                    int upvoteCount   = 0;
+                    int downvoteCount = 0;
 
                     for (QueryDocumentSnapshot voteDocument : querySnapshot) {
                         Boolean isUpvote = readVoteIsUpvote(voteDocument);
                         if (Boolean.TRUE.equals(isUpvote)) {
                             upvoteCount++;
+                        } else {
+                            downvoteCount++;
                         }
                     }
 
-                    textUpvoteCount.setText(formatUpvoteCount(upvoteCount));
+                    int netVotes = upvoteCount - downvoteCount;
 
+                    // Show net vote count with breakdown
+                    String voteLabel;
+                    if (downvoteCount == 0) {
+                        voteLabel = upvoteCount + " upvote" + (upvoteCount != 1 ? "s" : "");
+                    } else {
+                        voteLabel = netVotes + " votes  (↑" + upvoteCount + "  ↓" + downvoteCount + ")";
+                    }
+                    textUpvoteCount.setText(voteLabel);
+
+                    // Write net vote count back to the log document
                     db.collection("activity_logs")
                             .document(activityLogDocumentId)
-                            .update("voteCount", upvoteCount);
+                            .update("voteCount", netVotes);
+
+
 
                     FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                     if (currentUser == null) {
@@ -285,8 +334,7 @@ public class ValidationFeedFragment extends Fragment {
                     btnDownvote.setEnabled(!alreadyVoted);
                 })
                 .addOnFailureListener(e -> {
-                    textUpvoteCount.setText("0 upvotes");
-                    btnUpvote.setEnabled(true);
+                    textUpvoteCount.setText("0 votes");
                     btnDownvote.setEnabled(true);
                 });
     }
@@ -454,5 +502,73 @@ public class ValidationFeedFragment extends Fragment {
         if (getContext() == null) return dp;
         float density = getContext().getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
+    }
+
+    private void reportLog(@NonNull String activityLogDocumentId, @NonNull String logId) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (currentUser == null) {
+            Toast.makeText(requireContext(), "Please log in first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String reporterId = currentUser.getUid();
+        String reportId = activityLogDocumentId + "_" + reporterId;
+
+        Map<String, Object> reportData = new HashMap<>();
+        reportData.put("logDocumentId", activityLogDocumentId);
+        reportData.put("logId", logId);
+        reportData.put("reporterId", reporterId);
+        reportData.put("reason", "Reported from validation feed");
+        reportData.put("timestamp", Timestamp.now());
+
+        db.collection("reports")
+                .document(reportId)
+                .set(reportData)
+                .addOnSuccessListener(unused -> {
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("reported", true);
+                    updates.put("status", "reported");
+                    updates.put("reportCount", FieldValue.increment(1));
+                    updates.put("lastReportedAt", Timestamp.now());
+
+                    db.collection("activity_logs")
+                            .document(activityLogDocumentId)
+                            .update(updates)
+                            .addOnSuccessListener(done ->
+                                    Toast.makeText(requireContext(), "Log reported for staff review", Toast.LENGTH_SHORT).show()
+                            )
+                            .addOnFailureListener(e ->
+                                    Toast.makeText(requireContext(), "Could not update report status", Toast.LENGTH_SHORT).show()
+                            );
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(requireContext(), "Could not report log", Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    private void confirmDeleteLog(@NonNull String activityLogDocumentId) {
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Delete log?")
+                .setMessage("This will permanently delete this activity log.")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Delete", (dialog, which) -> deleteLog(activityLogDocumentId))
+                .show();
+    }
+
+    private void deleteLog(@NonNull String activityLogDocumentId) {
+        db.collection("activity_logs")
+                .document(activityLogDocumentId)
+                .delete()
+                .addOnSuccessListener(unused -> {
+                    Toast.makeText(requireContext(), "Log deleted", Toast.LENGTH_SHORT).show();
+
+                    if (getView() != null) {
+                        loadCurrentUserRoleThenLogs(getLayoutInflater());
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(requireContext(), "Could not delete log", Toast.LENGTH_SHORT).show()
+                );
     }
 }

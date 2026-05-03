@@ -644,6 +644,7 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card_amber"
+                android:visibility="gone"
                 android:gravity="center"
                 android:text="↗  Share My Progress"
                 android:textColor="@color/white"
@@ -654,6 +655,7 @@
             <TextView
                 android:id="@+id/btn_view_feed"
                 android:layout_width="match_parent"
+                android:visibility="gone"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card_forest"
@@ -668,6 +670,7 @@
             <TextView
                 android:id="@+id/btn_view_challenges"
                 android:layout_width="match_parent"
+                android:visibility="gone"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card_forest"

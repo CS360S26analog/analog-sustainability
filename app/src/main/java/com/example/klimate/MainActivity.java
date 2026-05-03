@@ -179,40 +179,31 @@ public class MainActivity extends AppCompatActivity {
     private void setupStaffNavigation(BottomNavigationView bottomNav) {
         bottomNav.getMenu().clear();
         bottomNav.inflateMenu(R.menu.staff_nav_menu);
-
-        viewPager.setAdapter(new StaffPagerAdapter(this));
-        viewPager.setOffscreenPageLimit(2);
-        viewPager.setCurrentItem(0, false);
-        showPager();
+        loadFragment(new StaffOverviewFragment());
 
         bottomNav.setOnItemSelectedListener(item -> {
-            if (isUpdatingBottomNavFromPager) {
-                return true;
-            }
+            Fragment fragment;
+            int id = item.getItemId();
 
-            int position = getStaffPositionForNavId(item.getItemId());
-            if (position == -1) {
+            if (id == R.id.staff_nav_overview) {
+                fragment = new StaffOverviewFragment();
+            } else if (id == R.id.staff_nav_manage) {
+                fragment = new StaffManageFragment();
+            } else if (id == R.id.staff_nav_reports) {
+                fragment = new StaffReportsFragment();
+            } else if (id == R.id.staff_nav_feed) {
+                // Staff see the Validation Feed — they can upvote/downvote
+                fragment = new ValidationFeedFragment();
+            } else if (id == R.id.staff_nav_profile) {
+                fragment = new StaffProfileFragment();
+            } else {
                 return false;
             }
 
-            showPager();
-            viewPager.setCurrentItem(position, true);
+            loadFragment(fragment);
             return true;
         });
 
-        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageSelected(int position) {
-                int navId = getStaffNavIdForPosition(position);
-                if (navId == -1) return;
-
-                isUpdatingBottomNavFromPager = true;
-                bottomNav.setSelectedItemId(navId);
-                isUpdatingBottomNavFromPager = false;
-            }
-        });
-
-        bottomNav.setSelectedItemId(R.id.staff_nav_overview);
         showStaffTutorialIfNeeded(bottomNav);
     }
 
@@ -223,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
             return 1;
         } else if (id == R.id.staff_nav_reports) {
             return 2;
-        } else if (id == R.id.staff_nav_community) {
+        } else if (id == R.id.staff_nav_feed) {
             return 3;
         } else if (id == R.id.staff_nav_profile) {
             return 4;
@@ -240,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (position == 2) {
             return R.id.staff_nav_reports;
         } else if (position == 3) {
-            return R.id.staff_nav_community;
+            return R.id.staff_nav_feed;
         } else if (position == 4) {
             return R.id.staff_nav_profile;
         } else {
@@ -399,9 +390,9 @@ public class MainActivity extends AppCompatActivity {
                                         .descriptionTextSize(13),
 
                                 TapTarget.forView(
-                                                bottomNav.findViewById(R.id.staff_nav_community),
-                                                "Step 4 of 5 — Community & Tips",
-                                                "Publish sustainability tips that appear in the student community feed. Write a title, body, and choose a category. You can edit or delete your published tips at any time. Students see these under the Tips tab in their feed."
+                                                bottomNav.findViewById(R.id.staff_nav_feed),
+                                                "Step 4 of 5 — Validation Feed",
+                                                "Review student-submitted verified logs here. Upvote genuine sustainable activities to award bonus points. Downvote suspicious or fake submissions — at -5 net votes a log is automatically flagged for your review in the Reports tab."
                                         ).outerCircleColor(R.color.color_green_header)
                                         .targetCircleColor(android.R.color.white)
                                         .titleTextColor(android.R.color.white)
