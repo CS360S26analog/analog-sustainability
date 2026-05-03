@@ -581,7 +581,7 @@ public class LogFragment extends Fragment {
         TextView tvPtsLabel = new TextView(requireContext());
         tvPtsLabel.setText("Points earned");
         tvPtsLabel.setTextSize(11);
-        tvPtsLabel.setTextColor(0xCCFFFFFF);
+        tvPtsLabel.setTextColor(0xFFEEF7EE);
         LinearLayout.LayoutParams ptsLabelParams = new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
         tvPtsLabel.setLayoutParams(ptsLabelParams);
