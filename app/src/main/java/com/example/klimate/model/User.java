@@ -3,16 +3,21 @@
  *
  * Model class representing a registered Klimate app user.
  * Stores the user's authentication identity, display name, university,
- * and aggregated sustainability statistics.
+ * and aggregated sustainability statistics: total points earned, current
+ * logging streak, and cumulative CO2 saved.
  *
  * Each instance maps to a single document in the Firestore "users"
  * collection, where the document ID equals the Firebase Auth UID.
+ * The no-argument constructor is required by Firestore for automatic
+ * deserialization via toObject(User.class).
  *
  * Role in design: Part of the Model layer (MVC/MVVM). Written by
  * RegisterActivity on first registration. Read by DashboardViewModel
- * and ProfileFragment.
+ * and ProfileFragment. Updated by PointsManager whenever the user earns points.
  *
- * Outstanding issues: none.
+ * Outstanding issues:
+ * - streakDays is only ever incremented; the reset logic (check whether
+ *   the user logged anything yesterday at midnight) is not yet implemented.
  *
  * @author Maryam Waseem
  */
@@ -30,6 +35,7 @@ public class User {
     private int streakDays;
     private double co2SavedKg;
     private Timestamp createdAt;
+    private String role; // "student" or "staff"
 
     /**
      * Required no-argument constructor for Firestore deserialization.
@@ -40,22 +46,24 @@ public class User {
     /**
      * Constructs a new User with all fields specified.
      *
-     * @param uid         Firebase Auth UID
+     * @param uid         Firebase Auth UID, also used as the Firestore document ID
      * @param displayName the user's chosen display name
      * @param email       the campus email address used at registration
      * @param university  the university the user belongs to
      * @param createdAt   timestamp of account creation
+     * @param role        "staff" if the user entered the staff code, "student" otherwise
      */
     public User(String uid, String displayName, String email,
-                String university, Timestamp createdAt) {
-        this.uid          = uid;
-        this.displayName  = displayName;
-        this.email        = email;
-        this.university   = university;
-        this.totalPoints  = 0;
-        this.streakDays   = 0;
-        this.co2SavedKg   = 0.0;
-        this.createdAt    = createdAt;
+                String university, Timestamp createdAt, String role) {
+        this.uid         = uid;
+        this.displayName = displayName;
+        this.email       = email;
+        this.university  = university;
+        this.totalPoints = 0;
+        this.streakDays  = 0;
+        this.co2SavedKg  = 0.0;
+        this.createdAt   = createdAt;
+        this.role        = role;
     }
 
     /**
@@ -111,12 +119,17 @@ public class User {
         return university != null ? university : "LUMS";
     }
 
+    /**
+     * Sets the university.
+     *
+     * @param university the university name
+     */
     public void setUniversity(String university) { this.university = university; }
 
     /**
-     * Gets the total points balance.
+     * Returns the user's current total points balance.
      *
-     * @return totalPoints points total
+     * @return total points as an integer
      */
     public int getTotalPoints() { return totalPoints; }
 
@@ -168,4 +181,20 @@ public class User {
      * @param createdAt the creation timestamp
      */
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+
+    /**
+     * Returns the user's role — either "student" or "staff".
+     * Staff users have access to the challenge creation and tips
+     * management screens.
+     *
+     * @return role string
+     */
+    public String getRole() { return role; }
+
+    /**
+     * Sets the user's role.
+     *
+     * @param role "student" or "staff"
+     */
+    public void setRole(String role) { this.role = role; }
 }

@@ -1,9 +1,8 @@
 /**
  * FriendsFragment.java
  *
- * Displays the user's friends list and provides an entry point for
- * adding new friends. Currently shows a static list of friends with
- * their eco tier, points, and streak days.
+ * Displays the user's friends list and provides entry points for
+ * adding friends and reviewing pending validation submissions.
  *
  * Role in design: Part of the View layer. Accessible from the Friends
  * tab in the bottom navigation bar.
@@ -11,7 +10,7 @@
  * Outstanding issues: friend data is hardcoded for Half checkpoint.
  * Dynamic friend loading from Firestore is planned for Full checkpoint.
  *
- * @author Team Analog
+ * @author Karra
  */
 package com.example.klimate;
 
@@ -21,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -36,8 +36,20 @@ public class FriendsFragment extends Fragment {
 
         TextView btnAdd = view.findViewById(R.id.btn_add_friend);
         btnAdd.setOnClickListener(v ->
-            Toast.makeText(getContext(), "Add Friend — coming soon!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(getContext(), "Add Friend — coming soon!", Toast.LENGTH_SHORT).show()
         );
+
+        View pendingReviewsCard = view.findViewById(R.id.card_pending_reviews);
+        if (pendingReviewsCard != null) {
+            pendingReviewsCard.setOnClickListener(v ->
+                    requireActivity()
+                            .getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, new ValidationFeedFragment())
+                            .addToBackStack(null)
+                            .commit()
+            );
+        }
 
         return view;
     }

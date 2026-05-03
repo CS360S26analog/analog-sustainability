@@ -9,6 +9,10 @@
  * The selected university is stored in the User document and displayed
  * on the profile screen.
  *
+ * If the user enters the correct staff code during registration, their
+ * role is set to "staff", granting access to the staff management screens.
+ * Otherwise the role defaults to "student".
+ *
  * Role in design: Part of the Auth layer (one-time onboarding screen).
  * Depends on User.java (Model layer) to structure the Firestore write.
  *
@@ -38,7 +42,11 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private EditText etName, etEmail, etPassword;
+    // The secret code that grants staff access on registration.
+    // Share this only with LUMS sustainability staff members.
+    private static final String STAFF_CODE = "KLIMATE_STAFF_2026";
+
+    private EditText etName, etEmail, etPassword, etStaffCode;
     private TextView tvSelectedUniversity;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
@@ -64,17 +72,12 @@ public class RegisterActivity extends AppCompatActivity {
         etName               = findViewById(R.id.et_name);
         etEmail              = findViewById(R.id.et_email);
         etPassword           = findViewById(R.id.et_password);
+        etStaffCode          = findViewById(R.id.et_staff_code);
         tvSelectedUniversity = findViewById(R.id.tv_selected_university);
         Button btnRegister   = findViewById(R.id.btn_register);
         TextView tvLogin     = findViewById(R.id.tv_go_login);
 
-        // University selector — tapping the row opens a choice dialog
         tvSelectedUniversity.setOnClickListener(v -> showUniversityPicker());
-        // Also allow tapping the parent container
-        findViewById(R.id.tv_selected_university)
-                .getRootView()
-                .findViewById(R.id.tv_selected_university)
-                .setOnClickListener(v -> showUniversityPicker());
 
         btnRegister.setOnClickListener(v -> registerUser());
         tvLogin.setOnClickListener(v -> finish());
@@ -116,23 +119,29 @@ public class RegisterActivity extends AppCompatActivity {
     /**
      * Reads all input fields, validates them, creates a Firebase Auth account,
      * then writes a new User document to Firestore including the selected
-     * university. Navigates to MainActivity on success.
+     * university and role. Navigates to MainActivity on success.
      */
     private void registerUser() {
         String name       = etName.getText().toString().trim();
         String email      = etEmail.getText().toString().trim();
         String password   = etPassword.getText().toString().trim();
+        String staffCode  = etStaffCode.getText().toString().trim();
         String university = selectedUniversity;
 
-        if (TextUtils.isEmpty(name) || TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+        if (TextUtils.isEmpty(name) || TextUtils.isEmpty(email)
+                || TextUtils.isEmpty(password)) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (password.length() < 6) {
-            Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        // Determine role — staff code must match exactly, case-sensitive
+        String role = staffCode.equals(STAFF_CODE) ? "staff" : "student";
 
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnSuccessListener(result -> {
@@ -140,14 +149,21 @@ public class RegisterActivity extends AppCompatActivity {
                     if (firebaseUser == null) return;
 
                     String uid = firebaseUser.getUid();
-
-                    // Write user document including university
-                    User newUser = new User(uid, name, email, university, Timestamp.now());
+                    User newUser = new User(uid, name, email, university,
+                            Timestamp.now(), role);
 
                     db.collection("users").document(uid)
                             .set(newUser)
                             .addOnSuccessListener(unused -> {
-                                Toast.makeText(this, "Account created!", Toast.LENGTH_SHORT).show();
+                                if ("staff".equals(role)) {
+                                    Toast.makeText(this,
+                                            "Staff account created! Welcome 🌿",
+                                            Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(this,
+                                            "Account created!",
+                                            Toast.LENGTH_SHORT).show();
+                                }
                                 startActivity(new Intent(this, MainActivity.class));
                                 finish();
                             })
