@@ -1,315 +1,301 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/color_cream_bg"
-    android:fillViewport="true">
+    android:background="@color/color_auth_header">
 
-    <LinearLayout
+    <!-- Green hero area -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="340dp"
+        android:paddingStart="30dp"
+        android:paddingTop="48dp"
+        android:paddingEnd="30dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|bottom"
+            android:layout_marginBottom="82dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_go_login"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="15dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="← Back to login"
+                android:textColor="#EFFFFFFF"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="30dp"
+                android:text="Sign Up"
+                android:textColor="@color/white"
+                android:textSize="48sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- White bottom card -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:paddingStart="32dp"
-        android:paddingEnd="32dp"
-        android:paddingTop="32dp"
-        android:paddingBottom="32dp">
+        android:layout_marginTop="250dp"
+        android:fillViewport="true"
+        android:overScrollMode="never">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@drawable/bg_auth_bottom_card"
             android:orientation="vertical"
-            android:gravity="center_horizontal">
+            android:paddingStart="30dp"
+            android:paddingTop="30dp"
+            android:paddingEnd="30dp"
+            android:paddingBottom="36dp">
 
+            <!-- Display name -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="🌱 Klimate"
-                android:textSize="30sp"
-                android:textStyle="bold"
-                android:textColor="@color/color_forest_green"
-                android:gravity="center"
-                android:layout_marginBottom="6dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Create your campus climate account"
-                android:textSize="13sp"
-                android:textColor="@color/color_text_secondary"
-                android:gravity="center"
-                android:layout_marginBottom="24dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
                 android:text="Display name"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="@color/color_forest_green"
-                android:layout_marginStart="2dp"
-                android:layout_marginBottom="6dp" />
+                android:textColor="@color/color_auth_label"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="14dp"
+                app:boxBackgroundColor="@color/color_auth_surface"
                 app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="@color/white"
-                app:boxCornerRadiusTopStart="18dp"
-                app:boxCornerRadiusTopEnd="18dp"
-                app:boxCornerRadiusBottomStart="18dp"
-                app:boxCornerRadiusBottomEnd="18dp"
-                app:boxStrokeColor="@color/color_green_header"
-                app:boxStrokeWidth="1dp"
+                app:boxCornerRadiusBottomEnd="24dp"
+                app:boxCornerRadiusBottomStart="24dp"
+                app:boxCornerRadiusTopEnd="24dp"
+                app:boxCornerRadiusTopStart="24dp"
+                app:boxStrokeColor="@color/color_auth_input_stroke"
+                app:boxStrokeWidth="1.4dp"
                 app:boxStrokeWidthFocused="2dp"
-                app:hintEnabled="false">
+                app:hintEnabled="false"
+                app:startIconDrawable="@drawable/ic_person"
+                app:startIconTint="@color/color_auth_header">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_name"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
+                    android:layout_height="54dp"
+                    android:gravity="center_vertical|start"
                     android:hint="Your name"
                     android:inputType="textPersonName"
-                    android:singleLine="true"
-                    android:gravity="center_vertical|start"
-                    android:minHeight="0dp"
-                    android:includeFontPadding="false"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
                     android:paddingTop="0dp"
                     android:paddingBottom="0dp"
+                    android:singleLine="true"
                     android:textColor="@color/color_text_primary"
-                    android:textColorHint="@color/color_text_secondary"
-                    android:textSize="14sp" />
-
+                    android:textColorHint="@color/color_auth_hint"
+                    android:textSize="17sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Email -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
                 android:text="Campus email"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="@color/color_forest_green"
-                android:layout_marginStart="2dp"
-                android:layout_marginBottom="6dp" />
+                android:textColor="@color/color_auth_label"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="14dp"
+                app:boxBackgroundColor="@color/color_auth_surface"
                 app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="@color/white"
-                app:boxCornerRadiusTopStart="18dp"
-                app:boxCornerRadiusTopEnd="18dp"
-                app:boxCornerRadiusBottomStart="18dp"
-                app:boxCornerRadiusBottomEnd="18dp"
-                app:boxStrokeColor="@color/color_green_header"
-                app:boxStrokeWidth="1dp"
+                app:boxCornerRadiusBottomEnd="24dp"
+                app:boxCornerRadiusBottomStart="24dp"
+                app:boxCornerRadiusTopEnd="24dp"
+                app:boxCornerRadiusTopStart="24dp"
+                app:boxStrokeColor="@color/color_auth_input_stroke"
+                app:boxStrokeWidth="1.4dp"
                 app:boxStrokeWidthFocused="2dp"
-                app:hintEnabled="false">
+                app:hintEnabled="false"
+                app:startIconDrawable="@drawable/ic_email"
+                app:startIconTint="@color/color_auth_header">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_email"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
+                    android:layout_height="54dp"
+                    android:gravity="center_vertical|start"
                     android:hint="yourname@lums.edu.pk"
                     android:inputType="textEmailAddress"
-                    android:singleLine="true"
-                    android:gravity="center_vertical|start"
-                    android:minHeight="0dp"
-                    android:includeFontPadding="false"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
                     android:paddingTop="0dp"
                     android:paddingBottom="0dp"
+                    android:singleLine="true"
                     android:textColor="@color/color_text_primary"
-                    android:textColorHint="@color/color_text_secondary"
-                    android:textSize="14sp" />
-
+                    android:textColorHint="@color/color_auth_hint"
+                    android:textSize="17sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- University -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
                 android:text="University"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="@color/color_forest_green"
-                android:layout_marginStart="2dp"
-                android:layout_marginBottom="6dp" />
+                android:textColor="@color/color_auth_label"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <LinearLayout
+                android:id="@+id/layout_university_picker"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginBottom="4dp"
-                android:background="@drawable/bg_card_white"
-                android:orientation="horizontal"
+                android:layout_height="54dp"
+                android:layout_marginBottom="14dp"
+                android:background="@drawable/bg_auth_university_pill"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
+                android:orientation="horizontal"
+                android:paddingStart="22dp"
+                android:paddingEnd="22dp">
 
                 <TextView
                     android:id="@+id/tv_selected_university"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="LUMS"
-                    android:textSize="14sp"
                     android:gravity="center_vertical"
-                    android:includeFontPadding="false"
-                    android:textColor="@color/color_text_primary" />
+                    android:text="LUMS"
+                    android:textColor="@color/color_text_primary"
+                    android:textSize="17sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="Current campus"
-                    android:textSize="10sp"
-                    android:gravity="center_vertical"
-                    android:includeFontPadding="false"
-                    android:textColor="@color/color_green_header" />
-
+                    android:layout_height="wrap_content"
+                    android:text="▾"
+                    android:textColor="@color/color_auth_header"
+                    android:textSize="18sp" />
             </LinearLayout>
 
+            <!-- Password -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="More universities coming soon."
-                android:textColor="@color/color_text_secondary"
-                android:textSize="10sp"
-                android:layout_marginStart="2dp"
-                android:layout_marginBottom="14dp"
-                android:includeFontPadding="false" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
                 android:text="Password"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="@color/color_forest_green"
-                android:layout_marginStart="2dp"
-                android:layout_marginBottom="6dp" />
+                android:textColor="@color/color_auth_label"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="14dp"
+                app:boxBackgroundColor="@color/color_auth_surface"
                 app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="@color/white"
-                app:boxCornerRadiusTopStart="18dp"
-                app:boxCornerRadiusTopEnd="18dp"
-                app:boxCornerRadiusBottomStart="18dp"
-                app:boxCornerRadiusBottomEnd="18dp"
-                app:boxStrokeColor="@color/color_green_header"
-                app:boxStrokeWidth="1dp"
+                app:boxCornerRadiusBottomEnd="24dp"
+                app:boxCornerRadiusBottomStart="24dp"
+                app:boxCornerRadiusTopEnd="24dp"
+                app:boxCornerRadiusTopStart="24dp"
+                app:boxStrokeColor="@color/color_auth_input_stroke"
+                app:boxStrokeWidth="1.4dp"
                 app:boxStrokeWidthFocused="2dp"
-                app:hintEnabled="false"
                 app:endIconMode="password_toggle"
                 app:endIconTint="@color/color_text_secondary"
-                app:endIconContentDescription="Show password">
+                app:hintEnabled="false"
+                app:startIconDrawable="@drawable/ic_lock"
+                app:startIconTint="@color/color_auth_header">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_password"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
+                    android:layout_height="54dp"
+                    android:gravity="center_vertical|start"
                     android:hint="Min. 6 characters"
                     android:inputType="textPassword"
-                    android:singleLine="true"
-                    android:gravity="center_vertical|start"
-                    android:minHeight="0dp"
-                    android:includeFontPadding="false"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="48dp"
                     android:paddingTop="0dp"
+                    android:paddingEnd="48dp"
                     android:paddingBottom="0dp"
+                    android:singleLine="true"
                     android:textColor="@color/color_text_primary"
-                    android:textColorHint="@color/color_text_secondary"
-                    android:textSize="14sp" />
-
+                    android:textColorHint="@color/color_auth_hint"
+                    android:textSize="17sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Staff code -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Staff code"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="@color/color_forest_green"
-                android:layout_marginStart="2dp"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginBottom="6dp"
+                android:text="Staff code (optional)"
+                android:textColor="@color/color_auth_label"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_staff_code"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="24dp"
+                app:boxBackgroundColor="@color/color_auth_surface"
                 app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="@color/white"
-                app:boxCornerRadiusTopStart="18dp"
-                app:boxCornerRadiusTopEnd="18dp"
-                app:boxCornerRadiusBottomStart="18dp"
-                app:boxCornerRadiusBottomEnd="18dp"
-                app:boxStrokeColor="@color/color_green_header"
-                app:boxStrokeWidth="1dp"
+                app:boxCornerRadiusBottomEnd="24dp"
+                app:boxCornerRadiusBottomStart="24dp"
+                app:boxCornerRadiusTopEnd="24dp"
+                app:boxCornerRadiusTopStart="24dp"
+                app:boxStrokeColor="@color/color_auth_input_stroke"
+                app:boxStrokeWidth="1.4dp"
                 app:boxStrokeWidthFocused="2dp"
-                app:hintEnabled="false"
                 app:endIconMode="password_toggle"
                 app:endIconTint="@color/color_text_secondary"
-                app:endIconContentDescription="Show staff code">
+                app:hintEnabled="false"
+                app:startIconDrawable="@drawable/ic_lock"
+                app:startIconTint="@color/color_auth_header">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_staff_code"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:hint="Optional- Leave empty if student."
-                    android:inputType="textPassword"
-                    android:singleLine="true"
+                    android:layout_height="54dp"
                     android:gravity="center_vertical|start"
-                    android:minHeight="0dp"
-                    android:includeFontPadding="false"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="48dp"
+                    android:hint="Leave empty if you're a student"
+                    android:inputType="textPassword"
                     android:paddingTop="0dp"
+                    android:paddingEnd="48dp"
                     android:paddingBottom="0dp"
+                    android:singleLine="true"
                     android:textColor="@color/color_text_primary"
-                    android:textColorHint="@color/color_text_secondary"
-                    android:textSize="14sp" />
-
+                    android:textColorHint="@color/color_auth_hint"
+                    android:textSize="17sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_register"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="Create account"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_auth_button_pill"
+                android:elevation="4dp"
+                android:letterSpacing="0.10"
+                android:text="Sign Up"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
-                android:textSize="15sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                app:cornerRadius="16dp"
-                app:backgroundTint="@color/color_green_header" />
-
-            <TextView
-                android:id="@+id/tv_go_login"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="18dp"
-                android:gravity="center"
-                android:text="Already have an account? Log in"
-                android:textColor="@color/color_amber"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true" />
+                app:backgroundTint="@null"
+                app:cornerRadius="26dp" />
 
         </LinearLayout>
+    </ScrollView>
 
-    </LinearLayout>
-
-</ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

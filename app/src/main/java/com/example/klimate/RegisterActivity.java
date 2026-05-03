@@ -43,6 +43,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
 import java.util.Map;
+import android.view.Window;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AlertDialog;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -61,6 +64,9 @@ public class RegisterActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
+        Window window = getWindow();
+        window.setStatusBarColor(ContextCompat.getColor(this, R.color.color_auth_header));
+        window.setNavigationBarColor(ContextCompat.getColor(this, R.color.white));
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
@@ -77,16 +83,22 @@ public class RegisterActivity extends AppCompatActivity {
         tvSelectedUniversity = findViewById(R.id.tv_selected_university);
 
         Button btnRegister = findViewById(R.id.btn_register);
-        TextView tvLogin = findViewById(R.id.tv_go_login);
+        View tvLogin = findViewById(R.id.tv_go_login);
 
         if (tvSelectedUniversity != null) {
             tvSelectedUniversity.setText(SUPPORTED_UNIVERSITY);
+        }
+        View universityPicker = findViewById(R.id.layout_university_picker);
+
+        if (universityPicker != null) {
+            universityPicker.setOnClickListener(v -> showUniversityDialog());
         }
 
         setupErrorClearing();
 
         btnRegister.setOnClickListener(v -> registerUser());
         tvLogin.setOnClickListener(v -> finish());
+
     }
 
     private void setupErrorClearing() {
@@ -220,5 +232,16 @@ public class RegisterActivity extends AppCompatActivity {
         if (tilEmail != null) tilEmail.setError(null);
         if (tilPassword != null) tilPassword.setError(null);
         if (tilStaffCode != null) tilStaffCode.setError(null);
+    }
+
+    private void showUniversityDialog() {
+        String[] universities = {"LUMS", "FAST", "NUST", "IBA"};
+
+        new AlertDialog.Builder(this)
+                .setTitle("Select university")
+                .setItems(universities, (dialog, which) -> {
+                    tvSelectedUniversity.setText(universities[which]);
+                })
+                .show();
     }
 }
