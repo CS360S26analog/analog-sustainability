@@ -6,8 +6,8 @@
  * submit their own eco tips for staff review.
  *
  * Role in design: View layer for EXTRA-2 EcoMap / Eco Picks @ LUMS.
- * Student-submitted tips are stored in Firestore under "eco_map_notes"
- * with status = "pending" so staff can approve or reject them later.
+ * Hardcoded tips are used as default tips. Staff-approved student suggestions
+ * from Firestore are added into the same swipeable sticky-note carousel.
  *
  * @author Izza
  */
@@ -15,11 +15,15 @@ package com.example.klimate;
 
 import android.app.AlertDialog;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -35,7 +39,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,6 +62,16 @@ public class EcoPicksFragment extends Fragment {
             this.x = x;
             this.y = y;
             this.tips = tips;
+        }
+    }
+
+    private static class CarouselTip {
+        String text;
+        boolean fromCommunity;
+
+        CarouselTip(String text, boolean fromCommunity) {
+            this.text = text;
+            this.fromCommunity = fromCommunity;
         }
     }
 
@@ -173,7 +189,7 @@ public class EcoPicksFragment extends Fragment {
                 params.topMargin = top;
 
                 marker.setLayoutParams(params);
-                marker.setOnClickListener(v -> showStickyNote(spot));
+                marker.setOnClickListener(v -> showSwipeableStickyNote(spot));
 
                 mapContainer.addView(marker);
             }
@@ -191,11 +207,20 @@ public class EcoPicksFragment extends Fragment {
         return marker;
     }
 
-    private void showStickyNote(EcoSpot spot) {
+    private void showSwipeableStickyNote(EcoSpot spot) {
+        ArrayList<CarouselTip> tips = new ArrayList<>();
+
+        for (String defaultTip : spot.tips) {
+            tips.add(new CarouselTip(defaultTip, false));
+        }
+
+        final int[] currentIndex = {0};
+        final float[] downX = {0f};
+
         LinearLayout noteLayout = new LinearLayout(requireContext());
         noteLayout.setOrientation(LinearLayout.VERTICAL);
         noteLayout.setBackgroundResource(R.drawable.bg_sticky_note);
-        noteLayout.setPadding(dp(20), dp(18), dp(20), dp(16));
+        noteLayout.setPadding(dp(22), dp(20), dp(22), dp(16));
 
         TextView title = new TextView(requireContext());
         title.setText("📌 " + spot.title);
@@ -204,29 +229,57 @@ public class EcoPicksFragment extends Fragment {
         title.setTypeface(Typeface.create("casual", Typeface.BOLD));
         noteLayout.addView(title);
 
-        for (String tip : spot.tips) {
-            TextView tipView = new TextView(requireContext());
-            tipView.setText("• " + tip);
-            tipView.setTextColor(requireContext().getColor(R.color.color_text_primary));
-            tipView.setTextSize(16);
-            tipView.setTypeface(Typeface.create("casual", Typeface.NORMAL));
-            tipView.setPadding(0, dp(10), 0, 0);
-            noteLayout.addView(tipView);
-        }
+        TextView sourceLabel = new TextView(requireContext());
+        sourceLabel.setText("Default tip");
+        sourceLabel.setTextColor(requireContext().getColor(R.color.color_green_header));
+        sourceLabel.setTextSize(13);
+        sourceLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        sourceLabel.setPadding(0, dp(10), 0, dp(2));
+        noteLayout.addView(sourceLabel);
+
+        TextView tipText = new TextView(requireContext());
+        tipText.setTextColor(requireContext().getColor(R.color.color_text_primary));
+        tipText.setTextSize(19);
+        tipText.setTypeface(Typeface.create("casual", Typeface.NORMAL));
+        tipText.setGravity(Gravity.CENTER);
+        tipText.setMinHeight(dp(110));
+        tipText.setPadding(dp(8), dp(10), dp(8), dp(10));
+        noteLayout.addView(tipText);
+
+        LinearLayout navRow = new LinearLayout(requireContext());
+        navRow.setOrientation(LinearLayout.HORIZONTAL);
+        navRow.setGravity(Gravity.CENTER);
+        navRow.setPadding(0, dp(4), 0, dp(4));
+
+        TextView btnPrev = createStickyButton("‹");
+        TextView counter = new TextView(requireContext());
+        counter.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+        counter.setTextSize(12);
+        counter.setGravity(Gravity.CENTER);
+        counter.setPadding(dp(14), 0, dp(14), 0);
+
+        TextView btnNext = createStickyButton("›");
+
+        navRow.addView(btnPrev);
+        navRow.addView(counter);
+        navRow.addView(btnNext);
+        noteLayout.addView(navRow);
+
+        TextView helper = new TextView(requireContext());
+        helper.setText("Swipe left/right to browse tips");
+        helper.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+        helper.setTextSize(12);
+        helper.setGravity(Gravity.CENTER);
+        helper.setPadding(0, 0, 0, dp(8));
+        noteLayout.addView(helper);
 
         TextView suggested = new TextView(requireContext());
-        suggested.setText("\nSuggested log: " + spot.activityType);
+        suggested.setText("Suggested log: " + spot.activityType);
         suggested.setTextColor(requireContext().getColor(R.color.color_green_header));
         suggested.setTextSize(14);
         suggested.setTypeface(Typeface.DEFAULT_BOLD);
+        suggested.setPadding(0, dp(6), 0, 0);
         noteLayout.addView(suggested);
-
-        TextView reviewNote = new TextView(requireContext());
-        reviewNote.setText("Have a better campus tip? Suggest it for staff review.");
-        reviewNote.setTextColor(requireContext().getColor(R.color.color_text_secondary));
-        reviewNote.setTextSize(13);
-        reviewNote.setPadding(0, dp(8), 0, 0);
-        noteLayout.addView(reviewNote);
 
         LinearLayout buttons = new LinearLayout(requireContext());
         buttons.setOrientation(LinearLayout.HORIZONTAL);
@@ -242,9 +295,55 @@ public class EcoPicksFragment extends Fragment {
         buttons.addView(btnClose);
         noteLayout.addView(buttons);
 
+        Runnable updateTip = () -> {
+            if (tips.isEmpty()) return;
+
+            CarouselTip tip = tips.get(currentIndex[0]);
+            tipText.setText(tip.text);
+            sourceLabel.setText(tip.fromCommunity ? "Community-approved tip" : "Default tip");
+            counter.setText((currentIndex[0] + 1) + " / " + tips.size());
+        };
+
+        View.OnTouchListener swipeListener = (v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                downX[0] = event.getX();
+                return true;
+            }
+
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                float deltaX = event.getX() - downX[0];
+
+                if (Math.abs(deltaX) > dp(40)) {
+                    if (deltaX < 0) {
+                        currentIndex[0] = (currentIndex[0] + 1) % tips.size();
+                    } else {
+                        currentIndex[0] = (currentIndex[0] - 1 + tips.size()) % tips.size();
+                    }
+                    updateTip.run();
+                }
+
+                return true;
+            }
+
+            return true;
+        };
+
+        noteLayout.setOnTouchListener(swipeListener);
+        tipText.setOnTouchListener(swipeListener);
+
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(noteLayout)
                 .create();
+
+        btnPrev.setOnClickListener(v -> {
+            currentIndex[0] = (currentIndex[0] - 1 + tips.size()) % tips.size();
+            updateTip.run();
+        });
+
+        btnNext.setOnClickListener(v -> {
+            currentIndex[0] = (currentIndex[0] + 1) % tips.size();
+            updateTip.run();
+        });
 
         btnLog.setOnClickListener(v -> {
             dialog.dismiss();
@@ -259,12 +358,77 @@ public class EcoPicksFragment extends Fragment {
         btnClose.setOnClickListener(v -> dialog.dismiss());
 
         dialog.setOnShowListener(d -> {
-            if (dialog.getWindow() != null) {
-                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            Window window = dialog.getWindow();
+            if (window != null) {
+                window.setBackgroundDrawableResource(android.R.color.transparent);
+                window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+
+                WindowManager.LayoutParams params = window.getAttributes();
+                params.dimAmount = 0.72f;
+                window.setAttributes(params);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    window.setBackgroundBlurRadius(dp(18));
+                }
             }
         });
 
         dialog.show();
+
+        updateTip.run();
+        loadApprovedTipsForSpot(spot, tips, counter, sourceLabel, tipText, currentIndex);
+    }
+
+    private void loadApprovedTipsForSpot(EcoSpot spot,
+                                         ArrayList<CarouselTip> tips,
+                                         TextView counter,
+                                         TextView sourceLabel,
+                                         TextView tipText,
+                                         int[] currentIndex) {
+        FirebaseFirestore.getInstance()
+                .collection("eco_map_notes")
+                .whereEqualTo("spotTitle", spot.title)
+                .get()
+                .addOnSuccessListener(querySnapshots -> {
+                    if (!isAdded() || getContext() == null) return;
+
+                    ArrayList<QueryDocumentSnapshot> approvedDocs = new ArrayList<>();
+
+                    for (QueryDocumentSnapshot doc : querySnapshots) {
+                        String status = doc.getString("status");
+                        String noteText = doc.getString("noteText");
+
+                        if ("approved".equals(status) && noteText != null && !noteText.trim().isEmpty()) {
+                            approvedDocs.add(doc);
+                        }
+                    }
+
+                    approvedDocs.sort((a, b) -> {
+                        Timestamp ta = a.getTimestamp("reviewedAt");
+                        Timestamp tb = b.getTimestamp("reviewedAt");
+
+                        if (ta == null) ta = a.getTimestamp("submittedAt");
+                        if (tb == null) tb = b.getTimestamp("submittedAt");
+
+                        if (ta == null && tb == null) return 0;
+                        if (ta == null) return 1;
+                        if (tb == null) return -1;
+
+                        return tb.compareTo(ta);
+                    });
+
+                    for (QueryDocumentSnapshot doc : approvedDocs) {
+                        String noteText = doc.getString("noteText");
+                        tips.add(new CarouselTip(noteText.trim(), true));
+                    }
+
+                    if (!approvedDocs.isEmpty()) {
+                        counter.setText((currentIndex[0] + 1) + " / " + tips.size());
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Could not load approved tips.", Toast.LENGTH_SHORT).show()
+                );
     }
 
     private void showSubmitNoteDialog(EcoSpot spot) {
@@ -329,8 +493,18 @@ public class EcoPicksFragment extends Fragment {
         });
 
         dialog.setOnShowListener(d -> {
-            if (dialog.getWindow() != null) {
-                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            Window window = dialog.getWindow();
+            if (window != null) {
+                window.setBackgroundDrawableResource(android.R.color.transparent);
+                window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+
+                WindowManager.LayoutParams params = window.getAttributes();
+                params.dimAmount = 0.72f;
+                window.setAttributes(params);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    window.setBackgroundBlurRadius(dp(18));
+                }
             }
         });
 
