@@ -49,6 +49,13 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import com.example.klimate.local.ActivityLogDao;
+import com.example.klimate.local.ActivityLogEntity;
+import com.example.klimate.local.AppDatabase;
+import com.example.klimate.local.UserEntity;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,6 +66,7 @@ import java.util.Set;
 public class ProfileFragment extends Fragment {
 
     private FirebaseFirestore db;
+    private final Executor executor = Executors.newSingleThreadExecutor();
     private FirebaseAuth auth;
 
     private long currentTotalPoints = 0;
@@ -225,6 +233,27 @@ public class ProfileFragment extends Fragment {
         TextView tvAvatar = view.findViewById(R.id.tv_avatar_initials);
         badgesContainer = view.findViewById(R.id.badges_container);
 
+        executor.execute(() -> {
+       UserEntity cached = AppDatabase.getInstance(requireContext())
+                                      .userDao().getUserSync(uid);
+       if (cached == null || !isAdded()) return;
+       requireActivity().runOnUiThread(() -> {
+           if (tvName != null && !cached.displayName.isEmpty())
+               tvName.setText(cached.displayName);
+           if (tvAvatar != null && !cached.displayName.isEmpty())
+               tvAvatar.setText(getInitials(cached.displayName));
+           if (tvPointsBadge != null)
+               tvPointsBadge.setText("• " + cached.totalPoints + " pts");
+           if (tvCo2 != null)
+               tvCo2.setText(String.format(Locale.getDefault(), "%.1f", cached.co2SavedKg));
+           if (tvStreak != null)
+               tvStreak.setText(String.valueOf(cached.streakDays));
+           currentTotalPoints = cached.totalPoints;
+           currentStreakDays  = cached.streakDays;
+           renderBadges(); // render badges immediately from cached points/streak
+       });
+   });
+
         profileListener = db.collection("users").document(uid)
                 .addSnapshotListener((doc, e) -> {
                     if (!isAdded() || getContext() == null) return;
@@ -258,6 +287,15 @@ public class ProfileFragment extends Fragment {
                     if (tvStreak != null) {
                         tvStreak.setText(String.valueOf(currentStreakDays));
                     }
+                    executor.execute(() -> {
+                       UserEntity u = AppDatabase.getInstance(requireContext()).userDao().getUserSync(uid);
+                       if (u != null) {
+                           u.totalPoints = (int) currentTotalPoints;
+                           u.streakDays  = (int) currentStreakDays;
+                           u.co2SavedKg  = co2Saved;   // (the local variable from the snapshot)
+                           AppDatabase.getInstance(requireContext()).userDao().update(u);
+                       }
+                   });
 
                     renderBadges();
                 });

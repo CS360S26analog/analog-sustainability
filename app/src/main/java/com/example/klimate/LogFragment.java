@@ -31,6 +31,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.net.Uri;
+import com.example.klimate.local.ActivityLogDao;
+import com.example.klimate.local.ActivityLogEntity;
+import com.example.klimate.local.AppDatabase;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -56,6 +61,8 @@ import androidx.annotation.Nullable;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
+import com.example.klimate.local.ActivityLogEntity;
+import com.example.klimate.local.AppDatabase;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -74,6 +81,7 @@ import java.util.Map;
 public class LogFragment extends Fragment {
 
     private LinearLayout selectedCard = null;
+    private final Executor executor = Executors.newSingleThreadExecutor();
     private String selectedActivityName = null;
     private String selectedStatus = "quick";
     private Uri selectedProofUri = null;
@@ -825,43 +833,107 @@ public class LogFragment extends Fragment {
                                  int points,
                                  @Nullable String proofUrl,
                                  @NonNull LinearLayout[] cards) {
-        Map<String, Object> logData = new HashMap<>();
-        // Calculate co2 saved once when the log is created.
-// This value is stored on the log so history and campus totals can reuse it.
-        double co2SavedKg = CarbonCalculator.calculateCo2SavedKg(selectedActivityName, selectedQuantity);
-        logData.put("logId",        docRef.getId());
-        logData.put("userId",       userId);
-        logData.put("activityType", selectedActivityName);
-        logData.put("status",       selectedStatus);
-        logData.put("points",       points);
-        logData.put("bonusPoints",  0);
-        logData.put("proofUrl",     proofUrl);
-        logData.put("voteCount",    0);
-        logData.put("quantity",     selectedQuantity);
-        logData.put("co2SavedKg", co2SavedKg);
-        logData.put("unit",         getUnit(selectedActivityName));
-        logData.put("timestamp",    Timestamp.now());
 
-        docRef.set(logData)
-                .addOnSuccessListener(unused -> {
-                    new PointsManager().awardBasePoints(userId, points);
+        double co2SavedKg = CarbonCalculator.calculateCo2SavedKg(
+                selectedActivityName, selectedQuantity);
 
-                    db.collection("users")
-                            .document(userId)
-                            .update("co2SavedKg", FieldValue.increment(co2SavedKg));
+        // ── 1. Write to Room immediately (instant UI feedback) ───────────────
+        ActivityLogEntity entity = new ActivityLogEntity(
+                docRef.getId(),         // logId already generated
+                userId,
+                selectedActivityName,
+                selectedStatus,
+                points,
+                selectedQuantity,
+                co2SavedKg,
+                getUnit(selectedActivityName),
+                proofUrl,
+                System.currentTimeMillis()
+        );
 
-                    String message = "pending_verification".equals(selectedStatus)
-                            ? "Verified log submitted with proof"
-                            : selectedActivityName + " logged — +" + points + " pts ✅";
+        Context context = requireContext();
 
-                    Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
-                    resetForm(cards);
-                    setLogButtonEnabled(true);
-                })
-                .addOnFailureListener(e -> {
-                    setLogButtonEnabled(true);
-                    Toast.makeText(getContext(), "Failed to save log: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
+        executor.execute(() -> {
+            AppDatabase app_database = AppDatabase.getInstance(requireContext());
+            int localId = (int) app_database.activityLogDao().insert(entity);
+
+            // Increment user stats in Room immediately (optimistic update)
+            app_database.userDao().incrementPoints(userId, points);
+            app_database.userDao().incrementCo2(userId, co2SavedKg);
+
+            // ── 2. Push to Firestore in background ───────────────────────────
+            Map<String, Object> logData = new HashMap<>();
+            logData.put("logId",        docRef.getId());
+            logData.put("userId",       userId);
+            logData.put("activityType", selectedActivityName);
+            logData.put("status",       selectedStatus);
+            logData.put("points",       points);
+            logData.put("bonusPoints",  0);
+            logData.put("proofUrl",     proofUrl);
+            logData.put("voteCount",    0);
+            logData.put("quantity",     selectedQuantity);
+            logData.put("co2SavedKg",   co2SavedKg);
+            logData.put("unit",         getUnit(selectedActivityName));
+            logData.put("timestamp",    Timestamp.now());
+
+            docRef.set(logData)
+                    .addOnSuccessListener(unused -> {
+                        // Mark synced in Room
+                        executor.execute(() ->
+                                app_database.activityLogDao()
+                                        .markSynced(localId, docRef.getId(), "synced")
+                        );
+
+                        // Firestore user stats update (keeps Firestore in sync with Room)
+                        db.collection("users")
+                                .document(userId)
+                                .update("co2SavedKg", FieldValue.increment(co2SavedKg));
+
+                        new PointsManager().awardBasePoints(context, userId, points);
+
+                        if (isAdded() && getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                String message = "pending_verification".equals(selectedStatus)
+                                        ? "Verified log submitted with proof"
+                                        : selectedActivityName + " logged — +" + points + " pts ✅";
+                                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                                resetForm(cards);
+                                setLogButtonEnabled(true);
+                            });
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        // Mark failed in Room — SyncWorker will retry
+                        executor.execute(() ->
+                                app_database.activityLogDao().markFailed(localId)
+                        );
+
+                        if (isAdded() && getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                boolean isVerified =
+                                        "pending_verification".equals(selectedStatus);
+
+                                if (isVerified) {
+                                    // Verified logs: tell the user explicitly
+                                    Toast.makeText(getContext(),
+                                            "Saved locally — will upload when connected 📶",
+                                            Toast.LENGTH_LONG).show();
+                                } else {
+                                    // Quick logs: silently queue, show success to keep UX smooth
+                                    Toast.makeText(getContext(),
+                                            selectedActivityName + " logged ✅",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+
+                                resetForm(cards);
+                                setLogButtonEnabled(true);
+
+                                // Trigger immediate retry if connected
+                                MainActivity.triggerImmediateSync(requireContext());
+                            });
+                        }
+                    });
+        });
     }
 
     private void resetForm(@NonNull LinearLayout[] cards) {

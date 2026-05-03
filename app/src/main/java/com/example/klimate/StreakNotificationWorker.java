@@ -29,6 +29,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.example.klimate.local.AppDatabase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -37,6 +38,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -71,90 +73,42 @@ public class StreakNotificationWorker extends Worker {
     @Override
     public Result doWork() {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-
-        // No user logged in — nothing to notify
-        if (currentUser == null) {
-            return Result.success();
-        }
+        if (currentUser == null) return Result.success();
 
         String uid = currentUser.getUid();
 
-        // Use a latch to wait for Firestore result inside the synchronous Worker
-        CountDownLatch latch = new CountDownLatch(1);
-        AtomicInteger daysSinceLastLog = new AtomicInteger(-1);
+        // ── Room query (instant, works offline) ──────────────────────────────
+        List<String> days = AppDatabase.getInstance(getApplicationContext())
+                .activityLogDao()
+                .getDistinctLogDays(uid);
 
-        FirebaseFirestore.getInstance()
-                .collection("activity_logs")
-                .whereEqualTo("userId", uid)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    if (querySnapshot.isEmpty()) {
-                        // Never logged — treat as many days since last log
-                        daysSinceLastLog.set(99);
-                        latch.countDown();
-                        return;
-                    }
-
-                    // Find the most recent log timestamp
-                    Date mostRecent = null;
-                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
-                        com.google.firebase.Timestamp ts = doc.getTimestamp("timestamp");
-                        if (ts != null) {
-                            Date d = ts.toDate();
-                            if (mostRecent == null || d.after(mostRecent)) {
-                                mostRecent = d;
-                            }
-                        }
-                    }
-
-                    if (mostRecent == null) {
-                        daysSinceLastLog.set(99);
-                        latch.countDown();
-                        return;
-                    }
-
-                    // Calculate how many days ago that was
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
-                    String todayKey = sdf.format(Calendar.getInstance().getTime());
-                    String lastLogKey = sdf.format(mostRecent);
-
-                    if (todayKey.equals(lastLogKey)) {
-                        // Already logged today — no notification needed
-                        daysSinceLastLog.set(0);
-                    } else {
-                        // Count the days difference
-                        try {
-                            Date today = sdf.parse(todayKey);
-                            Date lastLog = sdf.parse(lastLogKey);
-                            if (today != null && lastLog != null) {
-                                long diffMillis = today.getTime() - lastLog.getTime();
-                                int days = (int) (diffMillis / (24L * 60L * 60L * 1000L));
-                                daysSinceLastLog.set(days);
-                            }
-                        } catch (Exception ex) {
-                            daysSinceLastLog.set(1);
-                        }
-                    }
-
-                    latch.countDown();
-                })
-                .addOnFailureListener(e -> {
-                    daysSinceLastLog.set(-1);
-                    latch.countDown();
-                });
-
-        // Wait up to 10 seconds for Firestore to respond
-        try {
-            latch.await(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
+        if (days.isEmpty()) {
+            // Never logged — send motivational notification
+            sendStreakNotification(99);
             return Result.success();
         }
 
-        int days = daysSinceLastLog.get();
+        // Find the most recent day key (format: yyyyMMdd)
+        String mostRecentDay = java.util.Collections.max(days);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+        String todayKey = sdf.format(Calendar.getInstance().getTime());
 
-        // Fire notification if they haven't logged today
-        if (days > 0) {
-            sendStreakNotification(days);
+        if (todayKey.equals(mostRecentDay)) {
+            // Already logged today — no notification
+            return Result.success();
+        }
+
+        // Calculate days since last log
+        try {
+            java.util.Date today   = sdf.parse(todayKey);
+            java.util.Date lastLog = sdf.parse(mostRecentDay);
+            if (today != null && lastLog != null) {
+                long diffMillis = today.getTime() - lastLog.getTime();
+                int daysSince = (int)(diffMillis / (24L * 60L * 60L * 1000L));
+                if (daysSince > 0) sendStreakNotification(daysSince);
+            }
+        } catch (Exception ex) {
+            sendStreakNotification(1);
         }
 
         return Result.success();

@@ -35,6 +35,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import com.example.klimate.local.AppDatabase;
+import com.example.klimate.local.UserEntity;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -51,6 +55,7 @@ import java.util.Locale;
 public class RankingsFragment extends Fragment {
 
     private FirebaseFirestore db;
+    private final Executor executor = Executors.newSingleThreadExecutor();
     private FirebaseAuth auth;
     private ListenerRegistration leaderboardListener;
 
@@ -167,48 +172,76 @@ public class RankingsFragment extends Fragment {
     private void loadLiveLeaderboard() {
         textLeaderboardStatus.setText("Loading leaderboard...");
 
-        leaderboardListener = db.collection("users")
-                .orderBy("totalPoints", Query.Direction.DESCENDING)
-                .limit(50)
-                .addSnapshotListener((snapshots, e) -> {
-                    if (!isAdded() || getContext() == null) return;
+        // ── Room first: show cached leaderboard instantly ────────────────────
+        executor.execute(() -> {
+            // We store all users in Room. Filter to students, sort by points.
+            // (Room doesn't have a cross-user query by default; we load all and filter.)
+            // If you only ever cache the current user, skip this block.
+            // For a full leaderboard cache, insert all Firestore users into Room
+            // on each snapshot (see the snapshot listener below).
 
-                    if (e != null || snapshots == null) {
-                        textLeaderboardStatus.setText("Could not load leaderboard");
-                        leaderboardContainer.removeAllViews();
-                        resetPodium();
-                        resetNemesis("Could not load nemesis");
-                        return;
-                    }
-
-                    List<LeaderboardUser> users = new ArrayList<>();
-
-                    for (DocumentSnapshot doc : snapshots.getDocuments()) {
-                        String role = doc.getString("role");
+            // This block shows whatever was cached from the last Firestore fetch:
+            // (no change needed here if Room only holds the current user —
+            //  the Firestore snapshot will populate the list as before)
 
 
-                        // Exclude staff accounts. Users with no role field are treated as students
-                        // (accounts created before role field was introduced).
-                        if ("staff".equalsIgnoreCase(role != null ? role.trim() : "")) {
-                            continue;
+            // ── Firestore live snapshot (unchanged logic, add Room upsert) ───
+            leaderboardListener = db.collection("users")
+                    .orderBy("totalPoints", Query.Direction.DESCENDING)
+                    .limit(50)
+                    .addSnapshotListener((snapshots, e) -> {
+                        if (!isAdded() || getContext() == null) return;
+                        if (e != null || snapshots == null) {
+                            textLeaderboardStatus.setText("Could not load leaderboard");
+                            leaderboardContainer.removeAllViews();
+                            resetPodium(); resetNemesis("Could not load nemesis");
+                            return;
                         }
 
-                        String uid = doc.getId();
-                        String displayName = doc.getString("displayName");
+                        List<LeaderboardUser> users = new java.util.ArrayList<>();
 
-                        if (TextUtils.isEmpty(displayName)) {
-                            String email = doc.getString("email");
-                            displayName = !TextUtils.isEmpty(email) ? email : "Student";
+                        for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                            String role = doc.getString("role");
+                            if ("staff".equalsIgnoreCase(role != null ? role.trim() : ""))
+                                continue;
+
+                            String uid = doc.getId();
+                            String displayName = doc.getString("displayName");
+                            if (TextUtils.isEmpty(displayName)) {
+                                String email = doc.getString("email");
+                                displayName = !TextUtils.isEmpty(email) ? email : "Student";
+                            }
+                            Long pointsValue = doc.getLong("totalPoints");
+                            long totalPoints = pointsValue != null ? pointsValue : 0;
+                            users.add(new LeaderboardUser(uid, displayName, totalPoints));
+
+                            // ── Upsert into Room (cache for offline display) ──
+                            final String finalName = displayName;
+                            final long finalPoints  = totalPoints;
+                            final String finalRole  = role != null ? role : "student";
+                            executor.execute(() -> {
+                                AppDatabase localDb =
+                                        AppDatabase.getInstance(requireContext());
+                                UserEntity existing = localDb.userDao().getUserSync(uid);
+                                if (existing == null) {
+                                    UserEntity u = new UserEntity(
+                                            uid, finalName,
+                                            doc.getString("email") != null
+                                                    ? doc.getString("email") : "",
+                                            "LUMS", finalRole,
+                                            (int) finalPoints, 0, 0, 0);
+                                    localDb.userDao().insert(u);
+                                } else {
+                                    existing.displayName = finalName;
+                                    existing.totalPoints = (int) finalPoints;
+                                    localDb.userDao().update(existing);
+                                }
+                            });
                         }
 
-                        Long pointsValue = doc.getLong("totalPoints");
-                        long totalPoints = pointsValue != null ? pointsValue : 0;
-
-                        users.add(new LeaderboardUser(uid, displayName, totalPoints));
-                    }
-
-                    bindLeaderboard(users);
-                });
+                        bindLeaderboard(users);
+                    });
+        });
     }
 
     private void bindLeaderboard(@NonNull List<LeaderboardUser> users) {

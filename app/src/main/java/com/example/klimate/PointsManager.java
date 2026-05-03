@@ -4,6 +4,10 @@ import android.util.Log;
 
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import android.content.Context;
+import com.example.klimate.local.AppDatabase;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +20,7 @@ import java.util.Map;
 public class PointsManager {
 
     private static final String TAG = "PointsManager";
+    private final Executor executor = Executors.newSingleThreadExecutor();
     private final FirebaseFirestore db;
 
     public PointsManager() {
@@ -32,7 +37,13 @@ public class PointsManager {
         return voteCount * 2;
     }
 
-    public void awardBasePoints(String userId, int basePoints) {
+    public void awardBasePoints(Context context, String userId, int basePoints) {
+        // ── Room first ───────────────────────────────────────────────────────
+        executor.execute(() -> {
+            AppDatabase.getInstance(context).userDao().incrementPoints(userId, basePoints);
+        });
+
+        // ── Firestore ────────────────────────────────────────────────────────
         db.collection("users")
                 .document(userId)
                 .update("totalPoints", FieldValue.increment(basePoints))
@@ -42,6 +53,7 @@ public class PointsManager {
                 })
                 .addOnFailureListener(e -> Log.e(TAG, "Failed to add base points", e));
     }
+
 
     private void checkBadgesForUser(String userId) {
         db.collection("users")

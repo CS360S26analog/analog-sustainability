@@ -34,6 +34,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
+import com.example.klimate.local.ActivityLogDao;
+import com.example.klimate.local.ActivityLogEntity;
+import com.example.klimate.local.AppDatabase;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -47,10 +50,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class HistoryFragment extends Fragment {
 
     private FirebaseFirestore db;
+    private final Executor executor = Executors.newSingleThreadExecutor();
+
     private FirebaseUser currentUser;
 
     private LinearLayout historyContainer;
@@ -115,44 +122,167 @@ public class HistoryFragment extends Fragment {
             tvEmptyState.setText("Please log in to view history.");
             return;
         }
-
         historyContainer.removeAllViews();
         tvEmptyState.setVisibility(View.GONE);
 
-        db.collection("activity_logs")
-                .whereEqualTo("userId", currentUser.getUid())
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    List<QueryDocumentSnapshot> docs = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        docs.add(doc);
-                    }
+        String uid = currentUser.getUid();
 
-                    docs.sort((a, b) -> {
-                        Timestamp ta = a.getTimestamp("timestamp");
-                        Timestamp tb = b.getTimestamp("timestamp");
+        // ── Room first (instant render) ──────────────────────────────────────
+        executor.execute(() -> {
+            List<ActivityLogEntity> roomLogs =
+                    AppDatabase.getInstance(requireContext())
+                            .activityLogDao().getLogsForUserSync(uid);
 
-                        if (ta == null && tb == null) return 0;
-                        if (ta == null) return 1;
-                        if (tb == null) return -1;
-                        return tb.toDate().compareTo(ta.toDate());
+            if (isAdded()) requireActivity().runOnUiThread(() -> {
+                if (!roomLogs.isEmpty()) {
+                    for (ActivityLogEntity e : roomLogs) addHistoryCardFromEntity(e);
+                }
+            });
+
+            // ── Firestore refresh ────────────────────────────────────────────
+            db.collection("activity_logs")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .addOnSuccessListener(querySnapshot -> {
+                        if (!isAdded()) return;
+
+                        // Upsert every Firestore doc into Room
+                        executor.execute(() -> {
+                            ActivityLogDao dao =
+                                    AppDatabase.getInstance(requireContext()).activityLogDao();
+                            for (QueryDocumentSnapshot doc : querySnapshot) {
+                                String logId = doc.getString("logId");
+                                if (logId == null || logId.isEmpty()) logId = doc.getId();
+                                if (dao.countByLogId(logId) == 0) {
+                                    ActivityLogEntity e = firestoreDocToEntity(doc);
+                                    dao.insert(e);
+                                }
+                            }
+                        });
+
+                        // Re-render from Firestore data
+                        List<QueryDocumentSnapshot> docs = new java.util.ArrayList<>();
+                        for (QueryDocumentSnapshot doc : querySnapshot) docs.add(doc);
+                        docs.sort((a, b) -> {
+                            Timestamp ta = a.getTimestamp("timestamp");
+                            Timestamp tb = b.getTimestamp("timestamp");
+                            if (ta == null && tb == null) return 0;
+                            if (ta == null) return 1; if (tb == null) return -1;
+                            return tb.toDate().compareTo(ta.toDate());
+                        });
+
+                        requireActivity().runOnUiThread(() -> {
+                            historyContainer.removeAllViews();
+                            if (docs.isEmpty()) {
+                                tvEmptyState.setVisibility(View.VISIBLE);
+                                tvEmptyState.setText("No activity history yet.");
+                            } else {
+                                for (QueryDocumentSnapshot doc : docs) addHistoryCard(doc);
+                            }
+                        });
+                    })
+                    .addOnFailureListener(e -> {
+                        if (isAdded() && historyContainer.getChildCount() == 0) {
+                            requireActivity().runOnUiThread(() -> {
+                                tvEmptyState.setVisibility(View.VISIBLE);
+                                tvEmptyState.setText("Could not load history.");
+                            });
+                        }
                     });
-
-                    if (docs.isEmpty()) {
-                        tvEmptyState.setVisibility(View.VISIBLE);
-                        tvEmptyState.setText("No activity history yet.");
-                        return;
-                    }
-
-                    for (QueryDocumentSnapshot doc : docs) {
-                        addHistoryCard(doc);
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    tvEmptyState.setVisibility(View.VISIBLE);
-                    tvEmptyState.setText("Could not load history.");
-                });
+        });
     }
+
+    private void addHistoryCardFromEntity(ActivityLogEntity e) {
+        // Reuse the same layout; synthesise only the fields addHistoryCard() uses
+        View card = LayoutInflater.from(getContext())
+                .inflate(R.layout.item_history_log, historyContainer, false);
+        TextView tvEmoji  = card.findViewById(R.id.tv_history_emoji);
+        TextView tvTitle  = card.findViewById(R.id.tv_history_title);
+        TextView tvMeta   = card.findViewById(R.id.tv_history_meta);
+        TextView tvStatus = card.findViewById(R.id.tv_history_status);
+        TextView btnEdit  = card.findViewById(R.id.btn_edit_log);
+        TextView btnDelete = card.findViewById(R.id.btn_delete_log);
+
+        tvEmoji.setText(getActivityEmoji(e.activityType));
+        tvTitle.setText(e.activityType);
+
+        String dateText = formatTimestamp(
+                e.timestampMillis > 0
+                        ? new com.google.firebase.Timestamp(
+                        new java.util.Date(e.timestampMillis)) : null);
+        tvMeta.setText(dateText + " • " + e.points + " pts");
+
+        boolean canModify = (System.currentTimeMillis() - e.timestampMillis)
+                <= EDIT_WINDOW_MILLIS;
+
+        String prettyStatus = e.status.replace("_", " ");
+        tvStatus.setText(prettyStatus + (canModify ? " • editable" : " • locked"));
+
+        btnEdit.setAlpha(canModify ? 1f : 0.45f);
+        btnDelete.setAlpha(canModify ? 1f : 0.45f);
+
+        // Edit/Delete work the same as before — they use the Firestore logId.
+        // If the entity is still "pending" (no logId yet), disable both buttons.
+        boolean hasSyncedId = !e.logId.isEmpty() && !"pending".equals(e.syncStatus);
+
+        btnEdit.setOnClickListener(v -> {
+            if (!canModify) {
+                Toast.makeText(getContext(), "Logs can only be edited within 24 hours.",
+                        Toast.LENGTH_SHORT).show(); return;
+            }
+            if (!hasSyncedId) {
+                Toast.makeText(getContext(), "Still uploading — try again shortly.",
+                        Toast.LENGTH_SHORT).show(); return;
+            }
+            showEditDialog(e.logId, e.activityType);
+        });
+
+        btnDelete.setOnClickListener(v -> {
+            if (!canModify) {
+                Toast.makeText(getContext(), "Logs can only be deleted within 24 hours.",
+                        Toast.LENGTH_SHORT).show(); return;
+            }
+            if (!hasSyncedId) {
+                // If still pending, delete only from Room
+                executor.execute(() ->
+                        AppDatabase.getInstance(requireContext())
+                                .activityLogDao().deleteByLocalId(e.localId)
+                );
+                historyContainer.removeView(card);
+                return;
+            }
+            showDeleteDialog(e.logId);
+        });
+
+        historyContainer.addView(card);
+    }
+
+    private ActivityLogEntity firestoreDocToEntity(QueryDocumentSnapshot doc) {
+        String logId = doc.getString("logId");
+        if (logId == null || logId.isEmpty()) logId = doc.getId();
+        String userId = doc.getString("userId") != null ? doc.getString("userId") : "";
+        String activityType = doc.getString("activityType") != null
+                ? doc.getString("activityType") : "";
+        String status = doc.getString("status") != null ? doc.getString("status") : "quick";
+        Long points = doc.getLong("points");
+        Long quantity = doc.getLong("quantity");
+        Double co2 = doc.getDouble("co2SavedKg");
+        String unit = doc.getString("unit") != null ? doc.getString("unit") : "";
+        String proofUrl = doc.getString("proofUrl");
+        Timestamp ts = doc.getTimestamp("timestamp");
+
+        ActivityLogEntity e = new ActivityLogEntity(
+                logId, userId, activityType, status,
+                points != null ? points.intValue() : 0,
+                quantity != null ? quantity.intValue() : 1,
+                co2 != null ? co2 : 0.0,
+                unit, proofUrl,
+                ts != null ? ts.toDate().getTime() : System.currentTimeMillis()
+        );
+        e.syncStatus = "synced";
+        return e;
+    }
+
 
     /**
      * Creates and populates a UI card for a single activity log.
@@ -356,44 +486,26 @@ public class HistoryFragment extends Fragment {
 
     private void recalculateUserStats() {
         if (currentUser == null) return;
+        String uid = currentUser.getUid();
 
-        db.collection("activity_logs")
-                .whereEqualTo("userId", currentUser.getUid())
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    double totalCo2 = 0.0;
-                    int totalPoints = 0;
-                    Set<String> uniqueDays = new HashSet<>();
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+        executor.execute(() -> {
+            AppDatabase localDb = AppDatabase.getInstance(requireContext());
+            ActivityLogDao logDao = localDb.activityLogDao();
 
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        Long points = doc.getLong("points");
-                        Long bonusPoints = doc.getLong("bonusPoints");
-                        Double co2SavedKg = doc.getDouble("co2SavedKg");
-                        Timestamp ts = doc.getTimestamp("timestamp");
+            double totalCo2  = logDao.getTotalCo2ForUser(uid);
+            int totalPoints  = logDao.getTotalPointsForUser(uid);
+            List<String> days = logDao.getDistinctLogDays(uid);
+            int streak        = calculateCurrentStreakFromDays(new HashSet<>(days));
 
-                        if (co2SavedKg != null) {
-                            totalCo2 += co2SavedKg;
-                        }
+            // Update Room user record
+            localDb.userDao().updateStats(uid, totalPoints, totalCo2, streak);
 
-                        totalPoints += (points != null ? points.intValue() : 0);
-                        totalPoints += (bonusPoints != null ? bonusPoints.intValue() : 0);
-
-                        if (ts != null) {
-                            uniqueDays.add(formatter.format(ts.toDate()));
-                        }
-                    }
-
-                    int streakDays = calculateCurrentStreakFromDays(uniqueDays);
-
-                    db.collection("users")
-                            .document(currentUser.getUid())
-                            .update(
-                                    "co2SavedKg", totalCo2,
-                                    "streakDays", streakDays,
-                                    "totalPoints", totalPoints
-                            );
-                });
+            // Push to Firestore
+            db.collection("users").document(uid)
+                    .update("co2SavedKg", totalCo2,
+                            "streakDays", streak,
+                            "totalPoints", totalPoints);
+        });
     }
 
     /**

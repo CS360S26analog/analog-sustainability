@@ -22,6 +22,16 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import android.app.Application;
+import android.content.Context;
+
+import com.example.klimate.local.ActivityLogDao;
+import com.example.klimate.local.ActivityLogEntity;
+import com.example.klimate.local.AppDatabase;
+import com.example.klimate.local.UserEntity;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 import com.example.klimate.model.ActivityLog;
 import com.example.klimate.model.User;
 import com.google.firebase.auth.FirebaseAuth;
@@ -36,6 +46,7 @@ import java.util.Map;
 public class DashboardViewModel extends ViewModel {
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private final Executor executor = Executors.newSingleThreadExecutor();
     private final FirebaseAuth auth = FirebaseAuth.getInstance();
 
     private final MutableLiveData<User> userLiveData = new MutableLiveData<>();
@@ -88,16 +99,53 @@ public class DashboardViewModel extends ViewModel {
      * Updates userLiveData on success so the UI can display
      * the real display name, streak, and points balance.
      */
-    public void loadUserData() {
+    public void loadUserData(Context context) {
         String uid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
         if (uid == null) return;
 
-        db.collection("users").document(uid)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    User user = documentSnapshot.toObject(User.class);
-                    userLiveData.setValue(user);
-                });
+        // ── Room first ───────────────────────────────────────────────────────
+        executor.execute(() -> {
+            UserEntity cached = AppDatabase.getInstance(context).userDao().getUserSync(uid);
+            if (cached != null) {
+                // Convert UserEntity → model User to keep LiveData type consistent
+                com.example.klimate.model.User u = new com.example.klimate.model.User();
+                u.setUid(cached.uid);
+                u.setDisplayName(cached.displayName);
+                u.setEmail(cached.email);
+                u.setTotalPoints(cached.totalPoints);
+                u.setStreakDays(cached.streakDays);
+                u.setCo2SavedKg(cached.co2SavedKg);
+                userLiveData.postValue(u);
+            }
+
+            // ── Firestore refresh ────────────────────────────────────────────
+            db.collection("users").document(uid).get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        com.example.klimate.model.User user =
+                                documentSnapshot.toObject(com.example.klimate.model.User.class);
+                        userLiveData.setValue(user);
+
+                        // Update Room cache
+                        if (user != null) {
+                            executor.execute(() -> {
+                                UserEntity u = AppDatabase.getInstance(context)
+                                        .userDao().getUserSync(uid);
+                                if (u == null) {
+                                    u = new UserEntity(uid, user.getDisplayName(),
+                                            user.getEmail(), user.getUniversity(),
+                                            user.getRole(), user.getTotalPoints(),
+                                            user.getStreakDays(), user.getCo2SavedKg(), 0);
+                                } else {
+                                    u.totalPoints = user.getTotalPoints();
+                                    u.streakDays  = user.getStreakDays();
+                                    u.co2SavedKg  = user.getCo2SavedKg();
+                                    u.displayName = user.getDisplayName();
+                                }
+                                AppDatabase.getInstance(context).userDao().update(u);
+                            });
+                        }
+                    });
+        });
     }
 
     /**
@@ -105,24 +153,50 @@ public class DashboardViewModel extends ViewModel {
      * After loading, calculates CO2 savings and category counts and posts
      * results to their respective LiveData objects.
      */
-    public void loadActivityLogs() {
+    public void loadActivityLogs(Context context) {
         String uid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
         if (uid == null) return;
 
-        db.collection("activity_logs")
-                .whereEqualTo("userId", uid)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    List<ActivityLog> logs = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        ActivityLog log = doc.toObject(ActivityLog.class);
-                        log.setLogId(doc.getId());
-                        logs.add(log);
-                    }
-                    logsLiveData.setValue(logs);
-                    calculateCo2(logs);
-                    calculateCategoryCounts(logs);
-                });
+        // ── Room first ───────────────────────────────────────────────────────
+        executor.execute(() -> {
+            List<ActivityLogEntity> roomEntities =
+                    AppDatabase.getInstance(context).activityLogDao().getLogsForUserSync(uid);
+
+            if (!roomEntities.isEmpty()) {
+                List<com.example.klimate.model.ActivityLog> roomLogs = new java.util.ArrayList<>();
+                for (ActivityLogEntity e : roomEntities) {
+                    com.example.klimate.model.ActivityLog log =
+                            new com.example.klimate.model.ActivityLog();
+                    log.setLogId(e.logId);
+                    log.setUserId(e.userId);
+                    log.setActivityType(e.activityType);
+                    log.setStatus(e.status);
+                    log.setPoints(e.points);
+                    log.setCo2SavedKg(e.co2SavedKg);
+                    roomLogs.add(log);
+                }
+                logsLiveData.postValue(roomLogs);
+                calculateCo2(roomLogs);
+                calculateCategoryCounts(roomLogs);
+            }
+
+            // ── Firestore refresh ────────────────────────────────────────────
+            db.collection("activity_logs")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .addOnSuccessListener(querySnapshot -> {
+                        List<com.example.klimate.model.ActivityLog> logs = new java.util.ArrayList<>();
+                        for (QueryDocumentSnapshot doc : querySnapshot) {
+                            com.example.klimate.model.ActivityLog log =
+                                    doc.toObject(com.example.klimate.model.ActivityLog.class);
+                            log.setLogId(doc.getId());
+                            logs.add(log);
+                        }
+                        logsLiveData.setValue(logs);
+                        calculateCo2(logs);
+                        calculateCategoryCounts(logs);
+                    });
+        });
     }
 
     /**

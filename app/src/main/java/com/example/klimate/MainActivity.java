@@ -1,6 +1,7 @@
 package com.example.klimate;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -17,6 +18,14 @@ import androidx.viewpager2.widget.ViewPager2;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import com.example.klimate.local.AppDatabase;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+
 
 import com.getkeepsafe.taptargetview.TapTarget;
 import com.getkeepsafe.taptargetview.TapTargetSequence;
@@ -24,6 +33,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.PersistentCacheSettings;
 
 import java.util.concurrent.TimeUnit;
 
@@ -58,7 +68,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         requestNotificationPermissionIfNeeded();
+        enableFirestoreOfflinePersistence();
+        initRoomDatabase();
         scheduleStreakNotificationWorker();
+        scheduleSyncWorker();
 
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
 
@@ -452,6 +465,58 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void enableFirestoreOfflinePersistence() {
+        FirebaseFirestoreSettings settings =
+                new FirebaseFirestoreSettings.Builder()
+                        .setLocalCacheSettings(
+                                PersistentCacheSettings.newBuilder()
+                                        .setSizeBytes(100*1024*1024)
+                                        .build()
+                        )
+                        .build();
+
+        FirebaseFirestore.getInstance().setFirestoreSettings(settings);
+    }
+    private void initRoomDatabase() {
+        // Kick off the initialisation off the main thread
+        new Thread(() ->
+                AppDatabase.getInstance(getApplicationContext()),
+                "room-init"
+        ).start();
+    }
+
+    private void scheduleSyncWorker() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+
+        PeriodicWorkRequest syncWork = new PeriodicWorkRequest.Builder(
+                com.example.klimate.SyncWorker.class,
+                15, TimeUnit.MINUTES
+        )
+                .setConstraints(constraints)
+                .build();
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "klimate_sync",
+                ExistingPeriodicWorkPolicy.KEEP,
+                syncWork
+        );
+    }
+
+    public static void triggerImmediateSync(Context context) {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+
+        androidx.work.OneTimeWorkRequest syncNow =
+                new androidx.work.OneTimeWorkRequest.Builder(com.example.klimate.SyncWorker.class)
+                        .setConstraints(constraints)
+                        .build();
+
+        WorkManager.getInstance(context).enqueue(syncNow);
+    }
+
     private void showFragmentContainer() {
         if (viewPager != null) {
             viewPager.setVisibility(View.GONE);
@@ -570,6 +635,7 @@ public class MainActivity extends AppCompatActivity {
             bottomNav.setVisibility(visible ? View.VISIBLE : View.GONE);
         }
     }
+
 
     public void navigateToHome() {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);

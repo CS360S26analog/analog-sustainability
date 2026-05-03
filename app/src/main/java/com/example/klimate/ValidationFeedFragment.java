@@ -29,6 +29,11 @@ import android.widget.Toast;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.view.ViewGroup;
+import com.example.klimate.local.AppDatabase;
+import com.example.klimate.local.VoteDao;
+import com.example.klimate.local.VoteEntity;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
@@ -44,6 +49,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
@@ -54,6 +60,7 @@ import java.util.Map;
 public class ValidationFeedFragment extends Fragment {
 
     private FirebaseFirestore db;
+    private final Executor executor = Executors.newSingleThreadExecutor();
     private LinearLayout validationFeedContainer;
     private View emptyStateCard;
 
@@ -86,6 +93,7 @@ public class ValidationFeedFragment extends Fragment {
     private void loadPendingLogs(@NonNull LayoutInflater inflater) {
         db.collection("activity_logs")
                 .whereEqualTo("status", "pending_verification")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!isAdded() || getContext() == null) return;
@@ -318,12 +326,10 @@ public class ValidationFeedFragment extends Fragment {
                           @NonNull TextView btnDownvote) {
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-
         if (currentUser == null) {
             Toast.makeText(requireContext(), "Please log in first", Toast.LENGTH_SHORT).show();
             return;
         }
-
         if (TextUtils.isEmpty(logId)) {
             Toast.makeText(requireContext(), "Invalid log entry", Toast.LENGTH_SHORT).show();
             return;
@@ -331,91 +337,74 @@ public class ValidationFeedFragment extends Fragment {
 
         String voterId = currentUser.getUid();
 
-        db.collection("votes")
-                .whereEqualTo("logId", logId)
-                .whereEqualTo("voterId", voterId)
-                .get()
-                .addOnSuccessListener(existingVotes -> {
-                    if (!existingVotes.isEmpty()) {
-                        Toast.makeText(
-                                requireContext(),
-                                "You already voted on this submission",
-                                Toast.LENGTH_SHORT
-                        ).show();
+        executor.execute(() -> {
+            VoteDao voteDao = AppDatabase.getInstance(requireContext()).voteDao();
 
-                        refreshVoteState(
-                                logId, activityLogDocumentId,
-                                textUpvoteCount, btnUpvote, btnDownvote
+            // ── Check Room for duplicate vote (instant, no network) ──────────
+            if (voteDao.hasVoted(logId, voterId) > 0) {
+                if (isAdded()) requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(),
+                                "You already voted on this submission", Toast.LENGTH_SHORT).show()
+                );
+                return;
+            }
+
+            // ── Write to Room immediately (optimistic) ───────────────────────
+            String voteId = db.collection("votes").document().getId();
+            VoteEntity entity = new VoteEntity(
+                    voteId, logId, voterId, isUpvote, System.currentTimeMillis());
+            int localVoteId = (int) voteDao.insert(entity);
+
+            // Update UI immediately with local upvote count
+            int localUpvotes = voteDao.getUpvoteCount(logId);
+            if (isAdded()) requireActivity().runOnUiThread(() -> {
+                textUpvoteCount.setText(formatUpvoteCount(localUpvotes));
+                btnUpvote.setEnabled(false);
+                btnDownvote.setEnabled(false);
+                Toast.makeText(requireContext(),
+                        isUpvote ? "Upvote submitted" : "Downvote submitted",
+                        Toast.LENGTH_SHORT).show();
+            });
+
+            // ── Firestore write ──────────────────────────────────────────────
+            Map<String, Object> voteData = new HashMap<>();
+            voteData.put("voteId",    voteId);
+            voteData.put("logId",     logId);
+            voteData.put("voterId",   voterId);
+            voteData.put("isUpvote",  isUpvote);
+            voteData.put("timestamp", Timestamp.now());
+
+            db.collection("votes").document(voteId)
+                    .set(voteData)
+                    .addOnSuccessListener(unused -> {
+                        executor.execute(() ->
+                                voteDao.markSynced(localVoteId, voteId, "synced")
                         );
-                        return;
-                    }
 
-                    String voteId = db.collection("votes").document().getId();
+                        // Attach points listener and update log voteCount (same as before)
+                        db.collection("activity_logs").document(activityLogDocumentId)
+                                .get().addOnSuccessListener(logDoc -> {
+                                    if (!logDoc.exists()) return;
+                                    String logOwnerId = logDoc.getString("userId");
+                                    if (logOwnerId != null) {
+                                        if (!isUpvote) {
+                                            db.collection("users").document(logOwnerId)
+                                                    .update("totalPoints", FieldValue.increment(-1));
+                                        }
+                                        new PointsManager().attachVoteListener(
+                                                activityLogDocumentId, logOwnerId);
+                                    }
+                                });
 
-                    Map<String, Object> voteData = new HashMap<>();
-                    voteData.put("voteId", voteId);
-                    voteData.put("logId", logId);
-                    voteData.put("voterId", voterId);
-                    voteData.put("isUpvote", isUpvote);
-                    voteData.put("timestamp", Timestamp.now());
-
-                    db.collection("votes")
-                            .document(voteId)
-                            .set(voteData)
-                            .addOnSuccessListener(unused -> {
-
-                                // Fetch the log to get the owner, then attach the vote listener
-                                // which handles net bonus recalculation and rejection at -5
-                                db.collection("activity_logs")
-                                        .document(activityLogDocumentId)
-                                        .get()
-                                        .addOnSuccessListener(logDoc -> {
-                                            if (!logDoc.exists()) return;
-
-                                            String logOwnerId = logDoc.getString("userId");
-
-                                            if (logOwnerId != null) {
-                                                // Immediately deduct 1 point for a downvote
-                                                // The vote listener handles bonus recalculation
-                                                // but the base -1 per downvote is applied here
-                                                if (!isUpvote) {
-                                                    db.collection("users")
-                                                            .document(logOwnerId)
-                                                            .update("totalPoints",
-                                                                    FieldValue.increment(-1));
-                                                }
-
-                                                // Attach listener to recalculate net bonus points
-                                                // and handle rejection if net votes reach -5
-                                                new PointsManager().attachVoteListener(
-                                                        activityLogDocumentId,
-                                                        logOwnerId
-                                                );
-                                            }
-                                        });
-
-                                refreshVoteState(
-                                        logId, activityLogDocumentId,
-                                        textUpvoteCount, btnUpvote, btnDownvote
-                                );
-
-                                Toast.makeText(
-                                        requireContext(),
-                                        isUpvote ? "Upvote submitted" : "Downvote submitted",
-                                        Toast.LENGTH_SHORT
-                                ).show();
-                            })
-                            .addOnFailureListener(e -> Toast.makeText(
-                                    requireContext(),
-                                    "Failed to submit vote",
-                                    Toast.LENGTH_SHORT
-                            ).show());
-                })
-                .addOnFailureListener(e -> Toast.makeText(
-                        requireContext(),
-                        "Failed to check existing vote",
-                        Toast.LENGTH_SHORT
-                ).show());
+                        refreshVoteState(logId, activityLogDocumentId,
+                                textUpvoteCount, btnUpvote, btnDownvote);
+                    })
+                    .addOnFailureListener(e -> {
+                        executor.execute(() -> voteDao.markFailed(localVoteId));
+                        // SyncWorker will retry and notify if persistently failing
+                        MainActivity.triggerImmediateSync(requireContext());
+                    });
+        });
     }
 
     private String formatTimestamp(@Nullable Timestamp timestamp) {

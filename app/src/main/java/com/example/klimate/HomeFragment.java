@@ -17,6 +17,7 @@
  */
 package com.example.klimate;
 
+import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
@@ -38,6 +39,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
+import com.example.klimate.local.ActivityLogEntity;
+import com.example.klimate.local.AppDatabase;
+import com.example.klimate.local.UserEntity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -57,10 +61,13 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class HomeFragment extends Fragment {
 
     private FirebaseFirestore db;
+    private final Executor executor = Executors.newSingleThreadExecutor();
     private FirebaseUser currentUser;
 
     @Nullable
@@ -271,44 +278,58 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadOptionalStats(View view) {
+        String uid = currentUser.getUid();
+
         int pointsId = requireContext().getResources().getIdentifier(
-                "tv_points_value", "id", requireContext().getPackageName()
-        );
+                "tv_points_value", "id", requireContext().getPackageName());
         int co2Id = requireContext().getResources().getIdentifier(
-                "tv_co2_saved", "id", requireContext().getPackageName()
-        );
+                "tv_co2_saved", "id", requireContext().getPackageName());
 
-        TextView tvPoints = pointsId != 0 ? view.findViewById(pointsId) : null;
-        TextView tvCo2Saved = co2Id != 0 ? view.findViewById(co2Id) : null;
+        TextView tvPoints  = pointsId != 0 ? view.findViewById(pointsId)  : null;
+        TextView tvCo2Saved = co2Id   != 0 ? view.findViewById(co2Id)     : null;
+        TextView tvEquiv   = view.findViewById(R.id.tv_co2_equivalent);
 
-        if (tvPoints == null && tvCo2Saved == null) {
-            return;
-        }
+        if (tvPoints == null && tvCo2Saved == null) return;
 
-        db.collection("users")
-                .document(currentUser.getUid())
-                .get()
-                .addOnSuccessListener(document -> {
-                    if (!document.exists()) return;
+        // ── Room first (instant) ─────────────────────────────────────────────
+        executor.execute(() -> {
+            AppDatabase localDb = AppDatabase.getInstance(requireContext());
+            int   roomPoints = localDb.activityLogDao().getTotalPointsForUser(uid);
+            double roomCo2   = localDb.activityLogDao().getTotalCo2ForUser(uid);
 
-                    Long totalPoints = document.getLong("totalPoints");
-                    Double co2SavedKg = document.getDouble("co2SavedKg");
+            if (isAdded()) requireActivity().runOnUiThread(() -> {
+                if (tvPoints   != null) tvPoints.setText(String.valueOf(roomPoints));
+                if (tvCo2Saved != null)
+                    tvCo2Saved.setText(String.format(Locale.getDefault(), "%.1f kg", roomCo2));
+                if (tvEquiv != null && roomCo2 > 0)
+                    tvEquiv.setText(CarbonEquivalentHelper.buildEquivalentString(roomCo2));
+            });
 
-                    if (tvPoints != null) {
-                        tvPoints.setText(String.valueOf(totalPoints != null ? totalPoints : 0));
-                    }
+            // ── Firestore refresh ────────────────────────────────────────────
+            db.collection("users").document(uid).get()
+                    .addOnSuccessListener(document -> {
+                        if (!document.exists() || !isAdded()) return;
 
-                    if (tvCo2Saved != null) {
-                        double value = co2SavedKg != null ? co2SavedKg : 0.0;
-                        tvCo2Saved.setText(String.format(Locale.getDefault(), "%.1f kg", value));
+                        Long totalPoints  = document.getLong("totalPoints");
+                        Double co2SavedKg = document.getDouble("co2SavedKg");
+                        double value      = co2SavedKg != null ? co2SavedKg : 0.0;
+                        int pts           = totalPoints != null ? totalPoints.intValue() : 0;
 
-                        // Show real-world equivalent below the CO₂ value
-                        TextView tvEquiv = view.findViewById(R.id.tv_co2_equivalent);
-                        if (tvEquiv != null && value > 0) {
+                        // Update Room cache
+                        Context context = requireContext();
+                        executor.execute(() ->
+                                localDb.userDao().updateStats(uid, pts, value,
+                                        (int)(document.getLong("streakDays") != null
+                                                ? document.getLong("streakDays") : 0))
+                        );
+
+                        if (tvPoints   != null) tvPoints.setText(String.valueOf(pts));
+                        if (tvCo2Saved != null)
+                            tvCo2Saved.setText(String.format(Locale.getDefault(), "%.1f kg", value));
+                        if (tvEquiv != null && value > 0)
                             tvEquiv.setText(CarbonEquivalentHelper.buildEquivalentString(value));
-                        }
-                    }
-                });
+                    });
+        });
     }
 
     private void setRandomGreeting(TextView tvGreetingMessage) {
@@ -326,20 +347,46 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadUserHeader(TextView tvUserName, TextView tvProfileInitial) {
-        db.collection("users")
-                .document(currentUser.getUid())
-                .get()
-                .addOnSuccessListener(document -> {
-                    if (!document.exists()) return;
+        String uid = currentUser.getUid();
 
-                    String displayName = document.getString("displayName");
-                    if (displayName != null && !displayName.trim().isEmpty()) {
+        // ── Room first (instant) ─────────────────────────────────────────────
+        executor.execute(() -> {
+            UserEntity cached = AppDatabase.getInstance(requireContext())
+                    .userDao().getUserSync(uid);
+            if (cached != null && !cached.displayName.isEmpty()) {
+                String first = cached.displayName.trim().split("\\s+")[0];
+                if (isAdded()) requireActivity().runOnUiThread(() -> {
+                    tvUserName.setText(first + "!");
+                    tvProfileInitial.setText(
+                            String.valueOf(Character.toUpperCase(first.charAt(0))));
+                });
+            }
+
+            // ── Firestore refresh ────────────────────────────────────────────
+            db.collection("users").document(uid).get()
+                    .addOnSuccessListener(document -> {
+                        if (!document.exists() || !isAdded()) return;
+                        String displayName = document.getString("displayName");
+                        if (displayName == null || displayName.trim().isEmpty()) return;
+
                         String cleanName = displayName.trim();
                         String firstName = cleanName.split("\\s+")[0];
+
+                        // Update Room
+                        executor.execute(() -> {
+                            UserEntity u = AppDatabase.getInstance(requireContext())
+                                    .userDao().getUserSync(uid);
+                            if (u != null) {
+                                u.displayName = displayName;
+                                AppDatabase.getInstance(requireContext()).userDao().update(u);
+                            }
+                        });
+
                         tvUserName.setText(firstName + "!");
-                        tvProfileInitial.setText(String.valueOf(Character.toUpperCase(firstName.charAt(0))));
-                    }
-                });
+                        tvProfileInitial.setText(
+                                String.valueOf(Character.toUpperCase(firstName.charAt(0))));
+                    });
+        });
     }
 
     private void loadUserStreakFromLogs(TextView tvStreakNumber,
@@ -347,47 +394,66 @@ public class HomeFragment extends Fragment {
                                         TextView tvStreakPercent,
                                         ProgressBar progressStreak,
                                         TextView tvBottomStreakDays) {
-        db.collection("activity_logs")
-                .whereEqualTo("userId", currentUser.getUid())
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    Set<String> uniqueDays = new HashSet<>();
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+        String uid = currentUser.getUid();
 
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        com.google.firebase.Timestamp ts = doc.getTimestamp("timestamp");
-                        if (ts == null) continue;
-                        uniqueDays.add(formatter.format(ts.toDate()));
-                    }
+        executor.execute(() -> {
+            // ── Room first ───────────────────────────────────────────────────
+            List<String> roomDays = AppDatabase.getInstance(requireContext())
+                    .activityLogDao()
+                    .getDistinctLogDays(uid);
 
-                    int currentStreak = calculateCurrentStreakFromDays(uniqueDays);
-                    int bestStreak = calculateBestStreakFromDays(uniqueDays);
+            Set<String> uniqueDays = new HashSet<>(roomDays);
+            int currentStreak = calculateCurrentStreakFromDays(uniqueDays);
+            int bestStreak    = calculateBestStreakFromDays(uniqueDays);
 
-                    tvStreakNumber.setText(String.valueOf(currentStreak));
-                    tvBottomStreakDays.setText(String.valueOf(bestStreak));
+            if (isAdded()) requireActivity().runOnUiThread(() ->
+                    applyStreakToUI(currentStreak, bestStreak,
+                            tvStreakNumber, tvStreakMessage, tvStreakPercent,
+                            progressStreak, tvBottomStreakDays)
+            );
 
-                    if (currentStreak <= 0) {
-                        tvStreakMessage.setText("Log to start your streak");
-                        tvStreakPercent.setText("0%");
-                        progressStreak.setMax(7);
-                        progressStreak.setProgress(0);
-                    } else {
-                        tvStreakMessage.setText("You're on a " + currentStreak + "-day streak");
-                        progressStreak.setMax(7);
-                        int progress = Math.min(currentStreak, 7);
-                        progressStreak.setProgress(progress);
-                        int percent = (int) ((progress / 7.0) * 100);
-                        tvStreakPercent.setText(percent + "%");
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    tvStreakNumber.setText("0");
-                    tvBottomStreakDays.setText("0");
-                    tvStreakMessage.setText("Couldn't load streak");
-                    tvStreakPercent.setText("0%");
-                    progressStreak.setMax(7);
-                    progressStreak.setProgress(0);
-                });
+            // ── Firestore refresh ────────────────────────────────────────────
+            db.collection("activity_logs")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        Set<String> firestoreDays = new HashSet<>();
+                        SimpleDateFormat fmt =
+                                new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                            com.google.firebase.Timestamp ts = doc.getTimestamp("timestamp");
+                            if (ts != null) firestoreDays.add(fmt.format(ts.toDate()));
+                        }
+                        if (!isAdded()) return;
+                        int cs = calculateCurrentStreakFromDays(firestoreDays);
+                        int bs = calculateBestStreakFromDays(firestoreDays);
+                        requireActivity().runOnUiThread(() ->
+                                applyStreakToUI(cs, bs,
+                                        tvStreakNumber, tvStreakMessage, tvStreakPercent,
+                                        progressStreak, tvBottomStreakDays)
+                        );
+                    });
+        });
+    }
+
+    private void applyStreakToUI(int currentStreak, int bestStreak,
+                                 TextView tvStreakNumber, TextView tvStreakMessage,
+                                 TextView tvStreakPercent, ProgressBar progressStreak,
+                                 TextView tvBottomStreakDays) {
+        tvStreakNumber.setText(String.valueOf(currentStreak));
+        tvBottomStreakDays.setText(String.valueOf(bestStreak));
+        if (currentStreak <= 0) {
+            tvStreakMessage.setText("Log to start your streak");
+            tvStreakPercent.setText("0%");
+            progressStreak.setMax(7);
+            progressStreak.setProgress(0);
+        } else {
+            tvStreakMessage.setText("You're on a " + currentStreak + "-day streak");
+            progressStreak.setMax(7);
+            int progress = Math.min(currentStreak, 7);
+            progressStreak.setProgress(progress);
+            tvStreakPercent.setText((int)((progress / 7.0) * 100) + "%");
+        }
     }
 
     private int calculateCurrentStreakFromDays(Set<String> uniqueDays) {
@@ -470,97 +536,94 @@ public class HomeFragment extends Fragment {
         return best;
     }
 
-    private void loadActivityCards(TextView tvRecent1Icon,
-                                   TextView tvRecent1Title,
-                                   TextView tvRecent1Subtitle,
-                                   TextView tvRecent2Icon,
-                                   TextView tvRecent2Title,
-                                   TextView tvRecent2Subtitle) {
-        db.collection("activity_logs")
-                .whereEqualTo("userId", currentUser.getUid())
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<QueryDocumentSnapshot> docs = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        docs.add(doc);
-                    }
+    private void loadActivityCards(TextView tvRecent1Icon, TextView tvRecent1Title,
+                                   TextView tvRecent1Subtitle, TextView tvRecent2Icon,
+                                   TextView tvRecent2Title, TextView tvRecent2Subtitle) {
+        String uid = currentUser.getUid();
 
-                    docs.sort((a, b) -> {
-                        com.google.firebase.Timestamp ta = a.getTimestamp("timestamp");
-                        com.google.firebase.Timestamp tb = b.getTimestamp("timestamp");
+        executor.execute(() -> {
+            // ── Room first ───────────────────────────────────────────────────
+            List<ActivityLogEntity> roomLogs =
+                    AppDatabase.getInstance(requireContext())
+                            .activityLogDao().getLogsForUserSync(uid);
 
-                        if (ta == null && tb == null) return 0;
-                        if (ta == null) return 1;
-                        if (tb == null) return -1;
-                        return tb.toDate().compareTo(ta.toDate());
+            if (!roomLogs.isEmpty() && isAdded()) {
+                requireActivity().runOnUiThread(() ->
+                        bindActivityCards(roomLogs.stream()
+                                        .map(e -> e.activityType).collect(java.util.stream.Collectors.toList()),
+                                tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
+                                tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle)
+                );
+            }
+
+            // ── Firestore refresh ────────────────────────────────────────────
+            db.collection("activity_logs")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        if (!isAdded()) return;
+                        List<String> types = new java.util.ArrayList<>();
+                        // sort newest first
+                        List<QueryDocumentSnapshot> docs = new java.util.ArrayList<>();
+                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) docs.add(doc);
+                        docs.sort((a, b) -> {
+                            com.google.firebase.Timestamp ta = a.getTimestamp("timestamp");
+                            com.google.firebase.Timestamp tb = b.getTimestamp("timestamp");
+                            if (ta == null && tb == null) return 0;
+                            if (ta == null) return 1;
+                            if (tb == null) return -1;
+                            return tb.toDate().compareTo(ta.toDate());
+                        });
+                        for (QueryDocumentSnapshot doc : docs) {
+                            String t = doc.getString("activityType");
+                            if (t != null) types.add(t);
+                        }
+                        requireActivity().runOnUiThread(() ->
+                                bindActivityCards(types,
+                                        tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
+                                        tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle)
+                        );
                     });
+        });
+    }
 
-                    if (docs.isEmpty()) {
-                        tvRecent1Icon.setText("");
-                        tvRecent1Title.setText("MOST FREQUENT");
-                        tvRecent1Subtitle.setText("Your most frequent activity will appear here.\nTry logging something.");
+    private void bindActivityCards(List<String> orderedTypes,
+                                   TextView tvRecent1Icon, TextView tvRecent1Title,
+                                   TextView tvRecent1Subtitle, TextView tvRecent2Icon,
+                                   TextView tvRecent2Title, TextView tvRecent2Subtitle) {
+        if (orderedTypes.isEmpty()) {
+            tvRecent1Icon.setText(""); tvRecent1Title.setText("MOST FREQUENT");
+            tvRecent1Subtitle.setText("Your most frequent activity will appear here.\nTry logging something.");
+            tvRecent2Icon.setText(""); tvRecent2Title.setText("RECENT ACTIVITY");
+            tvRecent2Subtitle.setText("Your latest activity will appear here once you log one.");
+            return;
+        }
+        HashMap<String, Integer> freq = new HashMap<>();
+        for (String t : orderedTypes) freq.put(t, freq.getOrDefault(t, 0) + 1);
 
-                        tvRecent2Icon.setText("");
-                        tvRecent2Title.setText("RECENT ACTIVITY");
-                        tvRecent2Subtitle.setText("Your latest activity will appear here once you log one.");
-                        return;
-                    }
+        String mostFrequent = null; int maxCount = 0;
+        for (String key : freq.keySet()) {
+            if (freq.get(key) > maxCount) { maxCount = freq.get(key); mostFrequent = key; }
+        }
+        String recentDifferent = null;
+        for (String t : orderedTypes) {
+            if (!t.equals(mostFrequent)) { recentDifferent = t; break; }
+        }
 
-                    HashMap<String, Integer> frequencyMap = new HashMap<>();
-                    for (QueryDocumentSnapshot doc : docs) {
-                        String activityType = doc.getString("activityType");
-                        if (activityType == null || activityType.trim().isEmpty()) continue;
+        tvRecent1Icon.setText(getActivityEmoji(mostFrequent));
+        tvRecent1Title.setText(mostFrequent);
+        tvRecent1Subtitle.setText("You're on a roll with this activity");
 
-                        int count = frequencyMap.containsKey(activityType) ? frequencyMap.get(activityType) : 0;
-                        frequencyMap.put(activityType, count + 1);
-                    }
-
-                    String mostFrequent = null;
-                    int maxCount = 0;
-
-                    for (String key : frequencyMap.keySet()) {
-                        int count = frequencyMap.get(key);
-                        if (count > maxCount) {
-                            maxCount = count;
-                            mostFrequent = key;
-                        }
-                    }
-
-                    String recentDifferent = null;
-                    for (QueryDocumentSnapshot doc : docs) {
-                        String activityType = doc.getString("activityType");
-                        if (activityType == null || activityType.trim().isEmpty()) continue;
-
-                        if (!activityType.equals(mostFrequent)) {
-                            recentDifferent = activityType;
-                            break;
-                        }
-                    }
-
-                    tvRecent1Icon.setText(getActivityEmoji(mostFrequent));
-                    tvRecent1Title.setText(mostFrequent);
-                    tvRecent1Subtitle.setText("You're on a roll with this activity");
-
-                    if (recentDifferent != null) {
-                        tvRecent2Icon.setText(getActivityEmoji(recentDifferent));
-                        tvRecent2Title.setText(recentDifferent);
-                        tvRecent2Subtitle.setText("Want to log this activity again?");
-                    } else {
-                        String suggestion = getRandomSuggestedActivity(mostFrequent);
-                        tvRecent2Icon.setText(getActivityEmoji(suggestion));
-                        tvRecent2Title.setText(suggestion);
-                        tvRecent2Subtitle.setText("Try this activity too");
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    tvRecent1Icon.setText("");
-                    tvRecent1Title.setText("MOST FREQUENT");
-                    tvRecent1Subtitle.setText("Couldn't load activity data");
-
-                    tvRecent2Icon.setText("");
-                    tvRecent2Title.setText("RECENT ACTIVITY");
-                    tvRecent2Subtitle.setText("Couldn't load activity data");
-                });
+        if (recentDifferent != null) {
+            tvRecent2Icon.setText(getActivityEmoji(recentDifferent));
+            tvRecent2Title.setText(recentDifferent);
+            tvRecent2Subtitle.setText("Want to log this activity again?");
+        } else {
+            String suggestion = getRandomSuggestedActivity(mostFrequent);
+            tvRecent2Icon.setText(getActivityEmoji(suggestion));
+            tvRecent2Title.setText(suggestion);
+            tvRecent2Subtitle.setText("Try this activity too");
+        }
     }
 
     private String getActivityEmoji(String activityType) {
@@ -614,33 +677,47 @@ public class HomeFragment extends Fragment {
                                       ProgressBar progressChallenge,
                                       TextView tvChallengeDays,
                                       TextView tvChallengePercent) {
-        db.collection("activity_logs")
-                .whereEqualTo("userId", currentUser.getUid())
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    int logCount = queryDocumentSnapshots.size();
-                    int target = 20;
-                    int progress = Math.min(logCount, target);
-                    int percent = (int) ((progress / (double) target) * 100);
+        String uid = currentUser.getUid();
+        int target = 20;
 
-                    tvChallengeTitle.setText("Zero Waste February ♻️");
-                    progressChallenge.setMax(target);
-                    progressChallenge.setProgress(progress);
-                    tvChallengeDays.setText(progress + " / " + target + " logs");
+        executor.execute(() -> {
+            // ── Room first ───────────────────────────────────────────────────
+            List<ActivityLogEntity> roomLogs =
+                    AppDatabase.getInstance(requireContext())
+                            .activityLogDao().getLogsForUserSync(uid);
+            int roomCount = roomLogs.size();
+            int roomProgress = Math.min(roomCount, target);
+            int roomPercent  = (int)((roomProgress / (double) target) * 100);
 
-                    if (logCount == 0) {
-                        tvChallengePercent.setText("Start logging to make progress");
-                    } else {
-                        tvChallengePercent.setText(percent + "% complete");
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    tvChallengeTitle.setText("Zero Waste February ♻️");
-                    progressChallenge.setMax(20);
-                    progressChallenge.setProgress(0);
-                    tvChallengeDays.setText("0 / 20 logs");
-                    tvChallengePercent.setText("Couldn't load challenge");
-                });
+            if (isAdded()) requireActivity().runOnUiThread(() -> {
+                tvChallengeTitle.setText("Zero Waste February ♻️");
+                progressChallenge.setMax(target);
+                progressChallenge.setProgress(roomProgress);
+                tvChallengeDays.setText(roomProgress + " / " + target + " logs");
+                tvChallengePercent.setText(roomCount == 0
+                        ? "Start logging to make progress"
+                        : roomPercent + "% complete");
+            });
+
+            // ── Firestore refresh ────────────────────────────────────────────
+            db.collection("activity_logs")
+                    .whereEqualTo("userId", uid)
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        if (!isAdded()) return;
+                        int logCount = queryDocumentSnapshots.size();
+                        int progress = Math.min(logCount, target);
+                        int percent  = (int)((progress / (double) target) * 100);
+                        requireActivity().runOnUiThread(() -> {
+                            progressChallenge.setMax(target);
+                            progressChallenge.setProgress(progress);
+                            tvChallengeDays.setText(progress + " / " + target + " logs");
+                            tvChallengePercent.setText(logCount == 0
+                                    ? "Start logging to make progress"
+                                    : percent + "% complete");
+                        });
+                    });
+        });
     }
 
     private void setDefaultDashboard(TextView tvStreakNumber,
@@ -712,76 +789,69 @@ public class HomeFragment extends Fragment {
 
     private void quickLogActivityFromHome(String activityName) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
         if (user == null) {
-            Toast.makeText(getContext(), "You must be logged in to submit a log", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "You must be logged in to submit a log",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
-
         int basePoints = getBasePoints(activityName);
         if (basePoints <= 0) {
             Toast.makeText(getContext(), "Invalid activity selected", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        String uid = user.getUid();
         DocumentReference docRef = db.collection("activity_logs").document();
+        double co2 = CarbonCalculator.calculateCo2SavedKg(activityName, 1);
 
-        HashMap<String, Object> logData = new HashMap<>();
-        logData.put("logId", docRef.getId());
-        logData.put("userId", user.getUid());
-        logData.put("activityType", activityName);
-        logData.put("status", "quick");
-        logData.put("points", basePoints);
-        logData.put("bonusPoints", 0);
-        logData.put("proofUrl", null);
-        logData.put("voteCount", 0);
-        logData.put("timestamp", Timestamp.now());
+        // ── 1. Room write (instant) ──────────────────────────────────────────
+        ActivityLogEntity entity = new ActivityLogEntity(
+                docRef.getId(), uid, activityName, "quick",
+                basePoints, 1, co2, "", null, System.currentTimeMillis()
+        );
+        Context context = requireContext();
+        executor.execute(() -> {
+            AppDatabase localDb = AppDatabase.getInstance(requireContext());
+            int localId = (int) localDb.activityLogDao().insert(entity);
+            localDb.userDao().incrementPoints(uid, basePoints);
+            localDb.userDao().incrementCo2(uid, co2);
 
-        docRef.set(logData)
-                .addOnSuccessListener(unused -> {
-                    new PointsManager().awardBasePoints(user.getUid(), basePoints);
-                    Toast.makeText(getContext(), activityName + " logged successfully ✅", Toast.LENGTH_SHORT).show();
-                    View view = getView();
-                    if (view != null) {
-                        loadOptionalStats(view);
+            // Show success immediately — don't wait for Firestore
+            if (isAdded()) requireActivity().runOnUiThread(() -> {
+                Toast.makeText(getContext(),
+                        activityName + " logged successfully ✅", Toast.LENGTH_SHORT).show();
+                View view = getView();
+                if (view != null) refreshDashboardUI(view);
+            });
 
+            // ── 2. Firestore write ───────────────────────────────────────────
+            HashMap<String, Object> logData = new HashMap<>();
+            logData.put("logId",        docRef.getId());
+            logData.put("userId",       uid);
+            logData.put("activityType", activityName);
+            logData.put("status",       "quick");
+            logData.put("points",       basePoints);
+            logData.put("bonusPoints",  0);
+            logData.put("proofUrl",     null);
+            logData.put("voteCount",    0);
+            logData.put("co2SavedKg",   co2);
+            logData.put("timestamp",    Timestamp.now());
 
-                        TextView tvStreakNumber = view.findViewById(R.id.tv_streak_number);
-                        TextView tvStreakMessage = view.findViewById(R.id.tv_streak_message);
-                        TextView tvStreakPercent = view.findViewById(R.id.tv_streak_percent);
-                        ProgressBar progressStreak = view.findViewById(R.id.progress_streak);
-                        TextView tvBottomStreakDays = view.findViewById(R.id.tv_bottom_streak_days);
-
-                        TextView tvRecent1Icon = view.findViewById(R.id.tv_recent_1_icon);
-                        TextView tvRecent1Title = view.findViewById(R.id.tv_recent_1_title);
-                        TextView tvRecent1Subtitle = view.findViewById(R.id.tv_recent_1_subtitle);
-
-                        TextView tvRecent2Icon = view.findViewById(R.id.tv_recent_2_icon);
-                        TextView tvRecent2Title = view.findViewById(R.id.tv_recent_2_title);
-                        TextView tvRecent2Subtitle = view.findViewById(R.id.tv_recent_2_subtitle);
-
-                        TextView tvChallengeTitle = view.findViewById(R.id.tv_challenge_title);
-                        ProgressBar progressChallenge = view.findViewById(R.id.progress_challenge);
-                        TextView tvChallengeDays = view.findViewById(R.id.tv_challenge_days);
-                        TextView tvChallengePercent = view.findViewById(R.id.tv_challenge_percent);
-
-                        loadUserStreakFromLogs(
-                                tvStreakNumber,
-                                tvStreakMessage,
-                                tvStreakPercent,
-                                progressStreak,
-                                tvBottomStreakDays
+            docRef.set(logData)
+                    .addOnSuccessListener(unused -> {
+                        executor.execute(() ->
+                                localDb.activityLogDao().markSynced(localId, docRef.getId(), "synced")
                         );
-                        loadActivityCards(
-                                tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
-                                tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
+                        new PointsManager().awardBasePoints(context, uid, basePoints);
+                    })
+                    .addOnFailureListener(e -> {
+                        executor.execute(() ->
+                                localDb.activityLogDao().markFailed(localId)
                         );
-                        loadMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
-                    }
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Failed to save log: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                );
+                        // Quick log failure: silent retry, no notification
+                        MainActivity.triggerImmediateSync(requireContext());
+                    });
+        });
     }
 
     private void openVerifiedLogFromHome(String activityName) {
@@ -1128,6 +1198,29 @@ public class HomeFragment extends Fragment {
                     .addToBackStack(null)
                     .commit();
         }
+    }
+    private void refreshDashboardUI(View view) {
+        loadOptionalStats(view);
+        TextView tvStreakNumber    = view.findViewById(R.id.tv_streak_number);
+        TextView tvStreakMessage   = view.findViewById(R.id.tv_streak_message);
+        TextView tvStreakPercent   = view.findViewById(R.id.tv_streak_percent);
+        ProgressBar progressStreak = view.findViewById(R.id.progress_streak);
+        TextView tvBottomStreakDays = view.findViewById(R.id.tv_bottom_streak_days);
+        TextView tvRecent1Icon     = view.findViewById(R.id.tv_recent_1_icon);
+        TextView tvRecent1Title    = view.findViewById(R.id.tv_recent_1_title);
+        TextView tvRecent1Subtitle = view.findViewById(R.id.tv_recent_1_subtitle);
+        TextView tvRecent2Icon     = view.findViewById(R.id.tv_recent_2_icon);
+        TextView tvRecent2Title    = view.findViewById(R.id.tv_recent_2_title);
+        TextView tvRecent2Subtitle = view.findViewById(R.id.tv_recent_2_subtitle);
+        TextView tvChallengeTitle  = view.findViewById(R.id.tv_challenge_title);
+        ProgressBar progressChall  = view.findViewById(R.id.progress_challenge);
+        TextView tvChallengeDays   = view.findViewById(R.id.tv_challenge_days);
+        TextView tvChallengePercent = view.findViewById(R.id.tv_challenge_percent);
+        loadUserStreakFromLogs(tvStreakNumber, tvStreakMessage, tvStreakPercent,
+                progressStreak, tvBottomStreakDays);
+        loadActivityCards(tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
+                tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle);
+        loadMonthlyChallenge(tvChallengeTitle, progressChall, tvChallengeDays, tvChallengePercent);
     }
 
 }
