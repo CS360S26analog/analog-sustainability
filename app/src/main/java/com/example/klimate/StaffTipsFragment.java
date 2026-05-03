@@ -6,8 +6,8 @@
  * Access is gated by users/{uid}/role == "staff" check.
  *
  * Role in design: Part of the View layer (MVVM). Writes to and reads from
- * the Firestore "tips" collection. Uses Observer pattern via Firestore
- * snapshot listener for the published tips list.
+ * the Firestore "tips" collection. Also reviews pending EcoMap tip
+ * suggestions from the "eco_map_notes" collection.
  *
  * Outstanding issues: None.
  *
@@ -15,7 +15,9 @@
  */
 package com.example.klimate;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,7 +39,6 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
@@ -200,21 +201,76 @@ public class StaffTipsFragment extends Fragment {
     }
 
     /**
-     * Loads all tips authored by the current staff user and renders them
-     * as cards in the tips list.
+     * Loads pending EcoMap suggestions first, then loads all tips authored
+     * by the current staff user and renders them as cards in the tips list.
      */
     private void loadPublishedTips() {
         if (currentUser == null || llTipsList == null) return;
 
         llTipsList.removeAllViews();
+        loadPendingEcoMapSuggestions();
+    }
 
+    /**
+     * Loads student-submitted EcoMap suggestions that are waiting for staff review.
+     */
+    private void loadPendingEcoMapSuggestions() {
+        db.collection("eco_map_notes")
+                .whereEqualTo("status", "pending")
+                .get()
+                .addOnSuccessListener(querySnapshots -> {
+                    if (!isAdded() || getContext() == null) return;
+
+                    addSectionHeading("Pending EcoMap Suggestions");
+
+                    if (querySnapshots.isEmpty()) {
+                        addSmallMessage("No EcoMap suggestions pending review.");
+                    } else {
+                        java.util.List<QueryDocumentSnapshot> notes = new java.util.ArrayList<>();
+
+                        for (QueryDocumentSnapshot doc : querySnapshots) {
+                            notes.add(doc);
+                        }
+
+                        notes.sort((a, b) -> {
+                            Timestamp ta = a.getTimestamp("submittedAt");
+                            Timestamp tb = b.getTimestamp("submittedAt");
+
+                            if (ta == null && tb == null) return 0;
+                            if (ta == null) return 1;
+                            if (tb == null) return -1;
+
+                            return tb.compareTo(ta);
+                        });
+
+                        for (QueryDocumentSnapshot doc : notes) {
+                            addEcoMapSuggestionCard(doc);
+                        }
+                    }
+
+                    loadOwnTipsBelowSuggestions();
+                })
+                .addOnFailureListener(e -> {
+                    if (!isAdded() || getContext() == null) return;
+
+                    addSectionHeading("Pending EcoMap Suggestions");
+                    addSmallMessage("Could not load EcoMap suggestions: " + e.getMessage());
+
+                    loadOwnTipsBelowSuggestions();
+                });
+    }
+
+    /**
+     * Loads the staff user's own published tips below the review queue.
+     */
+    private void loadOwnTipsBelowSuggestions() {
         db.collection("tips")
                 .whereEqualTo("authorUid", currentUser.getUid())
                 .get()
                 .addOnSuccessListener(querySnapshots -> {
                     if (!isAdded() || getContext() == null) return;
 
-                    llTipsList.removeAllViews();
+                    addSectionHeading("Your Published Tips");
 
                     if (querySnapshots.isEmpty()) {
                         TextView empty = new TextView(requireContext());
@@ -249,7 +305,7 @@ public class StaffTipsFragment extends Fragment {
                 .addOnFailureListener(e -> {
                     if (!isAdded() || getContext() == null) return;
 
-                    llTipsList.removeAllViews();
+                    addSectionHeading("Your Published Tips");
 
                     TextView err = new TextView(requireContext());
                     err.setText("Could not load tips: " + e.getMessage());
@@ -257,6 +313,158 @@ public class StaffTipsFragment extends Fragment {
                     err.setTextColor(0xFF888888);
                     llTipsList.addView(err);
                 });
+    }
+
+    /**
+     * Renders one pending EcoMap suggestion card with approve/reject controls.
+     *
+     * @param doc the Firestore document for this EcoMap suggestion
+     */
+    private void addEcoMapSuggestionCard(QueryDocumentSnapshot doc) {
+        LinearLayout card = new LinearLayout(requireContext());
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(16), dp(14), dp(16), dp(14));
+        card.setBackgroundResource(R.drawable.bg_card_outline);
+
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        cardParams.setMargins(0, 0, 0, dp(12));
+        card.setLayoutParams(cardParams);
+
+        String noteId = doc.getId();
+        String spotTitle = doc.getString("spotTitle");
+        String activityType = doc.getString("activityType");
+        String noteText = doc.getString("noteText");
+        String submittedBy = doc.getString("submittedBy");
+
+        TextView title = new TextView(requireContext());
+        title.setText("📍 " + safeText(spotTitle, "EcoMap Spot"));
+        title.setTextSize(16f);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        title.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_text_primary));
+        card.addView(title);
+
+        TextView meta = new TextView(requireContext());
+        meta.setText(safeText(activityType, "Sustainability") + "  ·  Student suggestion");
+        meta.setTextSize(13f);
+        meta.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_green_header));
+        meta.setPadding(0, dp(4), 0, dp(8));
+        card.addView(meta);
+
+        TextView body = new TextView(requireContext());
+        body.setText(safeText(noteText, ""));
+        body.setTextSize(14f);
+        body.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_text_secondary));
+        body.setPadding(0, 0, 0, dp(12));
+        card.addView(body);
+
+        LinearLayout buttonRow = new LinearLayout(requireContext());
+        buttonRow.setOrientation(LinearLayout.HORIZONTAL);
+        buttonRow.setGravity(Gravity.END);
+
+        TextView btnApprove = createReviewButton("Approve");
+        TextView btnReject = createReviewButton("Reject");
+
+        btnApprove.setOnClickListener(v ->
+                approveEcoMapSuggestion(noteId, spotTitle, activityType, noteText, submittedBy)
+        );
+
+        btnReject.setOnClickListener(v ->
+                rejectEcoMapSuggestion(noteId)
+        );
+
+        buttonRow.addView(btnApprove);
+        buttonRow.addView(btnReject);
+        card.addView(buttonRow);
+
+        llTipsList.addView(card);
+    }
+
+    /**
+     * Approves an EcoMap suggestion by publishing it to tips and marking
+     * the original eco_map_notes document as approved.
+     */
+    private void approveEcoMapSuggestion(String noteId,
+                                         String spotTitle,
+                                         String activityType,
+                                         String noteText,
+                                         String submittedBy) {
+        if (currentUser == null) return;
+
+        Map<String, Object> tipData = new HashMap<>();
+        tipData.put("title", safeText(spotTitle, "EcoMap") + " Tip");
+        tipData.put("body", safeText(noteText, ""));
+        tipData.put("category", safeText(activityType, "Other"));
+        tipData.put("authorUid", currentUser.getUid());
+        tipData.put("timestamp", Timestamp.now());
+        tipData.put("views", 0);
+        tipData.put("source", "eco_map_note");
+        tipData.put("originalNoteId", noteId);
+        tipData.put("submittedBy", submittedBy);
+
+        db.collection("tips")
+                .add(tipData)
+                .addOnSuccessListener(ref ->
+                        db.collection("eco_map_notes")
+                                .document(noteId)
+                                .update(
+                                        "status", "approved",
+                                        "reviewedBy", currentUser.getUid(),
+                                        "reviewedAt", Timestamp.now(),
+                                        "publishedTipId", ref.getId()
+                                )
+                                .addOnSuccessListener(unused -> {
+                                    Toast.makeText(getContext(),
+                                            "Suggestion approved and published ✅",
+                                            Toast.LENGTH_SHORT).show();
+                                    loadPublishedTips();
+                                })
+                                .addOnFailureListener(e ->
+                                        Toast.makeText(getContext(),
+                                                "Published, but review status was not updated.",
+                                                Toast.LENGTH_LONG).show()
+                                )
+                )
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(),
+                                "Could not approve suggestion: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    /**
+     * Rejects an EcoMap suggestion after confirmation.
+     */
+    private void rejectEcoMapSuggestion(String noteId) {
+        if (currentUser == null) return;
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Reject Suggestion")
+                .setMessage("Are you sure you want to reject this EcoMap suggestion?")
+                .setPositiveButton("Reject", (dialog, which) ->
+                        db.collection("eco_map_notes")
+                                .document(noteId)
+                                .update(
+                                        "status", "rejected",
+                                        "reviewedBy", currentUser.getUid(),
+                                        "reviewedAt", Timestamp.now()
+                                )
+                                .addOnSuccessListener(unused -> {
+                                    Toast.makeText(getContext(),
+                                            "Suggestion rejected.",
+                                            Toast.LENGTH_SHORT).show();
+                                    loadPublishedTips();
+                                })
+                                .addOnFailureListener(e ->
+                                        Toast.makeText(getContext(),
+                                                "Could not reject suggestion: " + e.getMessage(),
+                                                Toast.LENGTH_SHORT).show()
+                                )
+                )
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     /**
@@ -348,5 +556,57 @@ public class StaffTipsFragment extends Fragment {
         editingTipId = null;
         TextView btnPost = requireView().findViewById(R.id.btn_post_tip);
         if (btnPost != null) btnPost.setText("Post Tip");
+    }
+
+    private void addSectionHeading(String text) {
+        TextView heading = new TextView(requireContext());
+        heading.setText(text);
+        heading.setTextSize(17f);
+        heading.setTypeface(Typeface.DEFAULT_BOLD);
+        heading.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_text_primary));
+        heading.setPadding(0, dp(18), 0, dp(10));
+        llTipsList.addView(heading);
+    }
+
+    private void addSmallMessage(String text) {
+        TextView message = new TextView(requireContext());
+        message.setText(text);
+        message.setTextSize(13f);
+        message.setTextColor(0xFF888888);
+        message.setPadding(0, 0, 0, dp(12));
+        llTipsList.addView(message);
+    }
+
+    private TextView createReviewButton(String text) {
+        TextView button = new TextView(requireContext());
+        button.setText(text);
+        button.setTextSize(13f);
+        button.setTypeface(Typeface.DEFAULT_BOLD);
+        button.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_green_header));
+        button.setGravity(Gravity.CENTER);
+        button.setPadding(dp(12), dp(8), dp(12), dp(8));
+        button.setClickable(true);
+        button.setFocusable(true);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1
+        );
+        params.setMargins(0, 0, dp(8), 0);
+        button.setLayoutParams(params);
+
+        return button;
+    }
+
+    private String safeText(String value, String fallback) {
+        if (value == null || value.trim().isEmpty()) {
+            return fallback;
+        }
+        return value;
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
     }
 }
