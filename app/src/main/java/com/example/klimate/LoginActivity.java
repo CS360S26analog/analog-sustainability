@@ -15,7 +15,6 @@
  *
  * Outstanding issues:
  * - "Forgot password" / password reset flow not yet implemented.
- * - No input validation for email format beyond Firebase's own checks.
  *
  * @author Maryam Waseem
  */
@@ -23,26 +22,27 @@ package com.example.klimate;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.util.Patterns;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginActivity extends AppCompatActivity {
 
     private EditText etEmail, etPassword;
+    private TextInputLayout tilEmail, tilPassword;
     private FirebaseAuth mAuth;
 
-    /**
-     * Initialises the login screen. If a user is already authenticated,
-     * skips the form and navigates directly to MainActivity.
-     * Otherwise sets up the email/password fields and button listeners.
-     *
-     * @param savedInstanceState previously saved instance state, or null
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,35 +50,64 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-        // If already logged in, go straight to main
         if (mAuth.getCurrentUser() != null) {
             startActivity(new Intent(this, MainActivity.class));
             finish();
             return;
         }
 
-        etEmail    = findViewById(R.id.et_email);
+        tilEmail = findViewById(R.id.til_email);
+        tilPassword = findViewById(R.id.til_login_password);
+
+        etEmail = findViewById(R.id.et_email);
         etPassword = findViewById(R.id.et_password);
-        Button btnLogin    = findViewById(R.id.btn_login);
+
+        Button btnLogin = findViewById(R.id.btn_login);
         TextView tvRegister = findViewById(R.id.tv_go_register);
 
+        setupErrorClearing();
+
         btnLogin.setOnClickListener(v -> loginUser());
-        tvRegister.setOnClickListener(v -> {
-            startActivity(new Intent(this, RegisterActivity.class));
+        tvRegister.setOnClickListener(v ->
+                startActivity(new Intent(this, RegisterActivity.class))
+        );
+    }
+
+    private void setupErrorClearing() {
+        addErrorClearer(etEmail, tilEmail);
+        addErrorClearer(etPassword, tilPassword);
+    }
+
+    private void addErrorClearer(EditText field, TextInputLayout layout) {
+        if (field == null || layout == null) return;
+
+        field.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // No action needed.
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                layout.setError(null);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // No action needed.
+            }
         });
     }
 
-    /**
-     * Reads the email and password fields, validates they are non-empty,
-     * and attempts sign-in via Firebase Authentication.
-     * Navigates to MainActivity on success; shows a Toast on failure.
-     */
     private void loginUser() {
-        String email    = etEmail.getText().toString().trim();
+        String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
-            Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+        clearAllErrors();
+
+        View firstInvalidField = validateInputs(email, password);
+        if (firstInvalidField != null) {
+            firstInvalidField.requestFocus();
             return;
         }
 
@@ -88,7 +117,33 @@ public class LoginActivity extends AppCompatActivity {
                     finish();
                 })
                 .addOnFailureListener(e ->
-                        Toast.makeText(this, "Login failed: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                        Toast.makeText(this,
+                                "Login failed: " + e.getMessage(),
+                                Toast.LENGTH_LONG).show()
                 );
+    }
+
+    private View validateInputs(String email, String password) {
+        View firstInvalidField = null;
+
+        if (TextUtils.isEmpty(email)) {
+            tilEmail.setError("Email is required");
+            firstInvalidField = firstInvalidField == null ? etEmail : firstInvalidField;
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            tilEmail.setError("Enter a valid email address");
+            firstInvalidField = firstInvalidField == null ? etEmail : firstInvalidField;
+        }
+
+        if (TextUtils.isEmpty(password)) {
+            tilPassword.setError("Password is required");
+            firstInvalidField = firstInvalidField == null ? etPassword : firstInvalidField;
+        }
+
+        return firstInvalidField;
+    }
+
+    private void clearAllErrors() {
+        if (tilEmail != null) tilEmail.setError(null);
+        if (tilPassword != null) tilPassword.setError(null);
     }
 }
