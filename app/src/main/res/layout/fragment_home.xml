@@ -80,7 +80,7 @@
                 </FrameLayout>
             </LinearLayout>
 
-            <!-- Dynamic streak card -->
+            <!-- Dynamic streak card: kept untouched -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -104,9 +104,9 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="12dp"
                     android:layout_marginEnd="10dp"
+                    android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
@@ -150,6 +150,218 @@
             android:paddingEnd="16dp"
             android:paddingBottom="16dp">
 
+            <!-- Impact Dashboard -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_monthly_stats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="3dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="18dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="18dp"
+                    android:paddingBottom="16dp">
+
+                    <!-- Stats list on the left -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Impact Dashboard"
+                            android:textColor="@color/color_green_text"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <!-- Current streak -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:gravity="center"
+                                android:text="🌱"
+                                android:textSize="16sp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tv_stats_current_streak"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:maxLines="1"
+                                    android:text="0"
+                                    android:textColor="@color/color_text_primary"
+                                    android:textSize="17sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Current streak"
+                                    android:textColor="@color/color_text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Best streak -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:gravity="center"
+                                android:text="🔥"
+                                android:textSize="16sp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tv_bottom_streak_days"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:maxLines="1"
+                                    android:text="0"
+                                    android:textColor="@color/color_text_primary"
+                                    android:textSize="17sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Best streak"
+                                    android:textColor="@color/color_text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Points -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:gravity="center"
+                                android:text="⭐"
+                                android:textSize="16sp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tv_points_value"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:maxLines="1"
+                                    android:text="0"
+                                    android:textColor="@color/color_text_primary"
+                                    android:textSize="17sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Points"
+                                    android:textColor="@color/color_text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Double ring on the right -->
+                    <FrameLayout
+                        android:layout_width="150dp"
+                        android:layout_height="150dp"
+                        android:layout_marginStart="8dp">
+
+                        <com.example.klimate.DoubleProgressRingView
+                            android:id="@+id/progress_ring_monthly"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                        <LinearLayout
+                            android:layout_width="96dp"
+                            android:layout_height="96dp"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_co2_saved"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:maxLines="1"
+                                android:text="0.0 kg"
+                                android:textColor="@color/color_text_primary"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:text="CO₂ saved"
+                                android:textColor="@color/color_text_secondary"
+                                android:textSize="10sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_co2_equivalent"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:gravity="center"
+                                android:text=""
+                                android:textColor="@color/color_green_text"
+                                android:textSize="8sp"
+                                android:visibility="gone" />
+                        </LinearLayout>
+                    </FrameLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <!-- Activity cards -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -160,8 +372,8 @@
                     android:id="@+id/card_recent_1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="1"
                     android:layout_marginEnd="7dp"
+                    android:layout_weight="1"
                     android:background="@drawable/bg_card_amber"
                     android:clickable="true"
                     android:focusable="true"
@@ -226,8 +438,8 @@
                     android:id="@+id/card_recent_2"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="1"
                     android:layout_marginStart="7dp"
+                    android:layout_weight="1"
                     android:background="@drawable/bg_card_forest"
                     android:clickable="true"
                     android:focusable="true"
@@ -289,7 +501,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Campus Impact Card (US-13) -->
+            <!-- Campus Impact Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -301,9 +513,9 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
+                    android:padding="16dp">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -315,9 +527,9 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="🌍  Campus Impact"
+                            android:textAllCaps="true"
                             android:textColor="#CCFFFFFF"
-                            android:textSize="12sp"
-                            android:textAllCaps="true" />
+                            android:textSize="12sp" />
 
                         <TextView
                             android:id="@+id/tv_campus_co2"
@@ -341,8 +553,8 @@
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:gravity="center_horizontal">
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
 
                         <View
                             android:layout_width="6dp"
@@ -357,151 +569,8 @@
                             android:textColor="#CCFFFFFF"
                             android:textSize="11sp" />
                     </LinearLayout>
-
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
-
-            <!-- Stats row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:orientation="horizontal">
-
-                <androidx.cardview.widget.CardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="5dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🔥"
-                            android:textSize="26sp" />
-
-                        <TextView
-                            android:id="@+id/tv_bottom_streak_days"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="0"
-                            android:textColor="@color/color_text_primary"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Best Streak"
-                            android:textColor="@color/color_text_secondary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <androidx.cardview.widget.CardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="3dp"
-                    android:layout_marginEnd="3dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🌍"
-                            android:textSize="26sp" />
-
-                        <TextView
-                            android:id="@+id/tv_co2_saved"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="0.0 kg"
-                            android:textColor="@color/color_text_primary"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tv_co2_equivalent"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="3dp"
-                            android:gravity="center"
-                            android:text=""
-                            android:textColor="@color/color_green_text"
-                            android:textSize="9sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="CO₂ saved"
-                            android:textColor="@color/color_text_secondary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <androidx.cardview.widget.CardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="5dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⭐"
-                            android:textSize="26sp" />
-
-                        <TextView
-                            android:id="@+id/tv_points_value"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="0"
-                            android:textColor="@color/color_text_primary"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Points"
-                            android:textColor="@color/color_text_secondary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-            </LinearLayout>
 
             <!-- Monthly challenges -->
             <LinearLayout
@@ -623,6 +692,7 @@
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>
+
                     <TextView
                         android:id="@+id/tv_goal_status"
                         android:layout_width="wrap_content"
@@ -644,43 +714,44 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card_amber"
-                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
                 android:text="↗  Share My Progress"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true" />
+                android:visibility="gone" />
+
             <TextView
                 android:id="@+id/btn_view_feed"
                 android:layout_width="match_parent"
-                android:visibility="gone"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card_forest"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
                 android:text="🌍  Community Feed"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true" />
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/btn_view_challenges"
                 android:layout_width="match_parent"
-                android:visibility="gone"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card_forest"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
                 android:text="🏆  View Challenges"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true" />
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/btn_eco_picks"
@@ -688,31 +759,29 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card_amber"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
                 android:text="🌿  Eco Picks @ LUMS"
                 android:textColor="@color/white"
                 android:textSize="14sp"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true" />
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/btn_staff_manage_challenges"
                 android:layout_width="match_parent"
-                android:visibility="gone"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_header_green"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
-                android:text="🛠  ]
-                : Manage Challenges"
+                android:text="🛠  Manage Challenges"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true" />
+                android:visibility="gone" />
 
-            <!-- Staff Tips button — only shown to staff users -->
             <TextView
                 android:id="@+id/btn_staff_tips"
                 android:layout_width="match_parent"
@@ -720,14 +789,14 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="16dp"
                 android:background="@drawable/bg_header_green"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
                 android:text="📋  Staff: Manage Tips"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:visibility="gone"
-                android:clickable="true"
-                android:focusable="true" />
+                android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

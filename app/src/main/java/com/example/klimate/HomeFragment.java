@@ -56,12 +56,22 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
-import java.util.Map;
 
 public class HomeFragment extends Fragment {
 
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
+
+    private DoubleProgressRingView progressRingMonthly;
+    private TextView tvStatsCurrentStreak;
+
+    private float impactCo2SavedKg = 0f;
+    private float impactPersonalGoalKg = 0f;
+    private float impactChallengeProgress = 0f;
+
+    // Current app shows the monthly challenge card by default,
+    // so the dashboard ring treats the monthly challenge as active unless Firestore says otherwise.
+    private boolean impactHasMonthlyChallenge = true;
 
     @Nullable
     @Override
@@ -84,6 +94,8 @@ public class HomeFragment extends Fragment {
         ProgressBar progressStreak = view.findViewById(R.id.progress_streak);
 
         TextView tvBottomStreakDays = view.findViewById(R.id.tv_bottom_streak_days);
+        tvStatsCurrentStreak = view.findViewById(R.id.tv_stats_current_streak);
+        progressRingMonthly = view.findViewById(R.id.progress_ring_monthly);
 
         TextView tvRecent1Icon = view.findViewById(R.id.tv_recent_1_icon);
         TextView tvRecent1Title = view.findViewById(R.id.tv_recent_1_title);
@@ -141,11 +153,13 @@ public class HomeFragment extends Fragment {
                                 btnShare.setVisibility(View.VISIBLE);
                                 btnShare.setOnClickListener(v -> shareProgress());
                             }
+
                             TextView btnChallenges = view.findViewById(R.id.btn_view_challenges);
                             if (btnChallenges != null) {
                                 btnChallenges.setVisibility(View.VISIBLE);
                                 btnChallenges.setOnClickListener(v -> navigateToChallenges());
                             }
+
                             TextView btnFeed = view.findViewById(R.id.btn_view_feed);
                             if (btnFeed != null) {
                                 btnFeed.setVisibility(View.VISIBLE);
@@ -173,8 +187,14 @@ public class HomeFragment extends Fragment {
                 tvChallengePercent
         );
 
+        if (tvStatsCurrentStreak != null) {
+            tvStatsCurrentStreak.setText("0");
+        }
+        refreshImpactRing();
+
         if (currentUser != null) {
             loadUserHeader(tvUserName, tvProfileInitial);
+
             loadUserStreakFromLogs(
                     tvStreakNumber,
                     tvStreakMessage,
@@ -182,15 +202,18 @@ public class HomeFragment extends Fragment {
                     progressStreak,
                     tvBottomStreakDays
             );
+
             loadActivityCards(
                     tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
                     tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
             );
+
             loadMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
             loadOptionalStats(view);
+
             // Show staff tips button only if user is staff
             TextView btnStaffTips = view.findViewById(R.id.btn_staff_tips);
-            if (btnStaffTips != null && currentUser != null) {
+            if (btnStaffTips != null) {
                 db.collection("users").document(currentUser.getUid()).get()
                         .addOnSuccessListener(doc -> {
                             String role = doc.getString("role");
@@ -200,9 +223,11 @@ public class HomeFragment extends Fragment {
                             }
                         });
             }
+
             loadCampusImpact(view);
             loadGoalStatus(view);
         }
+
         TextView btnEcoPicks = view.findViewById(R.id.btn_eco_picks);
         if (btnEcoPicks != null) {
             btnEcoPicks.setOnClickListener(v -> {
@@ -211,6 +236,7 @@ public class HomeFragment extends Fragment {
                 }
             });
         }
+
         TextView btnStaffManageChallenges = view.findViewById(R.id.btn_staff_manage_challenges);
         if (btnStaffManageChallenges != null) {
             btnStaffManageChallenges.setOnClickListener(v -> {
@@ -229,6 +255,9 @@ public class HomeFragment extends Fragment {
 
         View view = getView();
         if (view == null || currentUser == null) return;
+
+        progressRingMonthly = view.findViewById(R.id.progress_ring_monthly);
+        tvStatsCurrentStreak = view.findViewById(R.id.tv_stats_current_streak);
 
         TextView tvUserName = view.findViewById(R.id.tv_user_name);
         TextView tvProfileInitial = view.findViewById(R.id.tv_profile_initial);
@@ -253,6 +282,7 @@ public class HomeFragment extends Fragment {
         TextView tvChallengePercent = view.findViewById(R.id.tv_challenge_percent);
 
         loadUserHeader(tvUserName, tvProfileInitial);
+
         loadUserStreakFromLogs(
                 tvStreakNumber,
                 tvStreakMessage,
@@ -260,10 +290,12 @@ public class HomeFragment extends Fragment {
                 progressStreak,
                 tvBottomStreakDays
         );
+
         loadActivityCards(
                 tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
                 tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
         );
+
         loadMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
         loadOptionalStats(view);
         loadCampusImpact(view);
@@ -271,17 +303,10 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadOptionalStats(View view) {
-        int pointsId = requireContext().getResources().getIdentifier(
-                "tv_points_value", "id", requireContext().getPackageName()
-        );
-        int co2Id = requireContext().getResources().getIdentifier(
-                "tv_co2_saved", "id", requireContext().getPackageName()
-        );
+        TextView tvPoints = view.findViewById(R.id.tv_points_value);
+        TextView tvCo2Saved = view.findViewById(R.id.tv_co2_saved);
 
-        TextView tvPoints = pointsId != 0 ? view.findViewById(pointsId) : null;
-        TextView tvCo2Saved = co2Id != 0 ? view.findViewById(co2Id) : null;
-
-        if (tvPoints == null && tvCo2Saved == null) {
+        if (tvPoints == null && tvCo2Saved == null && progressRingMonthly == null) {
             return;
         }
 
@@ -293,21 +318,40 @@ public class HomeFragment extends Fragment {
 
                     Long totalPoints = document.getLong("totalPoints");
                     Double co2SavedKg = document.getDouble("co2SavedKg");
+                    Double monthlyGoalKg = document.getDouble("monthlyGoalKg");
+                    Boolean joinedMonthlyChallenge = document.getBoolean("joinedMonthlyChallenge");
 
+                    long pointsValue = totalPoints != null ? totalPoints : 0L;
                     if (tvPoints != null) {
-                        tvPoints.setText(String.valueOf(totalPoints != null ? totalPoints : 0));
+                        tvPoints.setText(formatWholeNumber(pointsValue));
+                    }
+
+                    double co2Value = co2SavedKg != null ? co2SavedKg : 0.0;
+                    impactCo2SavedKg = (float) co2Value;
+
+                    if (monthlyGoalKg != null && monthlyGoalKg > 0) {
+                        impactPersonalGoalKg = monthlyGoalKg.floatValue();
+                    } else if (getContext() != null) {
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+                        impactPersonalGoalKg = prefs.getFloat("monthly_goal_kg", 0f);
+                    }
+
+                    if (joinedMonthlyChallenge != null) {
+                        impactHasMonthlyChallenge = joinedMonthlyChallenge;
+                    } else {
+                        impactHasMonthlyChallenge = true;
                     }
 
                     if (tvCo2Saved != null) {
-                        double value = co2SavedKg != null ? co2SavedKg : 0.0;
-                        tvCo2Saved.setText(String.format(Locale.getDefault(), "%.1f kg", value));
+                        tvCo2Saved.setText(String.format(Locale.getDefault(), "%.1f kg", co2Value));
 
-                        // Show real-world equivalent below the CO₂ value
                         TextView tvEquiv = view.findViewById(R.id.tv_co2_equivalent);
-                        if (tvEquiv != null && value > 0) {
-                            tvEquiv.setText(CarbonEquivalentHelper.buildEquivalentString(value));
+                        if (tvEquiv != null && co2Value > 0) {
+                            tvEquiv.setText(CarbonEquivalentHelper.buildEquivalentString(co2Value));
                         }
                     }
+
+                    refreshImpactRing();
                 });
     }
 
@@ -364,7 +408,11 @@ public class HomeFragment extends Fragment {
                     int bestStreak = calculateBestStreakFromDays(uniqueDays);
 
                     tvStreakNumber.setText(String.valueOf(currentStreak));
-                    tvBottomStreakDays.setText(String.valueOf(bestStreak));
+                    tvBottomStreakDays.setText(formatWholeNumber(bestStreak));
+
+                    if (tvStatsCurrentStreak != null) {
+                        tvStatsCurrentStreak.setText(formatWholeNumber(currentStreak));
+                    }
 
                     if (currentStreak <= 0) {
                         tvStreakMessage.setText("Log to start your streak");
@@ -383,6 +431,11 @@ public class HomeFragment extends Fragment {
                 .addOnFailureListener(e -> {
                     tvStreakNumber.setText("0");
                     tvBottomStreakDays.setText("0");
+
+                    if (tvStatsCurrentStreak != null) {
+                        tvStatsCurrentStreak.setText("0");
+                    }
+
                     tvStreakMessage.setText("Couldn't load streak");
                     tvStreakPercent.setText("0%");
                     progressStreak.setMax(7);
@@ -623,6 +676,9 @@ public class HomeFragment extends Fragment {
                     int progress = Math.min(logCount, target);
                     int percent = (int) ((progress / (double) target) * 100);
 
+                    impactChallengeProgress = progress / (float) target;
+                    refreshImpactRing();
+
                     tvChallengeTitle.setText("Zero Waste February ♻️");
                     progressChallenge.setMax(target);
                     progressChallenge.setProgress(progress);
@@ -635,6 +691,9 @@ public class HomeFragment extends Fragment {
                     }
                 })
                 .addOnFailureListener(e -> {
+                    impactChallengeProgress = 0f;
+                    refreshImpactRing();
+
                     tvChallengeTitle.setText("Zero Waste February ♻️");
                     progressChallenge.setMax(20);
                     progressChallenge.setProgress(0);
@@ -741,10 +800,10 @@ public class HomeFragment extends Fragment {
                 .addOnSuccessListener(unused -> {
                     new PointsManager().awardBasePoints(user.getUid(), basePoints);
                     Toast.makeText(getContext(), activityName + " logged successfully ✅", Toast.LENGTH_SHORT).show();
+
                     View view = getView();
                     if (view != null) {
                         loadOptionalStats(view);
-
 
                         TextView tvStreakNumber = view.findViewById(R.id.tv_streak_number);
                         TextView tvStreakMessage = view.findViewById(R.id.tv_streak_message);
@@ -772,10 +831,12 @@ public class HomeFragment extends Fragment {
                                 progressStreak,
                                 tvBottomStreakDays
                         );
+
                         loadActivityCards(
                                 tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
                                 tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle
                         );
+
                         loadMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
                     }
                 })
@@ -902,9 +963,8 @@ public class HomeFragment extends Fragment {
 
     /**
      * Loads the live campus-wide CO₂ impact summary.
-     * Queries ALL activity_logs (no userId filter) to aggregate
-     * total co2SavedKg and count distinct active users.
-     * US-13 implementation.
+     * Queries ALL activity_logs to aggregate total co2SavedKg
+     * and count distinct active users.
      *
      * @param view the root view of the fragment
      */
@@ -924,17 +984,15 @@ public class HomeFragment extends Fragment {
                         Double co2 = doc.getDouble("co2SavedKg");
                         if (co2 != null) totalCo2 += co2;
 
-                        // Count points-based contribution as proxy if co2SavedKg absent
                         String uid = doc.getString("userId");
                         if (uid != null) activeUsers.add(uid);
                     }
 
-                    double finalCo2 = totalCo2;
                     String co2Text;
-                    if (finalCo2 >= 1000) {
-                        co2Text = String.format(Locale.getDefault(), "%.1f tonnes CO₂ saved", finalCo2 / 1000.0);
+                    if (totalCo2 >= 1000) {
+                        co2Text = String.format(Locale.getDefault(), "%.1f tonnes CO₂ saved", totalCo2 / 1000.0);
                     } else {
-                        co2Text = String.format(Locale.getDefault(), "%.1f kg CO₂ saved", finalCo2);
+                        co2Text = String.format(Locale.getDefault(), "%.1f kg CO₂ saved", totalCo2);
                     }
 
                     tvCampusCo2.setText(co2Text);
@@ -944,17 +1002,18 @@ public class HomeFragment extends Fragment {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    if (tvCampusCo2 != null) tvCampusCo2.setText("Campus data unavailable");
+                    if (tvCampusCo2 != null) {
+                        tvCampusCo2.setText("Campus data unavailable");
+                    }
                 });
     }
 
     /**
      * Shows a dialog letting the user set their monthly CO₂ goal in kg.
      * Saves the goal locally in SharedPreferences and to Firestore.
-     * US-14 implementation.
      */
     private void showSetGoalDialog() {
-        if (getContext() == null) return;
+        if (getContext() == null || currentUser == null) return;
 
         EditText input = new EditText(requireContext());
         input.setHint("e.g. 20");
@@ -962,7 +1021,6 @@ public class HomeFragment extends Fragment {
                 | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         input.setPadding(50, 30, 50, 10);
 
-        // Pre-fill with existing goal if set
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
         float existing = prefs.getFloat("monthly_goal_kg", 0f);
         if (existing > 0) {
@@ -976,28 +1034,33 @@ public class HomeFragment extends Fragment {
                 .setPositiveButton("Save", (dialog, which) -> {
                     String raw = input.getText().toString().trim();
                     if (raw.isEmpty()) return;
+
                     try {
                         float goalKg = Float.parseFloat(raw);
                         if (goalKg <= 0) {
                             Toast.makeText(getContext(), "Please enter a value above 0", Toast.LENGTH_SHORT).show();
                             return;
                         }
-                        // Save locally
-                        prefs.edit().putFloat("monthly_goal_kg", goalKg).apply();
 
-                        // Save to Firestore
+                        prefs.edit().putFloat("monthly_goal_kg", goalKg).apply();
+                        impactPersonalGoalKg = goalKg;
+                        refreshImpactRing();
+
                         db.collection("users")
                                 .document(currentUser.getUid())
                                 .update("monthlyGoalKg", goalKg)
                                 .addOnSuccessListener(unused ->
-                                        Toast.makeText(getContext(),
+                                        Toast.makeText(
+                                                getContext(),
                                                 "Goal set: " + goalKg + " kg CO₂ this month 🌿",
-                                                Toast.LENGTH_SHORT).show()
+                                                Toast.LENGTH_SHORT
+                                        ).show()
                                 );
 
-                        // Update the goal status label immediately
                         View view = getView();
-                        if (view != null) updateGoalStatus(view, goalKg);
+                        if (view != null) {
+                            updateGoalStatus(view, goalKg);
+                        }
 
                     } catch (NumberFormatException e) {
                         Toast.makeText(getContext(), "Please enter a valid number", Toast.LENGTH_SHORT).show();
@@ -1009,14 +1072,13 @@ public class HomeFragment extends Fragment {
 
     /**
      * Updates the goal status label below the challenge progress bar.
-     * Shows how far the user is toward their monthly CO₂ goal.
      *
      * @param view   the root view of the fragment
      * @param goalKg the user's monthly CO₂ goal in kg
      */
     private void updateGoalStatus(View view, float goalKg) {
         TextView tvGoalStatus = view.findViewById(R.id.tv_goal_status);
-        if (tvGoalStatus == null) return;
+        if (tvGoalStatus == null || currentUser == null) return;
 
         db.collection("users")
                 .document(currentUser.getUid())
@@ -1026,8 +1088,14 @@ public class HomeFragment extends Fragment {
                     float savedKg = saved != null ? saved.floatValue() : 0f;
                     int percent = goalKg > 0 ? (int) ((savedKg / goalKg) * 100) : 0;
                     percent = Math.min(percent, 100);
-                    tvGoalStatus.setText(String.format(Locale.getDefault(),
-                            "Personal goal: %.1f / %.1f kg  (%d%%)", savedKg, goalKg, percent));
+
+                    tvGoalStatus.setText(String.format(
+                            Locale.getDefault(),
+                            "Personal goal: %.1f / %.1f kg  (%d%%)",
+                            savedKg,
+                            goalKg,
+                            percent
+                    ));
                 });
     }
 
@@ -1037,9 +1105,14 @@ public class HomeFragment extends Fragment {
      * @param view the root view of the fragment
      */
     private void loadGoalStatus(View view) {
+        if (getContext() == null) return;
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
         float goalKg = prefs.getFloat("monthly_goal_kg", 0f);
+
         if (goalKg > 0) {
+            impactPersonalGoalKg = goalKg;
+            refreshImpactRing();
             updateGoalStatus(view, goalKg);
         }
     }
@@ -1072,7 +1145,6 @@ public class HomeFragment extends Fragment {
      * Builds a formatted progress string from the user's Firestore stats
      * and fires an Intent.ACTION_SEND so the user can share to WhatsApp,
      * clipboard, or any installed app.
-     * Share progress feature implementation.
      */
     private void shareProgress() {
         if (currentUser == null || getContext() == null) return;
@@ -1089,12 +1161,12 @@ public class HomeFragment extends Fragment {
                     Long streak = doc.getLong("streakDays");
 
                     String firstName = (name != null && !name.isEmpty())
-                            ? name.split("\\s+")[0] : "I";
+                            ? name.split("\\s+")[0]
+                            : "I";
 
                     double co2Val = co2 != null ? co2 : 0.0;
                     long pts = points != null ? points : 0;
 
-                    // Build equivalents string
                     String equiv = co2Val > 0
                             ? " (" + CarbonEquivalentHelper.buildEquivalentString(co2Val) + ")"
                             : "";
@@ -1114,9 +1186,11 @@ public class HomeFragment extends Fragment {
                             shareIntent, "Share your progress"));
                 })
                 .addOnFailureListener(e ->
-                        Toast.makeText(getContext(),
+                        Toast.makeText(
+                                getContext(),
                                 "Could not load stats to share",
-                                Toast.LENGTH_SHORT).show()
+                                Toast.LENGTH_SHORT
+                        ).show()
                 );
     }
 
@@ -1130,4 +1204,23 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    private void refreshImpactRing() {
+        if (progressRingMonthly == null) return;
+
+        boolean hasPersonalGoal = impactPersonalGoalKg > 0f;
+        float personalProgress = hasPersonalGoal
+                ? impactCo2SavedKg / impactPersonalGoalKg
+                : 0f;
+
+        progressRingMonthly.setProgressState(
+                hasPersonalGoal,
+                personalProgress,
+                impactHasMonthlyChallenge,
+                impactChallengeProgress
+        );
+    }
+
+    private String formatWholeNumber(long value) {
+        return String.format(Locale.getDefault(), "%,d", value);
+    }
 }
