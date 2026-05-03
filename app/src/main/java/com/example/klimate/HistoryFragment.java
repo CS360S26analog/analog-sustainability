@@ -43,41 +43,10 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
-
-/**
- * HistoryFragment displays the user's past sustainability logs.
- * It allows users to review, edit, and delete recent logs.
- *
- * Role in design: UI layer Fragment that reads from Firestore and updates
- * user statistics after log changes.
- *
- * Outstanding issues:
- * - Logs are currently fetched all at once instead of paginated.
- * - Editing is limited to activity type only.
- */
-
-/**
- * Fragment responsible for displaying the user's activity history.
- *
- * <p>This fragment retrieves activity logs from Firebase Firestore and displays them
- * in a scrollable list. Users can view, edit, or delete logs within a 24-hour window.
- * It also recalculates and updates user statistics such as total points, CO₂ saved,
- * and activity streak when logs are modified.</p>
- *
- * <p>Part of the UI layer (MVC/MVVM). Interacts with Firestore collections:
- * <ul>
- *     <li>"activity_logs" – stores user activity logs</li>
- *     <li>"users" – stores aggregated user statistics</li>
- * </ul>
- * </p>
- * @author izza
- */
 
 public class HistoryFragment extends Fragment {
 
@@ -99,17 +68,6 @@ public class HistoryFragment extends Fragment {
             "Walked",
             "Energy saving"
     };
-
-    private static final Map<String, Double> CO2_PER_ACTIVITY = new HashMap<String, Double>() {{
-        put("Cycling", 0.21);
-        put("Walked", 0.10);
-        put("Recycling", 0.15);
-        put("Composting", 0.12);
-        put("Public Transit", 0.08);
-        put("Plant-based meal", 0.50);
-        put("Reusable cup", 0.05);
-        put("Energy saving", 0.18);
-    }};
 
     /**
      * Inflates the layout and initializes Firebase instances and UI components.
@@ -147,9 +105,8 @@ public class HistoryFragment extends Fragment {
     /**
      * Loads the user's activity history from Firestore.
      *
-     * <p>Fetches all logs belonging to the current user, sorts them by timestamp
-     * (most recent first), and displays them as cards. If no logs exist or an error
-     * occurs, an appropriate message is shown.</p>
+     * Fetches all logs belonging to the current user, sorts them by timestamp
+     * most recent first, and displays them as cards.
      */
 
     private void loadHistory() {
@@ -199,9 +156,6 @@ public class HistoryFragment extends Fragment {
 
     /**
      * Creates and populates a UI card for a single activity log.
-     *
-     * <p>Displays activity type, timestamp, points, status, and allows editing or
-     * deletion if within the allowed time window.</p>
      *
      * @param doc Firestore document representing an activity log
      */
@@ -278,9 +232,6 @@ public class HistoryFragment extends Fragment {
     /**
      * Displays a dialog allowing the user to edit an existing activity log.
      *
-     * <p>The user can select a new activity type from predefined options.
-     * Updates Firestore and recalculates user statistics on success.</p>
-     *
      * @param logId the ID of the log to edit
      * @param currentActivity the current activity type of the log
      */
@@ -331,15 +282,32 @@ public class HistoryFragment extends Fragment {
 
                 db.collection("activity_logs")
                         .document(logId)
-                        .update(
-                                "activityType", updatedActivity,
-                                "points", updatedPoints
-                        )
-                        .addOnSuccessListener(unused -> {
-                            recalculateUserStats();
-                            Toast.makeText(getContext(), "Log updated.", Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
-                            loadHistory();
+                        .get()
+                        .addOnSuccessListener(documentSnapshot -> {
+                            Double quantity = documentSnapshot.getDouble("quantity");
+
+                            if (quantity == null || quantity <= 0) {
+                                quantity = 1.0;
+                            }
+
+                            double updatedCo2SavedKg = CarbonCalculator.calculateCo2SavedKg(updatedActivity, quantity);
+
+                            db.collection("activity_logs")
+                                    .document(logId)
+                                    .update(
+                                            "activityType", updatedActivity,
+                                            "points", updatedPoints,
+                                            "co2SavedKg", updatedCo2SavedKg
+                                    )
+                                    .addOnSuccessListener(unused -> {
+                                        recalculateUserStats();
+                                        Toast.makeText(getContext(), "Log updated.", Toast.LENGTH_SHORT).show();
+                                        dialog.dismiss();
+                                        loadHistory();
+                                    })
+                                    .addOnFailureListener(e ->
+                                            Toast.makeText(getContext(), "Failed to update log.", Toast.LENGTH_SHORT).show()
+                                    );
                         })
                         .addOnFailureListener(e ->
                                 Toast.makeText(getContext(), "Failed to update log.", Toast.LENGTH_SHORT).show()
@@ -352,8 +320,6 @@ public class HistoryFragment extends Fragment {
 
     /**
      * Displays a confirmation dialog to delete a log.
-     *
-     * <p>If confirmed, deletes the log from Firestore and updates user statistics.</p>
      *
      * @param logId the ID of the log to delete
      */
@@ -377,6 +343,7 @@ public class HistoryFragment extends Fragment {
                             .addOnFailureListener(e ->
                                     Toast.makeText(getContext(), "Failed to delete log.", Toast.LENGTH_SHORT).show()
                             );
+
                 })
                 .show();
     }
@@ -384,13 +351,7 @@ public class HistoryFragment extends Fragment {
     /**
      * Recalculates and updates user statistics based on all activity logs.
      *
-     * <p>Computes:
-     * <ul>
-     *     <li>Total CO₂ saved</li>
-     *     <li>Total points (including bonus points)</li>
-     *     <li>Current activity streak</li>
-     * </ul>
-     * Updates the "users" collection in Firestore.</p>
+     * Computes total CO2 saved, total points, and current activity streak.
      */
 
     private void recalculateUserStats() {
@@ -406,16 +367,13 @@ public class HistoryFragment extends Fragment {
                     SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
 
                     for (QueryDocumentSnapshot doc : querySnapshot) {
-                        String activityType = doc.getString("activityType");
                         Long points = doc.getLong("points");
                         Long bonusPoints = doc.getLong("bonusPoints");
+                        Double co2SavedKg = doc.getDouble("co2SavedKg");
                         Timestamp ts = doc.getTimestamp("timestamp");
 
-                        if (activityType != null) {
-                            Double co2 = CO2_PER_ACTIVITY.get(activityType);
-                            if (co2 != null) {
-                                totalCo2 += co2;
-                            }
+                        if (co2SavedKg != null) {
+                            totalCo2 += co2SavedKg;
                         }
 
                         totalPoints += (points != null ? points.intValue() : 0);
@@ -442,7 +400,7 @@ public class HistoryFragment extends Fragment {
      * Checks whether the given activity is a valid predefined option.
      *
      * @param activity the activity to validate
-     * @return true if valid, false otherwise
+     * @return true if valid and false otherwise
      */
 
     private boolean isValidActivity(String activity) {
@@ -459,10 +417,7 @@ public class HistoryFragment extends Fragment {
     /**
      * Calculates the user's current activity streak based on unique active days.
      *
-     * <p>The streak counts consecutive days (including today or yesterday)
-     * where the user has logged at least one activity.</p>
-     *
-     * @param uniqueDays set of dates (formatted as yyyyMMdd) with activity logs
+     * @param uniqueDays set of dates formatted as yyyyMMdd with activity logs
      * @return the number of consecutive days in the streak
      */
 
@@ -509,10 +464,10 @@ public class HistoryFragment extends Fragment {
     }
 
     /**
-     * Determines whether a log is within the editable 24-hour window.
+     * Determines whether a log is within the editable 24 hour window.
      *
      * @param timestamp the timestamp of the log
-     * @return true if within 24 hours, false otherwise
+     * @return true if within 24 hours and false otherwise
      */
 
     private boolean isWithin24Hours(Timestamp timestamp) {
@@ -527,7 +482,7 @@ public class HistoryFragment extends Fragment {
      * Formats a Firestore timestamp into a readable date string.
      *
      * @param timestamp the timestamp to format
-     * @return formatted date string or "Unknown time" if null
+     * @return formatted date string or unknown time if null
      */
 
     private String formatTimestamp(Timestamp timestamp) {

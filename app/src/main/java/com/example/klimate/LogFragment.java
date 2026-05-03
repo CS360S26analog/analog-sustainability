@@ -56,6 +56,7 @@ import androidx.annotation.Nullable;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -825,6 +826,9 @@ public class LogFragment extends Fragment {
                                  @Nullable String proofUrl,
                                  @NonNull LinearLayout[] cards) {
         Map<String, Object> logData = new HashMap<>();
+        // Calculate co2 saved once when the log is created.
+// This value is stored on the log so history and campus totals can reuse it.
+        double co2SavedKg = CarbonCalculator.calculateCo2SavedKg(selectedActivityName, selectedQuantity);
         logData.put("logId",        docRef.getId());
         logData.put("userId",       userId);
         logData.put("activityType", selectedActivityName);
@@ -834,12 +838,17 @@ public class LogFragment extends Fragment {
         logData.put("proofUrl",     proofUrl);
         logData.put("voteCount",    0);
         logData.put("quantity",     selectedQuantity);
+        logData.put("co2SavedKg", co2SavedKg);
         logData.put("unit",         getUnit(selectedActivityName));
         logData.put("timestamp",    Timestamp.now());
 
         docRef.set(logData)
                 .addOnSuccessListener(unused -> {
                     new PointsManager().awardBasePoints(userId, points);
+
+                    db.collection("users")
+                            .document(userId)
+                            .update("co2SavedKg", FieldValue.increment(co2SavedKg));
 
                     String message = "pending_verification".equals(selectedStatus)
                             ? "Verified log submitted with proof"
@@ -851,9 +860,7 @@ public class LogFragment extends Fragment {
                 })
                 .addOnFailureListener(e -> {
                     setLogButtonEnabled(true);
-                    Toast.makeText(getContext(),
-                            "Failed to save log: " + e.getMessage(),
-                            Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "Failed to save log: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 

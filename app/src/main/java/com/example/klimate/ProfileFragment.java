@@ -265,7 +265,20 @@ public class ProfileFragment extends Fragment {
         loadBadges(uid);
         wireSettingsRows(view);
         wireLogout(view);
-        populateRewards(view, uid);
+
+        // Only show rewards for student accounts (not staff)
+        db.collection("users").document(uid).get()
+                .addOnSuccessListener(roleDoc -> {
+                    String role = roleDoc.getString("role");
+                    boolean isStaffUser = "staff".equals(role);
+
+                    if (isStaffUser) {
+                        // Hide the entire rewards section for staff
+                        hideRewardsSectionForStaff(view);
+                    } else {
+                        populateRewards(view, uid);
+                    }
+                });
 
         return view;
     }
@@ -666,5 +679,38 @@ public class ProfileFragment extends Fragment {
             badgesListener.remove();
             badgesListener = null;
         }
+    }
+
+    /**
+     * Hides the rewards section entirely for staff accounts.
+     * Staff do not participate in the points/rewards system.
+     * Finds and hides the rewards header label and the rewards container.
+     */
+    /**
+     * Hides the rewards section entirely for staff accounts.
+     * Staff do not participate in the points/rewards system.
+     */
+    private void hideRewardsSectionForStaff(View view) {
+        View rewardsContainer = view.findViewById(R.id.rewards_container);
+        if (rewardsContainer == null) return;
+
+        // Walk up the view hierarchy to hide the entire rewards card/section
+        View parent = (View) rewardsContainer.getParent();
+        while (parent != null) {
+            if (parent instanceof androidx.cardview.widget.CardView) {
+                parent.setVisibility(View.GONE);
+                return;
+            }
+            // Stop at the ScrollView level — don't go further up
+            if (parent instanceof androidx.core.widget.NestedScrollView) {
+                break;
+            }
+            View grandParent = (parent.getParent() instanceof View)
+                    ? (View) parent.getParent() : null;
+            parent = grandParent;
+        }
+
+        // Fallback — just hide the container itself
+        rewardsContainer.setVisibility(View.GONE);
     }
 }

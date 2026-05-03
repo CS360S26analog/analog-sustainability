@@ -8,10 +8,11 @@
  *
  * Current sprint work:
  * - Reads users from Firestore ordered by totalPoints descending
- * - Shows rank, initials, name, and points
+ * - Shows rank initials name and points
  * - Highlights the current user row
  * - Updates the top 3 podium from live data
- * - Shows nemesis users directly above and below current user
+ * - Shows a dynamic nemesis card
+ * - Shows close gap suggestions based on the point gap
  *
  * @author Karar
  */
@@ -25,7 +26,9 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -33,6 +36,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -65,15 +69,26 @@ public class RankingsFragment extends Fragment {
     private TextView textRank3Name;
     private TextView textRank3Points;
 
+    private LinearLayout cardNemesisWatch;
+    private LinearLayout layoutCloseGapSuggestions;
     private TextView textNemesisStatus;
-    private LinearLayout nemesisAboveRow;
-    private LinearLayout nemesisBelowRow;
-    private TextView textNemesisAboveInitials;
-    private TextView textNemesisAboveName;
-    private TextView textNemesisAboveGap;
-    private TextView textNemesisBelowInitials;
-    private TextView textNemesisBelowName;
-    private TextView textNemesisBelowGap;
+    private TextView textNemesisInitials;
+    private TextView textNemesisName;
+    private TextView textNemesisRank;
+    private TextView textNemesisGap;
+    private TextView textNemesisGapLabel;
+    private TextView textNemesisLowerName;
+    private TextView textNemesisHigherName;
+    private TextView textNemesisMessage;
+    private TextView btnCloseGap;
+    private TextView btnNemesisLogActivity;
+    private TextView textSuggestionOne;
+    private TextView textSuggestionTwo;
+    private TextView textSuggestionThree;
+    private ProgressBar progressNemesisGap;
+
+    private boolean nemesisGlowOn = false;
+    private String currentNemesisUid = "";
 
     private static class LeaderboardUser {
         String uid;
@@ -87,6 +102,14 @@ public class RankingsFragment extends Fragment {
         }
     }
 
+    /**
+     * Inflates the rankings screen and starts the live leaderboard listener.
+     *
+     * @param inflater the LayoutInflater used to inflate views
+     * @param container the parent view group
+     * @param savedInstanceState previously saved fragment state
+     * @return the root view for the rankings screen
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -112,15 +135,29 @@ public class RankingsFragment extends Fragment {
         textRank3Name = view.findViewById(R.id.text_rank_3_name);
         textRank3Points = view.findViewById(R.id.text_rank_3_points);
 
+        cardNemesisWatch = view.findViewById(R.id.card_nemesis_watch);
+        layoutCloseGapSuggestions = view.findViewById(R.id.layout_close_gap_suggestions);
         textNemesisStatus = view.findViewById(R.id.text_nemesis_status);
-        nemesisAboveRow = view.findViewById(R.id.row_nemesis_above);
-        nemesisBelowRow = view.findViewById(R.id.row_nemesis_below);
-        textNemesisAboveInitials = view.findViewById(R.id.text_nemesis_above_initials);
-        textNemesisAboveName = view.findViewById(R.id.text_nemesis_above_name);
-        textNemesisAboveGap = view.findViewById(R.id.text_nemesis_above_gap);
-        textNemesisBelowInitials = view.findViewById(R.id.text_nemesis_below_initials);
-        textNemesisBelowName = view.findViewById(R.id.text_nemesis_below_name);
-        textNemesisBelowGap = view.findViewById(R.id.text_nemesis_below_gap);
+        textNemesisInitials = view.findViewById(R.id.text_nemesis_initials);
+        textNemesisName = view.findViewById(R.id.text_nemesis_name);
+        textNemesisRank = view.findViewById(R.id.text_nemesis_rank);
+        textNemesisGap = view.findViewById(R.id.text_nemesis_gap);
+        textNemesisGapLabel = view.findViewById(R.id.text_nemesis_gap_label);
+        textNemesisLowerName = view.findViewById(R.id.text_nemesis_lower_name);
+        textNemesisHigherName = view.findViewById(R.id.text_nemesis_higher_name);
+        textNemesisMessage = view.findViewById(R.id.text_nemesis_message);
+        btnCloseGap = view.findViewById(R.id.btn_close_gap);
+        btnNemesisLogActivity = view.findViewById(R.id.btn_nemesis_log_activity);
+        textSuggestionOne = view.findViewById(R.id.text_suggestion_one);
+        textSuggestionTwo = view.findViewById(R.id.text_suggestion_two);
+        textSuggestionThree = view.findViewById(R.id.text_suggestion_three);
+        progressNemesisGap = view.findViewById(R.id.progress_nemesis_gap);
+
+        cardNemesisWatch.setOnClickListener(v -> toggleNemesisGlow());
+
+        btnCloseGap.setOnClickListener(v -> toggleSuggestionsPanel());
+
+        btnNemesisLogActivity.setOnClickListener(v -> navigateToLogScreen());
 
         loadLiveLeaderboard();
 
@@ -132,6 +169,7 @@ public class RankingsFragment extends Fragment {
 
         leaderboardListener = db.collection("users")
                 .orderBy("totalPoints", Query.Direction.DESCENDING)
+                .limit(50)
                 .addSnapshotListener((snapshots, e) -> {
                     if (!isAdded() || getContext() == null) return;
 
@@ -146,6 +184,15 @@ public class RankingsFragment extends Fragment {
                     List<LeaderboardUser> users = new ArrayList<>();
 
                     for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                        String role = doc.getString("role");
+
+
+                        // Exclude staff accounts. Users with no role field are treated as students
+                        // (accounts created before role field was introduced).
+                        if ("staff".equalsIgnoreCase(role != null ? role.trim() : "")) {
+                            continue;
+                        }
+
                         String uid = doc.getId();
                         String displayName = doc.getString("displayName");
 
@@ -180,85 +227,213 @@ public class RankingsFragment extends Fragment {
         FirebaseUser currentUser = auth.getCurrentUser();
         String currentUid = currentUser != null ? currentUser.getUid() : "";
 
-        updateNemesis(users, currentUid);
+        currentNemesisUid = updateNemesis(users, currentUid);
 
         for (int i = 0; i < users.size(); i++) {
             LeaderboardUser user = users.get(i);
             boolean isCurrentUser = user.uid.equals(currentUid);
-            View row = createLeaderboardRow(i + 1, user, isCurrentUser);
+            boolean isNemesisUser = user.uid.equals(currentNemesisUid);
+            View row = createLeaderboardRow(i + 1, user, isCurrentUser, isNemesisUser);
             leaderboardContainer.addView(row);
         }
     }
 
-    private void updateNemesis(@NonNull List<LeaderboardUser> users, String currentUid) {
+    private String updateNemesis(@NonNull List<LeaderboardUser> users, String currentUid) {
         if (TextUtils.isEmpty(currentUid)) {
             resetNemesis("Sign in to view your nemesis");
-            return;
+            return "";
         }
 
-        int currentIndex = -1;
-
-        for (int i = 0; i < users.size(); i++) {
-            if (users.get(i).uid.equals(currentUid)) {
-                currentIndex = i;
-                break;
-            }
-        }
+        int currentIndex = findUserIndex(users, currentUid);
 
         if (currentIndex == -1) {
             resetNemesis("You are not on the leaderboard yet");
-            return;
+            return "";
         }
 
         LeaderboardUser currentUser = users.get(currentIndex);
         LeaderboardUser aboveUser = currentIndex > 0 ? users.get(currentIndex - 1) : null;
         LeaderboardUser belowUser = currentIndex < users.size() - 1 ? users.get(currentIndex + 1) : null;
 
-        textNemesisStatus.setText("Your closest leaderboard rivals");
+        LeaderboardUser nemesisUser;
+        boolean isCatchUpMode;
 
-        if (aboveUser == null) {
-            nemesisAboveRow.setVisibility(View.GONE);
+        if (aboveUser != null) {
+            nemesisUser = aboveUser;
+            isCatchUpMode = true;
+        } else if (belowUser != null) {
+            nemesisUser = belowUser;
+            isCatchUpMode = false;
         } else {
-            nemesisAboveRow.setVisibility(View.VISIBLE);
-            textNemesisAboveInitials.setText(getInitials(aboveUser.displayName));
-            textNemesisAboveName.setText("Above you: " + aboveUser.displayName);
-            long gap = Math.max(0, aboveUser.totalPoints - currentUser.totalPoints);
-            textNemesisAboveGap.setText(formatPoints(gap) + " pts ahead");
+            resetNemesis("You are the only student on the leaderboard");
+            return "";
         }
 
-        if (belowUser == null) {
-            nemesisBelowRow.setVisibility(View.GONE);
+        int nemesisRank = findUserIndex(users, nemesisUser.uid) + 1;
+        long gap = Math.abs(nemesisUser.totalPoints - currentUser.totalPoints);
+
+        LeaderboardUser lowerUser;
+        LeaderboardUser higherUser;
+
+        if (currentUser.totalPoints <= nemesisUser.totalPoints) {
+            lowerUser = currentUser;
+            higherUser = nemesisUser;
         } else {
-            nemesisBelowRow.setVisibility(View.VISIBLE);
-            textNemesisBelowInitials.setText(getInitials(belowUser.displayName));
-            textNemesisBelowName.setText("Below you: " + belowUser.displayName);
-            long gap = Math.max(0, currentUser.totalPoints - belowUser.totalPoints);
-            textNemesisBelowGap.setText(formatPoints(gap) + " pts behind");
+            lowerUser = nemesisUser;
+            higherUser = currentUser;
         }
 
-        if (aboveUser == null && belowUser == null) {
-            textNemesisStatus.setText("You are the only student on the leaderboard");
-        } else if (aboveUser == null) {
-            textNemesisStatus.setText("You are rank #1 keep your lead");
-        } else if (belowUser == null) {
+        String lowerName = lowerUser.uid.equals(currentUid) ? "You" : lowerUser.displayName;
+        String higherName = higherUser.uid.equals(currentUid) ? "You" : higherUser.displayName;
+
+        textNemesisInitials.setText(getInitials(nemesisUser.displayName));
+        textNemesisInitials.setBackgroundResource(getAvatarBackground(nemesisRank, false));
+        textNemesisName.setText(nemesisUser.displayName);
+        textNemesisRank.setText("RANK #" + nemesisRank);
+        textNemesisGap.setText(formatPoints(gap) + " pts");
+
+        textNemesisLowerName.setText(lowerName);
+        textNemesisHigherName.setText(higherName);
+
+        int progress = calculateProgress(lowerUser.totalPoints, higherUser.totalPoints);
+        progressNemesisGap.setProgress(progress);
+
+        if (isCatchUpMode) {
             textNemesisStatus.setText("Catch the student above you");
+            textNemesisGapLabel.setText("to overtake");
+            textNemesisMessage.setText("");
+            btnCloseGap.setText("⚔ Close Gap");
+        } else {
+            textNemesisStatus.setText("You are rank #1 keep your lead");
+            textNemesisGapLabel.setText("lead gap");
+            textNemesisMessage.setText("");
+            btnCloseGap.setText("🛡 Defend Rank");
         }
+
+        updateSuggestions(gap, isCatchUpMode);
+
+        return nemesisUser.uid;
+    }
+
+    private int findUserIndex(@NonNull List<LeaderboardUser> users, @NonNull String uid) {
+        for (int i = 0; i < users.size(); i++) {
+            if (users.get(i).uid.equals(uid)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private int calculateProgress(long lowerPoints, long higherPoints) {
+        if (higherPoints <= 0) {
+            return 0;
+        }
+
+        return (int) Math.min(100, Math.round((lowerPoints * 100.0) / higherPoints));
+    }
+
+    private void updateSuggestions(long gap, boolean isCatchUpMode) {
+        long targetGap;
+
+        if (isCatchUpMode) {
+            targetGap = Math.max(1, gap);
+        } else {
+            targetGap = Math.max(60, Math.round(gap * 0.4));
+        }
+
+        int cyclingCount = ceilDivide(targetGap, 30);
+        int plantCount = ceilDivide(targetGap, 25);
+        int walkedCount = ceilDivide(targetGap, 20);
+
+        if (isCatchUpMode) {
+            textSuggestionOne.setText("🚲 " + cyclingCount + " x Cycling  •  " + (cyclingCount * 30) + " pts");
+            textSuggestionTwo.setText("🥗 " + plantCount + " x Plant-based meal  •  " + (plantCount * 25) + " pts");
+            textSuggestionThree.setText("👟 " + walkedCount + " x Walked  •  " + (walkedCount * 20) + " pts");
+        } else {
+            textSuggestionOne.setText("🚲 " + cyclingCount + " x Cycling  •  +" + (cyclingCount * 30) + " pts  •  protect your lead");
+            textSuggestionTwo.setText("🥗 " + plantCount + " x Plant-based meal  •  +" + (plantCount * 25) + " pts  •  stay ahead");
+            textSuggestionThree.setText("👟 " + walkedCount + " x Walked  •  +" + (walkedCount * 20) + " pts  •  defend your rank");
+        }
+    }
+
+    private int ceilDivide(long value, int divisor) {
+        return (int) ((value + divisor - 1) / divisor);
     }
 
     private void resetNemesis(String message) {
         textNemesisStatus.setText(message);
-        nemesisAboveRow.setVisibility(View.GONE);
-        nemesisBelowRow.setVisibility(View.GONE);
+        textNemesisInitials.setText("--");
+        textNemesisInitials.setBackgroundResource(R.drawable.bg_avatar_teal);
+        textNemesisName.setText("No rival");
+        textNemesisRank.setText("RANK --");
+        textNemesisGap.setText("0 pts");
+        textNemesisGapLabel.setText("gap");
+        textNemesisLowerName.setText("You");
+        textNemesisHigherName.setText("Rival");
+        textNemesisMessage.setText("");
+        textSuggestionOne.setText("🚲 Log activities to unlock suggestions");
+        textSuggestionTwo.setText("🥗 Verified logs can help you climb");
+        textSuggestionThree.setText("👟 Keep your streak alive");
+        progressNemesisGap.setProgress(0);
+        layoutCloseGapSuggestions.setVisibility(View.GONE);
+        currentNemesisUid = "";
+    }
+
+    private void toggleNemesisGlow() {
+        nemesisGlowOn = !nemesisGlowOn;
+
+        if (nemesisGlowOn) {
+            cardNemesisWatch.setBackgroundResource(R.drawable.bg_nemesis_card_glow);
+            cardNemesisWatch.animate()
+                    .scaleX(1.015f)
+                    .scaleY(1.015f)
+                    .setDuration(140)
+                    .start();
+            cardNemesisWatch.setElevation(dpToPx(8));
+        } else {
+            cardNemesisWatch.setBackgroundResource(R.drawable.bg_nemesis_card);
+            cardNemesisWatch.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(140)
+                    .start();
+            cardNemesisWatch.setElevation(dpToPx(4));
+        }
+    }
+
+    private void toggleSuggestionsPanel() {
+        if (layoutCloseGapSuggestions.getVisibility() == View.VISIBLE) {
+            layoutCloseGapSuggestions.setVisibility(View.GONE);
+        } else {
+            layoutCloseGapSuggestions.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void navigateToLogScreen() {
+        View bottomNavView = requireActivity().findViewById(R.id.bottom_nav);
+
+        if (bottomNavView instanceof BottomNavigationView) {
+            ((BottomNavigationView) bottomNavView).setSelectedItemId(R.id.nav_log);
+        }
     }
 
     private View createLeaderboardRow(int rank,
                                       @NonNull LeaderboardUser user,
-                                      boolean isCurrentUser) {
+                                      boolean isCurrentUser,
+                                      boolean isNemesisUser) {
         LinearLayout row = new LinearLayout(requireContext());
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12));
-        row.setBackgroundResource(isCurrentUser ? R.drawable.bg_you_row : R.drawable.bg_leaderboard_row);
+
+        if (isCurrentUser) {
+            row.setBackgroundResource(R.drawable.bg_you_row);
+        } else if (isNemesisUser) {
+            row.setBackgroundResource(R.drawable.bg_rival_row);
+        } else {
+            row.setBackgroundResource(R.drawable.bg_leaderboard_row);
+        }
 
         LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -315,12 +490,35 @@ public class RankingsFragment extends Fragment {
 
         row.addView(textColumn);
 
-        TextView medalText = new TextView(requireContext());
-        medalText.setText(getMedalText(rank));
-        medalText.setTextSize(18);
-        medalText.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        medalText.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_amber));
-        row.addView(medalText);
+        if (isNemesisUser) {
+            TextView rivalChip = new TextView(requireContext());
+            LinearLayout.LayoutParams chipParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    dpToPx(28)
+            );
+            chipParams.setMargins(0, 0, dpToPx(10), 0);
+            rivalChip.setLayoutParams(chipParams);
+            rivalChip.setGravity(Gravity.CENTER);
+            rivalChip.setPadding(dpToPx(10), 0, dpToPx(10), 0);
+            rivalChip.setBackgroundResource(R.drawable.bg_live_chip);
+            rivalChip.setText("Rival");
+            rivalChip.setTextSize(12);
+            rivalChip.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_text_secondary));
+            row.addView(rivalChip);
+        }
+
+        ImageView medalImage = new ImageView(requireContext());
+        LinearLayout.LayoutParams medalParams = new LinearLayout.LayoutParams(dpToPx(28), dpToPx(28));
+        medalImage.setLayoutParams(medalParams);
+
+        int medalDrawable = getMedalDrawable(rank);
+        if (medalDrawable == 0) {
+            medalImage.setVisibility(View.INVISIBLE);
+        } else {
+            medalImage.setImageResource(medalDrawable);
+        }
+
+        row.addView(medalImage);
 
         return row;
     }
@@ -339,28 +537,28 @@ public class RankingsFragment extends Fragment {
         if (index >= users.size()) {
             initialsView.setText("--");
             nameView.setText("Waiting");
-            pointsView.setText("0 pts");
+            pointsView.setText("");
             return;
         }
 
         LeaderboardUser user = users.get(index);
         initialsView.setText(getInitials(user.displayName));
         nameView.setText(user.displayName);
-        pointsView.setText(formatPoints(user.totalPoints) + " pts");
+        pointsView.setText("");
     }
 
     private void resetPodium() {
         textRank1Initials.setText("--");
         textRank1Name.setText("Waiting");
-        textRank1Points.setText("0 pts");
+        textRank1Points.setText("");
 
         textRank2Initials.setText("--");
         textRank2Name.setText("Waiting");
-        textRank2Points.setText("0 pts");
+        textRank2Points.setText("");
 
         textRank3Initials.setText("--");
         textRank3Name.setText("Waiting");
-        textRank3Points.setText("0 pts");
+        textRank3Points.setText("");
     }
 
     private String formatRank(int rank) {
@@ -390,11 +588,11 @@ public class RankingsFragment extends Fragment {
         return cleanName.substring(0, 1).toUpperCase();
     }
 
-    private String getMedalText(int rank) {
-        if (rank == 1) return "🥇";
-        if (rank == 2) return "🥈";
-        if (rank == 3) return "🥉";
-        return "";
+    private int getMedalDrawable(int rank) {
+        if (rank == 1) return R.drawable.ic_medal_gold;
+        if (rank == 2) return R.drawable.ic_medal_silver;
+        if (rank == 3) return R.drawable.ic_medal_bronze;
+        return 0;
     }
 
     private int getAvatarBackground(int rank, boolean isCurrentUser) {

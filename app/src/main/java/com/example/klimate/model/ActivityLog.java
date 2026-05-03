@@ -20,6 +20,8 @@ import com.google.firebase.Timestamp;
 public class ActivityLog {
 
     private String logId;
+
+    private double co2SavedKg;
     private String userId;
     private String activityType;
     private String status; // "quick", "pending_verification", or "verified"
@@ -229,5 +231,25 @@ public class ActivityLog {
 
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
+
+    public double getCo2SavedKg()
+    {
+        /**
+         * Calculates co2 saved ad returns.
+         *
+         * @return co2 saved
+         */
+        return co2SavedKg;
+    }
+
+    public void setCo2SavedKg(double co2SavedKg)
+    {
+        /**
+         * Calculates total points including vote bonus.
+         *
+         * @return base points plus bonus points
+         */
+        this.co2SavedKg = co2SavedKg;
+    }
 
 }

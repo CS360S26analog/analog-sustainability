@@ -44,21 +44,6 @@ public class DashboardViewModel extends ViewModel {
     private final MutableLiveData<Map<String, Integer>> categoryCountLiveData = new MutableLiveData<>();
 
     /**
-     * CO2 saved per activity type in kilograms.
-     * Used to calculate the user's estimated carbon reduction.
-     */
-    private static final Map<String, Double> CO2_PER_ACTIVITY = new HashMap<String, Double>() {{
-    	put("Cycling", 0.21);
-    	put("Walked", 0.10);
-    	put("Recycling", 0.15);
-    	put("Composting", 0.12);
-    	put("Public Transit", 0.08);
-    	put("Plant-based meal", 0.50);
-    	put("Reusable cup", 0.05);
-    	put("Energy saving", 0.18);
-	}};
-
-    /**
      * Returns LiveData holding the current user's profile (name, streak, points).
      * HomeFragment observes this to update the greeting and stat cards.
      *
@@ -80,7 +65,7 @@ public class DashboardViewModel extends ViewModel {
 
     /**
      * Returns LiveData holding the calculated total CO2 saved in kilograms.
-     * Value is derived from the user's activity logs using CO2_PER_ACTIVITY constants.
+     * Value is derived from the co2SavedKg value stored on each activity log.
      *
      * @return LiveData wrapping a Double representing kg of CO2 saved
      */
@@ -142,31 +127,18 @@ public class DashboardViewModel extends ViewModel {
 
     /**
      * Calculates the total estimated CO2 saved from a list of activity logs.
-     * Uses the CO2_PER_ACTIVITY lookup table. Activities not in the table
-     * contribute 0.0 kg. Posts the result to co2LiveData.
+     * Uses the co2SavedKg value saved when each log was created.
+     * Logs without a saved CO2 value contribute 0.0 kg.
      *
      * @param logs list of ActivityLog objects to calculate from
      */
     private void calculateCo2(List<ActivityLog> logs) {
-        Map<String, Double> co2PerUnit = new HashMap<String, Double>() {{
-            put("Cycling",           0.021); // kg CO2 per km
-            put("Walked",            0.010); // kg CO2 per km
-            put("Public Transit",    0.008); // kg CO2 per km
-            put("Plant-based meal",  0.500); // kg CO2 per meal
-            put("Reusable cup",      0.050); // kg CO2 per cup
-            put("Recycling",         0.030); // kg CO2 per item recycled
-            put("Composting",        0.120); // flat per log
-            put("Energy saving",     0.180); // flat per log
-        }};
-
         double total = 0.0;
+
         for (ActivityLog log : logs) {
-            Double rate = co2PerUnit.get(log.getActivityType());
-            if (rate != null) {
-                int quantity = log.getQuantity() > 0 ? log.getQuantity() : 1;
-                total += rate * quantity;
-            }
+            total += log.getCo2SavedKg();
         }
+
         co2LiveData.setValue(total);
     }
 
