@@ -141,16 +141,18 @@
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
+            <!-- Row 1: Cycling + Public Transit -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="110dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:orientation="horizontal">
 
                 <LinearLayout
                     android:id="@+id/card_cycling"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="110dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     android:background="@drawable/bg_activity_card"
@@ -177,7 +179,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+30 pts"
+                        android:text="3 pts/km"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -185,7 +187,8 @@
                 <LinearLayout
                     android:id="@+id/card_transit"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="110dp"
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     android:background="@drawable/bg_activity_card"
@@ -212,22 +215,24 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+20 pts"
+                        android:text="1 pt/km"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Row 2: Recycling + Plant-based meal -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="110dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:orientation="horizontal">
 
                 <LinearLayout
                     android:id="@+id/card_recycling"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="110dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     android:background="@drawable/bg_activity_card"
@@ -254,7 +259,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+15 pts"
+                        android:text="2 pts/item"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -262,7 +267,8 @@
                 <LinearLayout
                     android:id="@+id/card_plantbased"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="110dp"
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     android:background="@drawable/bg_activity_card"
@@ -289,22 +295,24 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+25 pts"
+                        android:text="25 pts/meal"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Row 3: Reusable cup + Composting -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="110dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:orientation="horizontal">
 
                 <LinearLayout
                     android:id="@+id/card_reusable"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="110dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     android:background="@drawable/bg_activity_card"
@@ -331,7 +339,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+10 pts"
+                        android:text="10 pts/cup"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -339,7 +347,8 @@
                 <LinearLayout
                     android:id="@+id/card_composting"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="110dp"
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     android:background="@drawable/bg_activity_card"
@@ -372,16 +381,18 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Row 4: Walked + Energy saving -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="110dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:orientation="horizontal">
 
                 <LinearLayout
                     android:id="@+id/card_walked"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="110dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="6dp"
                     android:background="@drawable/bg_activity_card"
@@ -408,7 +419,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+20 pts"
+                        android:text="2 pts/km"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -416,7 +427,8 @@
                 <LinearLayout
                     android:id="@+id/card_energy"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="110dp"
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     android:background="@drawable/bg_activity_card"
@@ -443,86 +455,13 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+10 pts"
+                        android:text="+15 pts"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
-            <!-- Quantity slider — shown when an activity is selected -->
-            <LinearLayout
-                android:id="@+id/card_quantity_section"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:layout_marginBottom="4dp"
-                android:background="@drawable/bg_leaderboard_row"
-                android:orientation="vertical"
-                android:padding="16dp"
-                android:visibility="gone">
 
-                <TextView
-                    android:id="@+id/tv_quantity_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="How far did you cycle?"
-                    android:textColor="@color/color_text_primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <SeekBar
-                        android:id="@+id/seekbar_quantity"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:max="30"
-                        android:progress="1"
-                        android:progressTint="@color/color_green_header"
-                        android:thumbTint="@color/color_green_header" />
-
-                    <TextView
-                        android:id="@+id/tv_quantity_value"
-                        android:layout_width="70dp"
-                        android:layout_height="wrap_content"
-                        android:gravity="end"
-                        android:text="1 km"
-                        android:textColor="@color/color_green_text"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Points earned"
-                        android:textColor="@color/color_text_secondary"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/tv_quantity_points"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="+3 pts"
-                        android:textColor="@color/color_amber"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </LinearLayout>
-
+            <!-- Verified proof section — shown only when Verified Log tab active -->
             <LinearLayout
                 android:id="@+id/card_verified_proof_section"
                 android:layout_width="match_parent"

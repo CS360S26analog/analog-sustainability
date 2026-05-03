@@ -6,9 +6,10 @@
  * For verified logs, the user can attach a proof photo which is uploaded
  * to Firebase Storage and saved to Firestore under the proofUrl field.
  *
- * Activities that are quantifiable (cycling, walking, etc.) show a slider
- * so the user can select how much they did. Points are calculated
- * dynamically based on quantity × rate per unit.
+ * Quantifiable activities (Cycling, Walking, etc.) show a dynamic slider
+ * injected directly into the selected activity card. Points are calculated
+ * live as the slider moves. Flat-rate activities (Composting, Energy saving)
+ * show no slider — fixed points are awarded on submission.
  *
  * Role in design: Part of the UI/Controller layer. Collects user input,
  * uploads proof media when needed, and writes activity log documents.
@@ -76,7 +77,6 @@ public class LogFragment extends Fragment {
     private FirebaseStorage storage;
 
     private View proofSection;
-    private View quantitySection;
     private ImageView imageProofPreview;
     private TextView textProofStatus;
     private TextView btnSelectProof;
@@ -84,10 +84,6 @@ public class LogFragment extends Fragment {
     private View quickTab;
     private View verifiedTab;
     private NestedScrollView logScrollView;
-    private SeekBar seekbarQuantity;
-    private TextView tvQuantityLabel;
-    private TextView tvQuantityValue;
-    private TextView tvQuantityPoints;
 
     private boolean shouldAutoOpenProofPicker = false;
 
@@ -102,15 +98,16 @@ public class LogFragment extends Fragment {
             "Reusable cup", "Composting", "Walked", "Energy saving"
     };
 
-    // ---------------------------------------------------------------
-    // Activity configuration — unit, max slider value, pts per unit
-    // ---------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // Activity configuration — unit, slider max, pts per unit
+    // -------------------------------------------------------------------
 
     /**
      * Returns the unit label for a given activity type.
+     * Returns empty string for flat-rate activities that have no unit.
      *
      * @param activityType the activity name
-     * @return unit string e.g. "km", "kg", "meal"
+     * @return unit string e.g. "km", "meal", "item", or ""
      */
     private String getUnit(String activityType) {
         switch (activityType) {
@@ -125,8 +122,7 @@ public class LogFragment extends Fragment {
             case "Recycling":
                 return "item";
             default:
-                // Composting and Energy saving are flat rate — no unit needed
-                return "";
+                return ""; // Composting and Energy saving — flat rate, no unit
         }
     }
 
@@ -138,68 +134,61 @@ public class LogFragment extends Fragment {
      */
     private int getMaxQuantity(String activityType) {
         switch (activityType) {
-            case "Cycling":        return 20;
-            case "Walked":         return 15;
-            case "Public Transit": return 50;
+            case "Cycling":          return 20;
+            case "Walked":           return 15;
+            case "Public Transit":   return 50;
             case "Plant-based meal": return 3;
-            case "Reusable cup":   return 5;
-            case "Recycling":      return 20;
-            default:               return 1;
+            case "Reusable cup":     return 5;
+            case "Recycling":        return 20;
+            default:                 return 1;
         }
     }
 
     /**
      * Returns the points awarded per unit of quantity for a given activity.
-     * Used to calculate dynamic points as the slider moves.
+     * For flat-rate activities this is the total fixed award.
      *
      * @param activityType the activity name
-     * @return points per unit
+     * @return points per unit, or fixed points for flat-rate activities
      */
     private int getPointsPerUnit(String activityType) {
         switch (activityType) {
-            case "Cycling":        return 3;
-            case "Walked":         return 2;
-            case "Public Transit": return 1;
+            case "Cycling":          return 3;
+            case "Walked":           return 2;
+            case "Public Transit":   return 1;
             case "Plant-based meal": return 25;
-            case "Reusable cup":   return 10;
-            case "Recycling":      return 2;
-            case "Composting":     return 20; // flat
-            case "Energy saving":  return 15; // flat
-            default:               return 5;
+            case "Reusable cup":     return 10;
+            case "Recycling":        return 2;
+            case "Composting":       return 20; // flat
+            case "Energy saving":    return 15; // flat
+            default:                 return 5;
         }
     }
 
     /**
-     * Returns the question label shown above the slider for each activity.
+     * Returns the slider question label for a given activity type.
      *
      * @param activityType the activity name
-     * @return human-readable question string
+     * @return human-readable question string shown above the slider
      */
     private String getQuantityQuestion(String activityType) {
         switch (activityType) {
-            case "Cycling":
-                return "How far did you cycle?";
-            case "Walked":
-                return "How far did you walk?";
-            case "Public Transit":
-                return "How far did you travel by public transit?";
-            case "Plant-based meal":
-                return "How many plant-based meals did you have?";
-            case "Reusable cup":
-                return "How many times did you use a reusable cup?";
-            case "Recycling":
-                return "How many items did you recycle?";
-            default:
-                return "";
+            case "Cycling":          return "How far did you cycle?";
+            case "Walked":           return "How far did you walk?";
+            case "Public Transit":   return "How far did you travel by public transit?";
+            case "Plant-based meal": return "How many plant-based meals did you have?";
+            case "Reusable cup":     return "How many times did you use a reusable cup?";
+            case "Recycling":        return "How many items did you recycle?";
+            default:                 return "";
         }
     }
 
     /**
-     * Returns whether the given activity type has a quantity slider.
-     * Composting and Energy saving are flat rate and do not show a slider.
+     * Returns whether an activity shows a quantity slider.
+     * Composting and Energy saving are flat rate — no slider shown.
      *
      * @param activityType the activity name
-     * @return true if a slider should be shown
+     * @return true if the activity has a quantity slider
      */
     private boolean isQuantifiable(String activityType) {
         switch (activityType) {
@@ -211,28 +200,45 @@ public class LogFragment extends Fragment {
             case "Recycling":
                 return true;
             default:
-                // Composting and Energy saving are flat rate
                 return false;
         }
     }
 
-
     /**
-     * Calculates total points based on quantity and rate per unit.
+     * Calculates total points for a log based on activity type and quantity.
+     * For flat-rate activities quantity is ignored — fixed points returned.
      *
      * @param activityType the activity name
-     * @param quantity     the quantity selected on the slider
-     * @return total points for this log
+     * @param quantity     the slider quantity selected by the user
+     * @return total points to award for this log
      */
     private int calculatePoints(String activityType, int quantity) {
         if (!isQuantifiable(activityType)) {
-            // Flat rate — return fixed points regardless of quantity
             return getPointsPerUnit(activityType);
         }
         return getPointsPerUnit(activityType) * quantity;
     }
 
-    // ---------------------------------------------------------------
+    /**
+     * Builds a correctly pluralised unit label for a given quantity.
+     *
+     * @param activityType the activity name
+     * @param quantity     the current slider value
+     * @return unit string e.g. "km", "meal", "meals", "item", "items"
+     */
+    private String buildUnitLabel(String activityType, int quantity) {
+        String unit = getUnit(activityType);
+        switch (unit) {
+            case "meal": return quantity == 1 ? "meal"  : "meals";
+            case "cup":  return quantity == 1 ? "cup"   : "cups";
+            case "item": return quantity == 1 ? "item"  : "items";
+            default:     return unit; // km does not pluralise
+        }
+    }
+
+    // -------------------------------------------------------------------
+    // Image picker
+    // -------------------------------------------------------------------
 
     private final ActivityResultLauncher<String> pickImageLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -253,6 +259,10 @@ public class LogFragment extends Fragment {
                     btnSelectProof.setText("Choose Another Photo");
                 }
             });
+
+    // -------------------------------------------------------------------
+    // Lifecycle
+    // -------------------------------------------------------------------
 
     @Nullable
     @Override
@@ -281,25 +291,22 @@ public class LogFragment extends Fragment {
             btnLogInfo.setOnClickListener(v -> showLogInfoDialog());
         }
 
-        proofSection     = view.findViewById(R.id.card_verified_proof_section);
-        quantitySection  = view.findViewById(R.id.card_quantity_section);
+        proofSection      = view.findViewById(R.id.card_verified_proof_section);
         imageProofPreview = view.findViewById(R.id.image_verified_proof_preview);
-        textProofStatus  = view.findViewById(R.id.text_verified_proof_status);
-        btnSelectProof   = view.findViewById(R.id.btn_select_verified_proof);
-        btnLogActivity   = view.findViewById(R.id.btn_log_activity);
-        quickTab         = view.findViewById(R.id.btn_quick_log);
-        verifiedTab      = view.findViewById(R.id.btn_verified_log);
-        logScrollView    = view.findViewById(R.id.log_scroll_view);
-        seekbarQuantity  = view.findViewById(R.id.seekbar_quantity);
-        tvQuantityLabel  = view.findViewById(R.id.tv_quantity_label);
-        tvQuantityValue  = view.findViewById(R.id.tv_quantity_value);
-        tvQuantityPoints = view.findViewById(R.id.tv_quantity_points);
+        textProofStatus   = view.findViewById(R.id.text_verified_proof_status);
+        btnSelectProof    = view.findViewById(R.id.btn_select_verified_proof);
+        btnLogActivity    = view.findViewById(R.id.btn_log_activity);
+        quickTab          = view.findViewById(R.id.btn_quick_log);
+        verifiedTab       = view.findViewById(R.id.btn_verified_log);
+        logScrollView     = view.findViewById(R.id.log_scroll_view);
 
         LinearLayout[] cards = new LinearLayout[cardIds.length];
         for (int i = 0; i < cardIds.length; i++) {
             final int index = i;
             cards[i] = view.findViewById(cardIds[i]);
-            cards[i].setOnClickListener(v -> selectCard(cards, (LinearLayout) v, activityNames[index]));
+            cards[i].setOnClickListener(v ->
+                    selectCard(cards, (LinearLayout) v, activityNames[index])
+            );
         }
 
         if (quickTab != null && verifiedTab != null) {
@@ -319,25 +326,6 @@ public class LogFragment extends Fragment {
             setActiveTab(quickTab, verifiedTab);
         }
 
-        // Slider listener — recalculate points as user drags
-        if (seekbarQuantity != null) {
-            seekbarQuantity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    // Minimum quantity is always 1
-                    int quantity = Math.max(1, progress);
-                    selectedQuantity = quantity;
-                    updateQuantityDisplay(quantity);
-                }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {}
-
-                @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {}
-            });
-        }
-
         updateProofSection();
 
         if (btnSelectProof != null) {
@@ -353,56 +341,57 @@ public class LogFragment extends Fragment {
         return view;
     }
 
+    // -------------------------------------------------------------------
+    // Card selection + inline slider
+    // -------------------------------------------------------------------
+
     /**
-     * Updates the quantity label, value text and points display
-     * based on the current slider position and selected activity.
+     * Deselects all cards and removes any previously injected inline slider.
+     * Called before selecting a new card.
      *
-     * @param quantity the current quantity from the slider
+     * @param cards the full array of activity card views
      */
-    private void updateQuantityDisplay(int quantity) {
-        if (selectedActivityName == null) return;
+    private void deselectAll(LinearLayout[] cards) {
+        for (LinearLayout c : cards) {
+            c.setBackground(requireContext().getDrawable(R.drawable.bg_activity_card));
 
-        String unit = getUnit(selectedActivityName);
-        int pts = calculatePoints(selectedActivityName, quantity);
-
-        String unitLabel;
-        if (unit.equals("km")) {
-            unitLabel = "km"; // km doesn't pluralise
-        } else if (unit.equals("meal")) {
-            unitLabel = quantity == 1 ? "meal" : "meals";
-        } else if (unit.equals("cup")) {
-            unitLabel = quantity == 1 ? "cup" : "cups";
-        } else if (unit.equals("item")) {
-            unitLabel = quantity == 1 ? "item" : "items";
-        } else {
-            unitLabel = unit;
-        }
-
-        if (tvQuantityValue != null) {
-            tvQuantityValue.setText(quantity + " " + unitLabel);
-        }
-
-        if (tvQuantityPoints != null) {
-            tvQuantityPoints.setText("+" + pts + " pts");
-        }
-
-        if (btnLogActivity != null) {
-            btnLogActivity.setText("Log Activity  •  +" + pts + " pts");
+            // Remove inline slider that was injected into this card
+            View existingSlider = c.findViewWithTag("inline_slider");
+            if (existingSlider != null) {
+                c.removeView(existingSlider);
+            }
         }
     }
 
     /**
-     * Shows and configures the quantity slider for the selected activity.
-     * Sets the question label, slider max, and resets to quantity 1.
+     * Selects an activity card, highlights it, and injects the inline slider.
      *
+     * @param cards the full array of activity card views
+     * @param card  the card that was tapped
+     * @param name  the activity name associated with that card
+     */
+    private void selectCard(LinearLayout[] cards, LinearLayout card, String name) {
+        deselectAll(cards);
+        card.setBackground(requireContext().getDrawable(R.drawable.bg_activity_card_selected));
+        selectedCard         = card;
+        selectedActivityName = name;
+        showInlineSlider(card, name);
+    }
+
+    /**
+     * Builds a quantity slider UI programmatically and injects it into
+     * the bottom of the selected activity card. Tagged "inline_slider"
+     * so deselectAll() can find and remove it when another card is tapped.
+     *
+     * For flat-rate activities (Composting, Energy saving) no slider is
+     * injected — the log button simply updates with the fixed point value.
+     *
+     * @param card         the selected activity card LinearLayout
      * @param activityType the selected activity name
      */
-    private void showQuantitySlider(String activityType) {
-        if (quantitySection == null) return;
-
+    private void showInlineSlider(LinearLayout card, String activityType) {
         if (!isQuantifiable(activityType)) {
-            // Flat rate activity — hide slider, just show fixed points
-            quantitySection.setVisibility(View.GONE);
+            // Flat rate — just update the log button, no slider needed
             selectedQuantity = 1;
             int pts = calculatePoints(activityType, 1);
             if (btnLogActivity != null) {
@@ -411,28 +400,145 @@ public class LogFragment extends Fragment {
             return;
         }
 
-        quantitySection.setVisibility(View.VISIBLE);
+        int dp4  = dpToPx(4);
+        int dp8  = dpToPx(8);
+        int dp12 = dpToPx(12);
 
-        if (tvQuantityLabel != null) {
-            tvQuantityLabel.setText(getQuantityQuestion(activityType));
-        }
+        // Outer container — tagged so deselectAll() can remove it
+        LinearLayout sliderContainer = new LinearLayout(requireContext());
+        sliderContainer.setTag("inline_slider");
+        sliderContainer.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams containerParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        containerParams.topMargin = dp12;
+        sliderContainer.setLayoutParams(containerParams);
 
-        if (seekbarQuantity != null) {
-            seekbarQuantity.setMax(getMaxQuantity(activityType));
-            seekbarQuantity.setProgress(1);
-        }
+        // Question label
+        TextView tvLabel = new TextView(requireContext());
+        tvLabel.setText(getQuantityQuestion(activityType));
+        tvLabel.setTextSize(12);
+        tvLabel.setTextColor(0xFF4A8A4A); // white 80% opacity — matches card text style
+        tvLabel.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+        sliderContainer.addView(tvLabel);
 
+        // Slider row: SeekBar + value label side by side
+        LinearLayout sliderRow = new LinearLayout(requireContext());
+        sliderRow.setOrientation(LinearLayout.HORIZONTAL);
+        sliderRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams sliderRowParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        sliderRowParams.topMargin = dp8;
+        sliderRow.setLayoutParams(sliderRowParams);
+
+        SeekBar seekBar = new SeekBar(requireContext());
+        LinearLayout.LayoutParams seekParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        seekBar.setLayoutParams(seekParams);
+        seekBar.setMax(getMaxQuantity(activityType));
+        seekBar.setProgress(1);
+        seekBar.getProgressDrawable().setColorFilter(
+                new android.graphics.PorterDuffColorFilter(
+                        0xFFC17B2F, android.graphics.PorterDuff.Mode.SRC_IN));
+        seekBar.getThumb().setColorFilter(
+                new android.graphics.PorterDuffColorFilter(
+                        0xFFC17B2F, android.graphics.PorterDuff.Mode.SRC_IN));
+
+        // Value label — shows e.g. "1 km", "3 meals"
+        TextView tvValue = new TextView(requireContext());
+        tvValue.setText("1 " + buildUnitLabel(activityType, 1));
+        tvValue.setTextSize(13);
+        tvValue.setTextColor(0xFFC17B2F);
+        tvValue.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams valueParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        valueParams.setMarginStart(dp8);
+        tvValue.setLayoutParams(valueParams);
+
+        sliderRow.addView(seekBar);
+        sliderRow.addView(tvValue);
+        sliderContainer.addView(sliderRow);
+
+        // Summary line — shows e.g. "Logging: 5 km"
+
+        // Points row: "Points earned" label on the left, dynamic value on right
+        LinearLayout ptsRow = new LinearLayout(requireContext());
+        ptsRow.setOrientation(LinearLayout.HORIZONTAL);
+        ptsRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams ptsRowParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        ptsRowParams.topMargin = dp4;
+        ptsRow.setLayoutParams(ptsRowParams);
+
+        TextView tvPtsLabel = new TextView(requireContext());
+        tvPtsLabel.setText("Points earned");
+        tvPtsLabel.setTextSize(11);
+        tvPtsLabel.setTextColor(0xCCFFFFFF);
+        LinearLayout.LayoutParams ptsLabelParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        tvPtsLabel.setLayoutParams(ptsLabelParams);
+        ptsRow.addView(tvPtsLabel);
+
+        TextView tvPts = new TextView(requireContext());
+        TextView tvquantity = new TextView(requireContext());
+        int initialPts = calculatePoints(activityType, 1);
+        tvPts.setText("+" + initialPts + " pts");
+        tvPts.setTextSize(13);
+        tvPts.setTextColor(0xFFC17B2F); // amber
+        tvPts.setTypeface(null, Typeface.BOLD);
+        ptsRow.addView(tvPts);
+
+        sliderContainer.addView(ptsRow);
+
+        // Inject into card
+        card.addView(sliderContainer);
+
+        // Initialise state
         selectedQuantity = 1;
-        updateQuantityDisplay(1);
+        if (btnLogActivity != null) {
+            btnLogActivity.setText("Log Activity  •  1 " + buildUnitLabel(activityType, 1) + "  •  +" + initialPts + " pts");
+        }
+
+        // SeekBar listener — updates value label, pts label, and log button live
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                int quantity = Math.max(1, progress);
+                selectedQuantity = quantity;
+
+                tvValue.setText(quantity + " " + buildUnitLabel(activityType, quantity));
+
+
+                int pts = calculatePoints(activityType, quantity);
+                tvPts.setText("+" + pts + " pts");
+
+                if (btnLogActivity != null) {
+                    btnLogActivity.setText("Log Activity  •  " + quantity + " "
+                            + buildUnitLabel(activityType, quantity) + "  •  +" + pts + " pts");
+                }
+            }
+
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
     }
+
+    // -------------------------------------------------------------------
+    // Tab switching + proof section
+    // -------------------------------------------------------------------
 
     private void applyIncomingArguments(@NonNull LinearLayout[] cards) {
         Bundle args = getArguments();
         if (args == null) return;
 
-        String preselectedActivity   = args.getString("preselected_activity");
-        boolean openVerifiedFlow     = args.getBoolean("open_verified_flow", false);
-        shouldAutoOpenProofPicker    = args.getBoolean("open_proof_picker", false);
+        String preselectedActivity = args.getString("preselected_activity");
+        boolean openVerifiedFlow   = args.getBoolean("open_verified_flow", false);
+        shouldAutoOpenProofPicker  = args.getBoolean("open_proof_picker", false);
 
         if (preselectedActivity != null) {
             for (int i = 0; i < activityNames.length; i++) {
@@ -468,7 +574,7 @@ public class LogFragment extends Fragment {
         active.setBackgroundResource(R.drawable.bg_toggle_selected);
         inactive.setBackground(null);
 
-        int white    = requireContext().getColor(android.R.color.white);
+        int white     = requireContext().getColor(android.R.color.white);
         int secondary = requireContext().getColor(R.color.color_text_secondary);
 
         animateTextColor((TextView) active,   secondary, white);
@@ -503,21 +609,9 @@ public class LogFragment extends Fragment {
         }
     }
 
-    private void selectCard(LinearLayout[] cards, LinearLayout card, String name) {
-        deselectAll(cards);
-        card.setBackground(requireContext().getDrawable(R.drawable.bg_activity_card_selected));
-        selectedCard         = card;
-        selectedActivityName = name;
-
-        // Show and configure the quantity slider for this activity
-        showQuantitySlider(name);
-    }
-
-    private void deselectAll(LinearLayout[] cards) {
-        for (LinearLayout c : cards) {
-            c.setBackground(requireContext().getDrawable(R.drawable.bg_activity_card));
-        }
-    }
+    // -------------------------------------------------------------------
+    // Log submission
+    // -------------------------------------------------------------------
 
     private void submitLog(@NonNull LinearLayout[] cards) {
         FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -539,7 +633,6 @@ public class LogFragment extends Fragment {
 
         setLogButtonEnabled(false);
 
-        // Points are now calculated from quantity × rate
         int calculatedPoints = calculatePoints(selectedActivityName, selectedQuantity);
         DocumentReference docRef = db.collection("activity_logs").document();
 
@@ -551,14 +644,14 @@ public class LogFragment extends Fragment {
     }
 
     /**
-     * Compresses the selected proof image, then uploads the compressed
-     * bytes to Firebase Storage. Falls back to uploading the original
-     * file if compression fails, so the flow never breaks.
+     * Compresses the selected proof image then uploads the bytes to
+     * Firebase Storage. Falls back to uploading the original file if
+     * compression fails so the flow never breaks.
      *
-     * @param docRef    the pre-created Firestore document reference for this log
-     * @param userId    the UID of the user submitting the log
-     * @param points    calculated points for this log
-     * @param cards     the activity card array, used to reset the form on success
+     * @param docRef Firestore document reference for this log
+     * @param userId UID of the submitting user
+     * @param points calculated points for this log
+     * @param cards  activity card array used to reset form on success
      */
     private void uploadProofAndSaveLog(@NonNull DocumentReference docRef,
                                        @NonNull String userId,
@@ -575,7 +668,6 @@ public class LogFragment extends Fragment {
                 .child(userId)
                 .child(docRef.getId() + ".jpg");
 
-        // Attempt compression first
         Context context = getContext();
         if (context == null) {
             setLogButtonEnabled(true);
@@ -585,7 +677,6 @@ public class LogFragment extends Fragment {
         byte[] compressedBytes = compressImage(context, selectedProofUri);
 
         if (compressedBytes != null) {
-            // Upload compressed bytes directly — faster, less bandwidth
             StorageMetadata metadata = new StorageMetadata.Builder()
                     .setContentType("image/jpeg")
                     .build();
@@ -607,8 +698,6 @@ public class LogFragment extends Fragment {
                                 Toast.LENGTH_LONG).show();
                     });
         } else {
-            // Compression failed — fall back to uploading original file
-            // This ensures the flow never breaks even if compression errors
             Log.w("LogFragment", "Compression failed — uploading original file as fallback");
 
             proofRef.putFile(selectedProofUri)
@@ -669,7 +758,7 @@ public class LogFragment extends Fragment {
     }
 
     private void resetForm(@NonNull LinearLayout[] cards) {
-        deselectAll(cards);
+        deselectAll(cards); // also removes any inline slider
         selectedCard         = null;
         selectedActivityName = null;
         selectedProofUri     = null;
@@ -677,12 +766,6 @@ public class LogFragment extends Fragment {
         selectedQuantity     = 1;
         shouldAutoOpenProofPicker = false;
 
-        // Hide quantity slider
-        if (quantitySection != null) {
-            quantitySection.setVisibility(View.GONE);
-        }
-
-        // Reset log button label
         if (btnLogActivity != null) {
             btnLogActivity.setText("Log Activity");
         }
@@ -700,10 +783,15 @@ public class LogFragment extends Fragment {
         btnLogActivity.setAlpha(enabled ? 1f : 0.6f);
     }
 
+    // -------------------------------------------------------------------
+    // Info dialog
+    // -------------------------------------------------------------------
+
     private void showLogInfoDialog() {
         if (getContext() == null) return;
 
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_info_card, null);
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_info_card, null);
         TextView tvTitle   = dialogView.findViewById(R.id.tv_dialog_title);
         TextView tvContent = dialogView.findViewById(R.id.tv_dialog_content);
 
@@ -732,13 +820,13 @@ public class LogFragment extends Fragment {
         String[] bodies = {
                 "Log this when you use a bicycle instead of a car. Use the slider to select how many km you cycled. +3 pts per km.",
                 "Use this when you travel by bus, train, or shuttle. Slide to select the distance. +1 pt per km.",
-                "Log this when you recycle paper, plastic, cans, or other materials. Select the weight in kg. +5 pts per kg.",
+                "Log this when you recycle paper, plastic, cans, or other materials. Select how many items. +2 pts per item.",
                 "Use this when you choose a vegetarian or vegan meal. Select how many meals. +25 pts per meal.",
                 "Log this when you use your own reusable cup. Select how many times. +10 pts per cup.",
-                "Use this when food scraps are composted. Select the weight in kg. +5 pts per kg.",
+                "Use this when food scraps are composted. Flat reward of +20 pts per log.",
                 "Log this when you walk instead of using a fuel-based ride. Select how many km. +2 pts per km.",
-                "Use this when you reduce electricity use. Select how many kWh saved. +5 pts per kWh.",
-                "Pick an activity card first, then use the slider to select your quantity. Use Quick Log for a simple submission, or Verified Log to attach proof."
+                "Use this when you reduce electricity use like switching off lights. Flat reward of +15 pts per log.",
+                "Pick an activity card first. For quantifiable activities a slider appears inside the card — drag it to set your amount. Use Quick Log for a simple submission, or Verified Log to attach proof."
         };
 
         StringBuilder fullText = new StringBuilder();
@@ -766,27 +854,26 @@ public class LogFragment extends Fragment {
 
         return spannable;
     }
+
+    // -------------------------------------------------------------------
+    // Image compression
+    // -------------------------------------------------------------------
+
     /**
      * Compresses and resizes a Uri-referenced image before upload.
+     * Resizes so the longest side is at most 1080px preserving aspect ratio,
+     * then compresses to JPEG at 80% quality.
      *
-     * Resizes so the longest side is at most MAX_IMAGE_DIMENSION px,
-     * preserving aspect ratio. Then compresses to JPEG at JPEG_QUALITY.
-     *
-     * This runs on the calling thread — always call from a background
-     * thread or WorkManager. In our case Firebase Storage's putBytes()
-     * handles threading so this is called just before that.
-     *
-     * @param context   application context for ContentResolver
-     * @param imageUri  the Uri returned by the image picker
+     * @param context  application context for ContentResolver
+     * @param imageUri the Uri returned by the image picker
      * @return compressed image as a byte array, or null if processing failed
      */
     @Nullable
     private byte[] compressImage(@NonNull Context context, @NonNull Uri imageUri) {
-        final int MAX_IMAGE_DIMENSION = 1080; // px — longest side cap
-        final int JPEG_QUALITY        = 80;   // 0-100, 80 is visually lossless
+        final int MAX_IMAGE_DIMENSION = 1080;
+        final int JPEG_QUALITY        = 80;
 
         try {
-            // Decode the full bitmap from the Uri
             InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
             if (inputStream == null) return null;
 
@@ -798,25 +885,21 @@ public class LogFragment extends Fragment {
             int width  = original.getWidth();
             int height = original.getHeight();
 
-            // Only resize if the image is actually larger than our cap
             if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
-                float scale;
+                float scale = width >= height
+                        ? (float) MAX_IMAGE_DIMENSION / width
+                        : (float) MAX_IMAGE_DIMENSION / height;
 
-                if (width >= height) {
-                    scale = (float) MAX_IMAGE_DIMENSION / width;
-                } else {
-                    scale = (float) MAX_IMAGE_DIMENSION / height;
-                }
-
-                int newWidth  = Math.round(width  * scale);
-                int newHeight = Math.round(height * scale);
-
-                Bitmap resized = Bitmap.createScaledBitmap(original, newWidth, newHeight, true);
-                original.recycle(); // free the large original from memory
+                Bitmap resized = Bitmap.createScaledBitmap(
+                        original,
+                        Math.round(width  * scale),
+                        Math.round(height * scale),
+                        true
+                );
+                original.recycle();
                 original = resized;
             }
 
-            // Compress to JPEG bytes
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             original.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, outputStream);
             original.recycle();
@@ -827,5 +910,14 @@ public class LogFragment extends Fragment {
             Log.e("LogFragment", "Image compression failed", e);
             return null;
         }
+    }
+
+    // -------------------------------------------------------------------
+    // Utility
+    // -------------------------------------------------------------------
+
+    private int dpToPx(int dp) {
+        float density = requireContext().getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 }
