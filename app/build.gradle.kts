@@ -60,4 +60,5 @@ dependencies {
     androidTestImplementation("androidx.work:work-testing:2.9.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
     implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
+    implementation("org.maplibre.gl:android-sdk:11.13.5")
 }
