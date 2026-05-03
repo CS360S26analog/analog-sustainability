@@ -17,17 +17,21 @@
 package com.example.klimate;
 
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,6 +39,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -87,6 +93,7 @@ public class HomeFragment extends Fragment {
         TextView tvGreetingMessage = view.findViewById(R.id.tv_greeting_message);
         TextView tvUserName = view.findViewById(R.id.tv_user_name);
         TextView tvProfileInitial = view.findViewById(R.id.tv_profile_initial);
+        ImageView ivProfilePhoto = view.findViewById(R.id.iv_profile_photo);
         FrameLayout profileAvatarContainer = view.findViewById(R.id.profile_avatar_container);
 
         TextView tvStreakNumber = view.findViewById(R.id.tv_streak_number);
@@ -246,7 +253,7 @@ public class HomeFragment extends Fragment {
         refreshImpactRing();
 
         if (currentUser != null) {
-            loadUserHeader(tvUserName, tvProfileInitial);
+            loadUserHeader(tvUserName, tvProfileInitial, ivProfilePhoto);
 
             loadUserStreakFromLogs(
                     tvStreakNumber,
@@ -301,6 +308,7 @@ public class HomeFragment extends Fragment {
 
         TextView tvUserName = view.findViewById(R.id.tv_user_name);
         TextView tvProfileInitial = view.findViewById(R.id.tv_profile_initial);
+        ImageView ivProfilePhoto = view.findViewById(R.id.iv_profile_photo);
 
         TextView tvStreakNumber = view.findViewById(R.id.tv_streak_number);
         TextView tvStreakMessage = view.findViewById(R.id.tv_streak_message);
@@ -321,7 +329,7 @@ public class HomeFragment extends Fragment {
         TextView tvChallengeDays = view.findViewById(R.id.tv_challenge_days);
         TextView tvChallengePercent = view.findViewById(R.id.tv_challenge_percent);
 
-        loadUserHeader(tvUserName, tvProfileInitial);
+        loadUserHeader(tvUserName, tvProfileInitial, ivProfilePhoto);
 
         loadUserStreakFromLogs(
                 tvStreakNumber,
@@ -455,7 +463,7 @@ public class HomeFragment extends Fragment {
         tvGreetingMessage.setText(greetings.get(random.nextInt(greetings.size())));
     }
 
-    private void loadUserHeader(TextView tvUserName, TextView tvProfileInitial) {
+    private void loadUserHeader(TextView tvUserName, TextView tvProfileInitial, ImageView ivProfilePhoto) {
         db.collection("users")
                 .document(currentUser.getUid())
                 .get()
@@ -463,13 +471,49 @@ public class HomeFragment extends Fragment {
                     if (!document.exists()) return;
 
                     String displayName = document.getString("displayName");
+                    String profilePhotoBase64 = document.getString("profilePhotoBase64");
+
                     if (displayName != null && !displayName.trim().isEmpty()) {
                         String cleanName = displayName.trim();
                         String firstName = cleanName.split("\\s+")[0];
                         tvUserName.setText(firstName + "!");
                         tvProfileInitial.setText(String.valueOf(Character.toUpperCase(firstName.charAt(0))));
                     }
+
+                    updateHomeAvatar(tvProfileInitial, ivProfilePhoto, profilePhotoBase64);
                 });
+    }
+
+    private void updateHomeAvatar(TextView tvProfileInitial, ImageView ivProfilePhoto, String profilePhotoBase64) {
+        if (tvProfileInitial == null || ivProfilePhoto == null) return;
+
+        if (profilePhotoBase64 == null || profilePhotoBase64.trim().isEmpty()) {
+            ivProfilePhoto.setVisibility(View.GONE);
+            tvProfileInitial.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        try {
+            byte[] imageBytes = Base64.decode(profilePhotoBase64, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+
+            if (bitmap != null) {
+                RoundedBitmapDrawable roundedDrawable =
+                        RoundedBitmapDrawableFactory.create(getResources(), bitmap);
+                roundedDrawable.setCircular(true);
+
+                ivProfilePhoto.setImageDrawable(roundedDrawable);
+                ivProfilePhoto.setVisibility(View.VISIBLE);
+                tvProfileInitial.setVisibility(View.GONE);
+            } else {
+                ivProfilePhoto.setVisibility(View.GONE);
+                tvProfileInitial.setVisibility(View.VISIBLE);
+            }
+
+        } catch (Exception e) {
+            ivProfilePhoto.setVisibility(View.GONE);
+            tvProfileInitial.setVisibility(View.VISIBLE);
+        }
     }
 
     private void loadUserStreakFromLogs(TextView tvStreakNumber,
