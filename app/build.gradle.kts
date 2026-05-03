@@ -52,6 +52,7 @@ dependencies {
     implementation("androidx.work:work-runtime:2.9.1")
     androidTestImplementation(libs.androidx.work.testing)
     implementation("com.google.guava:guava:31.1-android")
+    implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.3.1")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

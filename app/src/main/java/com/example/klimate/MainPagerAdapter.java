@@ -19,13 +19,13 @@ public class MainPagerAdapter extends FragmentStateAdapter {
                 return new HomeFragment();
 
             case 1:
-                return new LogFragment();
+                return new FriendsFragment();
 
             case 2:
-                return new RankingsFragment();
+                return new LogFragment();
 
             case 3:
-                return new FriendsFragment();
+                return new RankingsFragment();
 
             case 4:
                 return new ProfileFragment();

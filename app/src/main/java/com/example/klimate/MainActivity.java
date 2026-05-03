@@ -142,15 +142,15 @@ public class MainActivity extends AppCompatActivity {
 
     private int getStudentPositionForNavId(int id) {
         if (id == R.id.nav_home) {
-            return 0;
-        } else if (id == R.id.nav_log) {
-            return 1;
-        } else if (id == R.id.nav_rankings) {
-            return 2;
+            return 0; // Home
         } else if (id == R.id.nav_friends) {
-            return 3;
+            return 1; // Friends (Updated)
+        } else if (id == R.id.nav_log) {
+            return 2; // Log (Updated)
+        } else if (id == R.id.nav_rankings) {
+            return 3; // Rankings (Updated)
         } else if (id == R.id.nav_profile) {
-            return 4;
+            return 4; // Profile
         } else {
             return -1;
         }
@@ -160,11 +160,11 @@ public class MainActivity extends AppCompatActivity {
         if (position == 0) {
             return R.id.nav_home;
         } else if (position == 1) {
-            return R.id.nav_log;
+            return R.id.nav_friends; // Updated
         } else if (position == 2) {
-            return R.id.nav_rankings;
+            return R.id.nav_log;     // Updated
         } else if (position == 3) {
-            return R.id.nav_friends;
+            return R.id.nav_rankings; // Updated
         } else if (position == 4) {
             return R.id.nav_profile;
         } else {
