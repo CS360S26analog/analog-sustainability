@@ -50,6 +50,8 @@ dependencies {
     implementation("com.google.guava:guava:31.1-android")
     //for the tutorial
     implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
+    implementation("androidx.startup:startup-runtime:1.1.1")
+    implementation("app.rive:rive-android:9.11.3")
 
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
 }
