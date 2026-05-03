@@ -3,12 +3,11 @@
  *
  * Displays an interactive LUMS EcoMap. Students can tap campus map markers
  * to view sticky-note sustainability tips, log suggested activities, and
- * submit their own eco notes for staff review.
+ * submit their own eco tips for staff review.
  *
  * Role in design: View layer for EXTRA-2 EcoMap / Eco Picks @ LUMS.
- *
- * Outstanding issues: submitted notes are currently shown as confirmation only;
- * Firestore staff-review storage can be added next.
+ * Student-submitted tips are stored in Firestore under "eco_map_notes"
+ * with status = "pending" so staff can approve or reject them later.
  *
  * @author Izza
  */
@@ -23,13 +22,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import android.widget.LinearLayout;
+
+import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class EcoPicksFragment extends Fragment {
 
@@ -128,13 +136,16 @@ public class EcoPicksFragment extends Fragment {
 
         mapContainer = view.findViewById(R.id.map_container);
         addMapMarkers();
+
         View btnHomeChip = view.findViewById(R.id.btn_home_chip);
-        btnHomeChip.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).setBottomNavVisible(true);
-                ((MainActivity) getActivity()).navigateToHome();
-            }
-        });
+        if (btnHomeChip != null) {
+            btnHomeChip.setOnClickListener(v -> {
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).setBottomNavVisible(true);
+                    ((MainActivity) getActivity()).navigateToHome();
+                }
+            });
+        }
 
         return view;
     }
@@ -168,8 +179,6 @@ public class EcoPicksFragment extends Fragment {
             }
         });
     }
-
-
 
     private TextView createMarker() {
         TextView marker = new TextView(requireContext());
@@ -212,17 +221,24 @@ public class EcoPicksFragment extends Fragment {
         suggested.setTypeface(Typeface.DEFAULT_BOLD);
         noteLayout.addView(suggested);
 
+        TextView reviewNote = new TextView(requireContext());
+        reviewNote.setText("Have a better campus tip? Suggest it for staff review.");
+        reviewNote.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+        reviewNote.setTextSize(13);
+        reviewNote.setPadding(0, dp(8), 0, 0);
+        noteLayout.addView(reviewNote);
+
         LinearLayout buttons = new LinearLayout(requireContext());
         buttons.setOrientation(LinearLayout.HORIZONTAL);
         buttons.setGravity(Gravity.END);
         buttons.setPadding(0, dp(16), 0, 0);
 
         TextView btnLog = createStickyButton("Log this");
-        TextView btnSubmit = createStickyButton("Submit note");
+        TextView btnSuggest = createStickyButton("Suggest tip");
         TextView btnClose = createStickyButton("Close");
 
         buttons.addView(btnLog);
-        buttons.addView(btnSubmit);
+        buttons.addView(btnSuggest);
         buttons.addView(btnClose);
         noteLayout.addView(buttons);
 
@@ -235,44 +251,130 @@ public class EcoPicksFragment extends Fragment {
             openLogWithActivity(spot.activityType);
         });
 
-        btnSubmit.setOnClickListener(v -> {
+        btnSuggest.setOnClickListener(v -> {
             dialog.dismiss();
             showSubmitNoteDialog(spot);
         });
 
         btnClose.setOnClickListener(v -> dialog.dismiss());
 
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
+        dialog.setOnShowListener(d -> {
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
+        });
 
         dialog.show();
     }
 
     private void showSubmitNoteDialog(EcoSpot spot) {
+        LinearLayout dialogLayout = new LinearLayout(requireContext());
+        dialogLayout.setOrientation(LinearLayout.VERTICAL);
+        dialogLayout.setPadding(dp(22), dp(20), dp(22), dp(16));
+        dialogLayout.setBackgroundResource(R.drawable.bg_sticky_note);
+
+        TextView title = new TextView(requireContext());
+        title.setText("Suggest a tip");
+        title.setTextColor(requireContext().getColor(R.color.color_text_primary));
+        title.setTextSize(22);
+        title.setTypeface(Typeface.create("casual", Typeface.BOLD));
+        dialogLayout.addView(title);
+
+        TextView subtitle = new TextView(requireContext());
+        subtitle.setText("For " + spot.title + "\nStaff will review it before publishing.");
+        subtitle.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+        subtitle.setTextSize(14);
+        subtitle.setPadding(0, dp(6), 0, dp(14));
+        dialogLayout.addView(subtitle);
+
         EditText input = new EditText(requireContext());
-        input.setHint("Write your eco tip here...");
-        input.setMinLines(3);
-        input.setPadding(dp(16), dp(12), dp(16), dp(12));
+        input.setHint("Example: Add a reminder to bring reusable mugs here...");
+        input.setMinLines(4);
+        input.setGravity(Gravity.TOP);
+        input.setPadding(dp(14), dp(12), dp(14), dp(12));
         input.setBackgroundResource(R.drawable.bg_card_outline);
         input.setTextColor(requireContext().getColor(R.color.color_text_primary));
         input.setHintTextColor(requireContext().getColor(R.color.color_text_secondary));
-        input.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.ITALIC));
+        input.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL));
+        dialogLayout.addView(input);
 
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Submit note for " + spot.title)
-                .setView(input)
-                .setPositiveButton("Submit", (dialog, which) -> {
-                    String note = input.getText().toString().trim();
+        LinearLayout buttonRow = new LinearLayout(requireContext());
+        buttonRow.setOrientation(LinearLayout.HORIZONTAL);
+        buttonRow.setGravity(Gravity.END);
+        buttonRow.setPadding(0, dp(18), 0, 0);
 
-                    if (note.isEmpty()) {
-                        Toast.makeText(getContext(), "Note cannot be empty", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Note submitted for staff review ✅", Toast.LENGTH_LONG).show();
-                    }
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+        TextView btnCancel = createStickyButton("Cancel");
+        TextView btnSubmit = createStickyButton("Submit");
+
+        buttonRow.addView(btnCancel);
+        buttonRow.addView(btnSubmit);
+        dialogLayout.addView(buttonRow);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogLayout)
+                .create();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSubmit.setOnClickListener(v -> {
+            String note = input.getText().toString().trim();
+
+            if (note.isEmpty()) {
+                Toast.makeText(getContext(), "Tip cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            submitEcoMapNoteForReview(spot, note);
+            dialog.dismiss();
+        });
+
+        dialog.setOnShowListener(d -> {
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void submitEcoMapNoteForReview(EcoSpot spot, String noteText) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (currentUser == null) {
+            Toast.makeText(getContext(), "Please log in before suggesting a tip.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference noteRef = db.collection("eco_map_notes").document();
+
+        Map<String, Object> noteData = new HashMap<>();
+        noteData.put("noteId", noteRef.getId());
+        noteData.put("spotTitle", spot.title);
+        noteData.put("activityType", spot.activityType);
+        noteData.put("noteText", noteText);
+        noteData.put("submittedBy", currentUser.getUid());
+        noteData.put("submittedAt", Timestamp.now());
+        noteData.put("status", "pending");
+        noteData.put("reviewedBy", null);
+        noteData.put("reviewedAt", null);
+        noteData.put("source", "eco_map");
+
+        noteRef.set(noteData)
+                .addOnSuccessListener(unused ->
+                        Toast.makeText(
+                                getContext(),
+                                "Tip submitted for staff review ✅",
+                                Toast.LENGTH_LONG
+                        ).show()
+                )
+                .addOnFailureListener(e ->
+                        Toast.makeText(
+                                getContext(),
+                                "Could not submit tip: " + e.getMessage(),
+                                Toast.LENGTH_LONG
+                        ).show()
+                );
     }
 
     private void openLogWithActivity(String activityType) {
@@ -310,6 +412,14 @@ public class EcoPicksFragment extends Fragment {
         button.setPadding(dp(10), dp(8), dp(10), dp(8));
         button.setGravity(Gravity.CENTER);
         button.setClickable(true);
+        button.setFocusable(true);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(dp(4), 0, dp(4), 0);
+        button.setLayoutParams(params);
 
         return button;
     }
