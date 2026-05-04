@@ -17,6 +17,7 @@
   - [Part 1](#product-backlog--project-part-1)
   - [Part 2](#product-backlog--project-part-2)
   - [Part 3](#product-backlog--project-part-3)
+  - [Part 4](#product-backlog--project-part-4)
 - [Wireframes & Screenshots](#wireframes--screenshots)
   - [Part 1](#wireframes--project-part-1)
   - [Part 2](#wireframes--project-part-2)
