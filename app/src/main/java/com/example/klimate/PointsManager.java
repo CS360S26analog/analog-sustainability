@@ -1,16 +1,16 @@
 package com.example.klimate;
 
+import android.content.Context;
 import android.util.Log;
 
+import com.example.klimate.local.AppDatabase;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import android.content.Context;
-import com.example.klimate.local.AppDatabase;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Handles points-related logic for verified activity logs.
@@ -37,6 +37,24 @@ public class PointsManager {
         return voteCount * 2;
     }
 
+    /**
+     * Calculates net bonus points from upvotes and downvotes.
+     *
+     * Rules:
+     * - each upvote gives +2 points
+     * - each downvote subtracts 1 point
+     * - negative inputs are treated as 0
+     * - final bonus never goes below 0
+     */
+    public static int calculateNetBonusPoints(int upvoteCount, int downvoteCount) {
+        int safeUpvotes = Math.max(0, upvoteCount);
+        int safeDownvotes = Math.max(0, downvoteCount);
+
+        int netBonus = (safeUpvotes * 2) - safeDownvotes;
+
+        return Math.max(0, netBonus);
+    }
+
     public void awardBasePoints(Context context, String userId, int basePoints) {
         // ── Room first ───────────────────────────────────────────────────────
         executor.execute(() -> {
@@ -53,7 +71,6 @@ public class PointsManager {
                 })
                 .addOnFailureListener(e -> Log.e(TAG, "Failed to add base points", e));
     }
-
 
     private void checkBadgesForUser(String userId) {
         db.collection("users")
