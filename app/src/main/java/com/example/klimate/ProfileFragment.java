@@ -245,7 +245,7 @@ public class ProfileFragment extends Fragment {
 
         loadBadges(uid);
         loadHistoryPreview(uid);
-        wireSettingsRows(view, uid);
+        wireSettingsRows(view);
         wireLogout(view);
 
         db.collection("users").document(uid).get()
@@ -539,23 +539,24 @@ public class ProfileFragment extends Fragment {
                 .show();
     }
 
-    private void wireSettingsRows(View view, String uid) {
+    private void wireSettingsRows(View view) {
         LinearLayout rowAccount = view.findViewById(R.id.row_account);
-        LinearLayout rowNotifications = view.findViewById(R.id.row_notifications);
         LinearLayout rowHelp = view.findViewById(R.id.row_help);
 
         if (rowAccount != null) {
-            rowAccount.setOnClickListener(v -> openAccountSettings());
-        }
-
-        if (rowNotifications != null) {
-            rowNotifications.setOnClickListener(v -> showNotifications(uid));
+            rowAccount.setOnClickListener(v ->
+                    Toast.makeText(getContext(), "Account Settings — coming soon!", Toast.LENGTH_SHORT).show()
+            );
         }
 
         if (rowHelp != null) {
-            rowHelp.setOnClickListener(v ->
-                    Toast.makeText(getContext(), "Help & Support — coming soon!", Toast.LENGTH_SHORT).show()
-            );
+            rowHelp.setOnClickListener(v -> {
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).startStudentTutorialAgain();
+                } else {
+                    Toast.makeText(getContext(), "Tutorial unavailable right now", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         TextView tvViewAll = view.findViewById(R.id.tv_view_all);
