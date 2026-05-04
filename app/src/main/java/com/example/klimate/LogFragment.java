@@ -801,10 +801,11 @@ public class LogFragment extends Fragment {
 
         setLogButtonEnabled(false);
 
-        boolean isVerifiedLog = "pending_verification".equals(selectedStatus);
-        int calculatedPoints = isVerifiedLog
-                ? calculatePoints(selectedActivityName, selectedQuantity)
-                : 0;
+        boolean isVerifiedLog = LogPointsPolicy.shouldAwardPoints(selectedStatus);
+        int calculatedPoints = LogPointsPolicy.pointsForStoredLog(
+                selectedStatus,
+                calculatePoints(selectedActivityName, selectedQuantity)
+        );
 
         DocumentReference docRef = db.collection("activity_logs").document();
 
@@ -887,7 +888,7 @@ public class LogFragment extends Fragment {
                                  @Nullable String proofUrl,
                                  @NonNull LinearLayout[] cards) {
 
-        final boolean isVerifiedLog = "pending_verification".equals(selectedStatus);
+        final boolean isVerifiedLog = LogPointsPolicy.shouldAwardPoints(selectedStatus);
 
         double co2SavedKg = CarbonCalculator.calculateCo2SavedKg(
                 selectedActivityName, selectedQuantity);
@@ -949,9 +950,7 @@ public class LogFragment extends Fragment {
 
                         if (isAdded() && getActivity() != null) {
                             getActivity().runOnUiThread(() -> {
-                                String message = isVerifiedLog
-                                        ? "Verified log submitted with proof"
-                                        : selectedActivityName + " logged ✅";
+                                String message = LogPointsPolicy.buildSuccessMessage(selectedStatus, selectedActivityName);
                                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                                 resetForm(cards);
                                 setLogButtonEnabled(true);
