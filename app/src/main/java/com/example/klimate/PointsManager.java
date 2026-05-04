@@ -1,12 +1,16 @@
 package com.example.klimate;
 
+import android.content.Context;
 import android.util.Log;
 
+import com.example.klimate.local.AppDatabase;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Handles points-related logic for verified activity logs.
@@ -16,6 +20,7 @@ import java.util.Map;
 public class PointsManager {
 
     private static final String TAG = "PointsManager";
+    private final Executor executor = Executors.newSingleThreadExecutor();
     private final FirebaseFirestore db;
 
     public PointsManager() {
@@ -32,7 +37,31 @@ public class PointsManager {
         return voteCount * 2;
     }
 
-    public void awardBasePoints(String userId, int basePoints) {
+    /**
+     * Calculates net bonus points from upvotes and downvotes.
+     *
+     * Rules:
+     * - each upvote gives +2 points
+     * - each downvote subtracts 1 point
+     * - negative inputs are treated as 0
+     * - final bonus never goes below 0
+     */
+    public static int calculateNetBonusPoints(int upvoteCount, int downvoteCount) {
+        int safeUpvotes = Math.max(0, upvoteCount);
+        int safeDownvotes = Math.max(0, downvoteCount);
+
+        int netBonus = (safeUpvotes * 2) - safeDownvotes;
+
+        return Math.max(0, netBonus);
+    }
+
+    public void awardBasePoints(Context context, String userId, int basePoints) {
+        // ── Room first ───────────────────────────────────────────────────────
+        executor.execute(() -> {
+            AppDatabase.getInstance(context).userDao().incrementPoints(userId, basePoints);
+        });
+
+        // ── Firestore ────────────────────────────────────────────────────────
         db.collection("users")
                 .document(userId)
                 .update("totalPoints", FieldValue.increment(basePoints))

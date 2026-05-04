@@ -25,4 +25,12 @@
     <color name="color_gold_star">#F0A020</color>
     <color name="color_winner_bg">#E8D040</color>
     <color name="color_divider">#E8E3D8</color>
+    <color name="color_auth_header">#6E9E60</color>
+    <color name="color_auth_header_dark">#5E8B52</color>
+    <color name="color_auth_bg">#F4F0E3</color>
+    <color name="color_auth_surface">#FFFFFF</color>
+    <color name="color_auth_input_stroke">#D9D9D0</color>
+    <color name="color_auth_hint">#8F8F8F</color>
+    <color name="color_auth_label">#345F3A</color>
+    <color name="color_auth_button">#6E9E60</color>
 </resources>

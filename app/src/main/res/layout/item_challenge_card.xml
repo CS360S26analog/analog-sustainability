@@ -36,7 +36,7 @@
                 android:id="@+id/btn_join_challenge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_header_green"
+                android:background="@drawable/bg_card_green"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"

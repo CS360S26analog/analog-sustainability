@@ -4,11 +4,11 @@
  * Screen for browsing pending verified activity submissions
  * that are awaiting community review and voting.
  *
- * Role in design: Part of the UI layer. Accessible from the
- * Rankings screen for the half checkpoint.
- *
- * Outstanding issues: actual remote proof image loading can be
- * added later if the project includes an image loading library.
+ * Vote UI uses icon-only Reddit-style arrows:
+ * - outlined arrows by default
+ * - filled green arrow after upvote
+ * - filled red arrow after downvote
+ * - saved Firebase vote state is restored when cards reload
  *
  * @author Karar
  * @author Haroon
@@ -16,6 +16,8 @@
 
 package com.example.klimate;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -26,47 +28,40 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.view.ViewGroup;
-
-import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.transition.Transition;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
+import com.example.klimate.local.AppDatabase;
+import com.example.klimate.local.VoteDao;
+import com.example.klimate.local.VoteEntity;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class ValidationFeedFragment extends Fragment {
 
     private FirebaseFirestore db;
+    private final Executor executor = Executors.newSingleThreadExecutor();
     private LinearLayout validationFeedContainer;
     private View emptyStateCard;
 
-    /**
-     * Inflates the validation feed screen, initializes Firebase,
-     * loads pending verified activity submissions, and wires the
-     * back button for returning to the previous screen.
-     *
-     * @param inflater the LayoutInflater used to inflate the fragment layout
-     * @param container the parent view group for this fragment
-     * @param savedInstanceState previously saved fragment state if available
-     * @return the root view for the validation feed screen
-     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -79,16 +74,17 @@ public class ValidationFeedFragment extends Fragment {
         emptyStateCard = view.findViewById(R.id.card_empty_validation_state);
 
         loadPendingLogs(inflater);
-
         return view;
     }
 
     private void loadPendingLogs(@NonNull LayoutInflater inflater) {
         db.collection("activity_logs")
                 .whereEqualTo("status", "pending_verification")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!isAdded() || getContext() == null) return;
+
                     validationFeedContainer.removeAllViews();
 
                     if (queryDocumentSnapshots.isEmpty()) {
@@ -118,6 +114,8 @@ public class ValidationFeedFragment extends Fragment {
                     }
                 })
                 .addOnFailureListener(e -> {
+                    if (!isAdded() || getContext() == null) return;
+
                     emptyStateCard.setVisibility(View.VISIBLE);
                     Toast.makeText(
                             requireContext(),
@@ -128,15 +126,15 @@ public class ValidationFeedFragment extends Fragment {
     }
 
     private void bindLogCard(@NonNull View cardView, @NonNull DocumentSnapshot document) {
-
         TextView textInitials = cardView.findViewById(R.id.text_submitter_initials);
         TextView textName = cardView.findViewById(R.id.text_submitter_name);
         TextView textActivity = cardView.findViewById(R.id.text_activity_type);
         TextView textTimestamp = cardView.findViewById(R.id.text_timestamp);
         TextView textProofStatus = cardView.findViewById(R.id.text_proof_status);
         TextView textUpvoteCount = cardView.findViewById(R.id.text_upvote_count);
-        TextView btnUpvote = cardView.findViewById(R.id.btn_upvote);
-        TextView btnDownvote = cardView.findViewById(R.id.btn_downvote);
+
+        ImageView btnUpvote = cardView.findViewById(R.id.btn_upvote);
+        ImageView btnDownvote = cardView.findViewById(R.id.btn_downvote);
 
         FrameLayout proofImageContainer = cardView.findViewById(R.id.proof_image_container);
         TextView textProofOverlay = cardView.findViewById(R.id.text_proof_overlay);
@@ -159,63 +157,10 @@ public class ValidationFeedFragment extends Fragment {
         textTimestamp.setText(formatTimestamp(timestamp));
         textUpvoteCount.setText("Loading...");
 
-        if (TextUtils.isEmpty(proofUrl)) {
-            textProofStatus.setText("No proof uploaded");
-            proofImageContainer.setVisibility(View.GONE);
-        } else {
-            textProofStatus.setText("Proof attached");
-            proofImageContainer.setVisibility(View.VISIBLE);
-            imageProof.setVisibility(View.VISIBLE);
-            textProofOverlay.setVisibility(View.GONE);
+        setVoteButtonState(btnUpvote, btnDownvote, null);
+        setVoteButtonsEnabled(btnUpvote, btnDownvote, true);
 
-            Glide.with(cardView.getContext())
-                    .asBitmap()
-                    .load(proofUrl)
-                    .into(new CustomTarget<Bitmap>() {
-                        @Override
-                        public void onResourceReady(@NonNull Bitmap resource,
-                                                    @Nullable Transition<? super Bitmap> transition) {
-
-                            imageProof.setImageBitmap(resource);
-
-                            int imgWidth = resource.getWidth();
-                            int imgHeight = resource.getHeight();
-
-                            float aspectRatio = (float) imgHeight / imgWidth;
-
-                            // Get container width (more accurate than full screen)
-                            int containerWidth = cardView.getWidth();
-                            if (containerWidth == 0) {
-                                containerWidth = cardView.getResources()
-                                        .getDisplayMetrics().widthPixels;
-                            }
-
-                            float maxRatio = 5f / 4f;  // Instagram portrait cap
-                            float minRatio = 1f;       // square baseline
-
-                            ViewGroup.LayoutParams params = imageProof.getLayoutParams();
-
-                            if (aspectRatio > maxRatio) {
-                                // Too tall → crop to 4:5
-                                params.height = (int) (containerWidth * maxRatio);
-                            } else if (aspectRatio < minRatio) {
-                                // Too wide → keep square-ish
-                                params.height = (int) (containerWidth * minRatio);
-                            } else {
-                                // Normal → preserve ratio
-                                params.height = (int) (containerWidth * aspectRatio);
-                            }
-
-                            imageProof.setLayoutParams(params);
-                        }
-
-                        @Override
-                        public void onLoadCleared(@Nullable Drawable placeholder) {
-                            // No-op
-                        }
-                    });
-        }
-
+        bindProofImage(cardView, proofUrl, textProofStatus, proofImageContainer, textProofOverlay, imageProof);
         loadSubmitterName(userId, textName, textInitials);
 
         final String finalLogId = logId;
@@ -223,66 +168,139 @@ public class ValidationFeedFragment extends Fragment {
 
         refreshVoteState(finalLogId, finalDocumentId, textUpvoteCount, btnUpvote, btnDownvote);
 
-        btnUpvote.setOnClickListener(v -> castVote(
-                finalLogId, finalDocumentId, true,
-                textUpvoteCount, btnUpvote, btnDownvote
-        ));
+        btnUpvote.setOnClickListener(v ->
+                castVote(
+                        finalLogId,
+                        finalDocumentId,
+                        true,
+                        textUpvoteCount,
+                        btnUpvote,
+                        btnDownvote
+                )
+        );
 
-        btnDownvote.setOnClickListener(v -> castVote(
-                finalLogId, finalDocumentId, false,
-                textUpvoteCount, btnUpvote, btnDownvote
-        ));
+        btnDownvote.setOnClickListener(v ->
+                castVote(
+                        finalLogId,
+                        finalDocumentId,
+                        false,
+                        textUpvoteCount,
+                        btnUpvote,
+                        btnDownvote
+                )
+        );
+    }
+
+    private void bindProofImage(@NonNull View cardView,
+                                @Nullable String proofUrl,
+                                @NonNull TextView textProofStatus,
+                                @NonNull FrameLayout proofImageContainer,
+                                @NonNull TextView textProofOverlay,
+                                @NonNull ImageView imageProof) {
+        if (TextUtils.isEmpty(proofUrl)) {
+            textProofStatus.setText("No proof uploaded");
+            proofImageContainer.setVisibility(View.GONE);
+            return;
+        }
+
+        textProofStatus.setText("Proof attached");
+        proofImageContainer.setVisibility(View.VISIBLE);
+        imageProof.setVisibility(View.VISIBLE);
+        textProofOverlay.setVisibility(View.GONE);
+
+        Glide.with(cardView.getContext())
+                .asBitmap()
+                .load(proofUrl)
+                .into(new CustomTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(@NonNull Bitmap resource,
+                                                @Nullable Transition<? super Bitmap> transition) {
+                        imageProof.setImageBitmap(resource);
+
+                        int imgWidth = resource.getWidth();
+                        int imgHeight = resource.getHeight();
+                        if (imgWidth <= 0 || imgHeight <= 0) return;
+
+                        float aspectRatio = (float) imgHeight / imgWidth;
+
+                        int containerWidth = cardView.getWidth();
+                        if (containerWidth == 0) {
+                            containerWidth = cardView.getResources().getDisplayMetrics().widthPixels;
+                        }
+
+                        float maxRatio = 5f / 4f;
+                        float minRatio = 1f;
+
+                        ViewGroup.LayoutParams params = imageProof.getLayoutParams();
+
+                        if (aspectRatio > maxRatio) {
+                            params.height = (int) (containerWidth * maxRatio);
+                        } else if (aspectRatio < minRatio) {
+                            params.height = (int) (containerWidth * minRatio);
+                        } else {
+                            params.height = (int) (containerWidth * aspectRatio);
+                        }
+
+                        imageProof.setLayoutParams(params);
+                    }
+
+                    @Override
+                    public void onLoadCleared(@Nullable Drawable placeholder) {
+                        // No-op
+                    }
+                });
     }
 
     private void refreshVoteState(@NonNull String logId,
                                   @NonNull String activityLogDocumentId,
                                   @NonNull TextView textUpvoteCount,
-                                  @NonNull TextView btnUpvote,
-                                  @NonNull TextView btnDownvote) {
+                                  @NonNull ImageView btnUpvote,
+                                  @NonNull ImageView btnDownvote) {
         db.collection("votes")
                 .whereEqualTo("logId", logId)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
+                    if (!isAdded()) return;
+
                     int upvoteCount = 0;
+                    Boolean currentUserVote = null;
+
+                    FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                    String currentUserId = currentUser != null ? currentUser.getUid() : null;
 
                     for (QueryDocumentSnapshot voteDocument : querySnapshot) {
                         Boolean isUpvote = readVoteIsUpvote(voteDocument);
+
                         if (Boolean.TRUE.equals(isUpvote)) {
                             upvoteCount++;
+                        }
+
+                        String voterId = voteDocument.getString("voterId");
+                        if (currentUserId != null && currentUserId.equals(voterId)) {
+                            currentUserVote = isUpvote;
                         }
                     }
 
                     textUpvoteCount.setText(formatUpvoteCount(upvoteCount));
+                    setVoteButtonState(btnUpvote, btnDownvote, currentUserVote);
 
+                    // Keep the saved count in activity_logs aligned with the votes collection.
                     db.collection("activity_logs")
                             .document(activityLogDocumentId)
                             .update("voteCount", upvoteCount);
 
-                    FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                     if (currentUser == null) {
-                        btnUpvote.setEnabled(false);
-                        btnDownvote.setEnabled(false);
-                        return;
+                        setVoteButtonsEnabled(btnUpvote, btnDownvote, false);
+                    } else {
+                        // Existing app behavior: one vote per submission.
+                        // We keep the selected arrow visible, but prevent duplicate votes.
+                        setVoteButtonsEnabled(btnUpvote, btnDownvote, currentUserVote == null);
                     }
-
-                    String currentUserId = currentUser.getUid();
-                    boolean alreadyVoted = false;
-
-                    for (QueryDocumentSnapshot voteDocument : querySnapshot) {
-                        String voterId = voteDocument.getString("voterId");
-                        if (currentUserId.equals(voterId)) {
-                            alreadyVoted = true;
-                            break;
-                        }
-                    }
-
-                    btnUpvote.setEnabled(!alreadyVoted);
-                    btnDownvote.setEnabled(!alreadyVoted);
                 })
                 .addOnFailureListener(e -> {
                     textUpvoteCount.setText("0 upvotes");
-                    btnUpvote.setEnabled(true);
-                    btnDownvote.setEnabled(true);
+                    setVoteButtonState(btnUpvote, btnDownvote, null);
+                    setVoteButtonsEnabled(btnUpvote, btnDownvote, true);
                 });
     }
 
@@ -314,11 +332,10 @@ public class ValidationFeedFragment extends Fragment {
                           @NonNull String activityLogDocumentId,
                           boolean isUpvote,
                           @NonNull TextView textUpvoteCount,
-                          @NonNull TextView btnUpvote,
-                          @NonNull TextView btnDownvote) {
+                          @NonNull ImageView btnUpvote,
+                          @NonNull ImageView btnDownvote) {
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-
         if (currentUser == null) {
             Toast.makeText(requireContext(), "Please log in first", Toast.LENGTH_SHORT).show();
             return;
@@ -330,92 +347,188 @@ public class ValidationFeedFragment extends Fragment {
         }
 
         String voterId = currentUser.getUid();
+        setVoteButtonsEnabled(btnUpvote, btnDownvote, false);
 
-        db.collection("votes")
-                .whereEqualTo("logId", logId)
-                .whereEqualTo("voterId", voterId)
-                .get()
-                .addOnSuccessListener(existingVotes -> {
-                    if (!existingVotes.isEmpty()) {
+        executor.execute(() -> {
+            VoteDao voteDao = AppDatabase.getInstance(requireContext()).voteDao();
+
+            if (voteDao.hasVoted(logId, voterId) > 0) {
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() -> {
                         Toast.makeText(
                                 requireContext(),
                                 "You already voted on this submission",
                                 Toast.LENGTH_SHORT
                         ).show();
+                        refreshVoteState(logId, activityLogDocumentId, textUpvoteCount, btnUpvote, btnDownvote);
+                    });
+                }
+                return;
+            }
 
-                        refreshVoteState(
-                                logId, activityLogDocumentId,
-                                textUpvoteCount, btnUpvote, btnDownvote
-                        );
-                        return;
+            String voteId = db.collection("votes").document().getId();
+            VoteEntity entity = new VoteEntity(
+                    voteId,
+                    logId,
+                    voterId,
+                    isUpvote,
+                    System.currentTimeMillis()
+            );
+
+            int localVoteId = (int) voteDao.insert(entity);
+
+            if (isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    setVoteButtonState(btnUpvote, btnDownvote, isUpvote);
+
+                    if (isUpvote) {
+                        animateUpvote(btnUpvote);
+                        textUpvoteCount.setText(formatUpvoteCount(parseUpvoteCount(textUpvoteCount) + 1));
+                    } else {
+                        animateDownvote(btnDownvote);
                     }
 
-                    String voteId = db.collection("votes").document().getId();
+                    Toast.makeText(
+                            requireContext(),
+                            isUpvote ? "Upvote submitted" : "Downvote submitted",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                });
+            }
 
-                    Map<String, Object> voteData = new HashMap<>();
-                    voteData.put("voteId", voteId);
-                    voteData.put("logId", logId);
-                    voteData.put("voterId", voterId);
-                    voteData.put("isUpvote", isUpvote);
-                    voteData.put("timestamp", Timestamp.now());
+            Map<String, Object> voteData = new HashMap<>();
+            voteData.put("voteId", voteId);
+            voteData.put("logId", logId);
+            voteData.put("voterId", voterId);
+            voteData.put("isUpvote", isUpvote);
+            voteData.put("timestamp", Timestamp.now());
 
-                    db.collection("votes")
-                            .document(voteId)
-                            .set(voteData)
-                            .addOnSuccessListener(unused -> {
+            db.collection("votes")
+                    .document(voteId)
+                    .set(voteData)
+                    .addOnSuccessListener(unused -> {
+                        executor.execute(() ->
+                                voteDao.markSynced(localVoteId, voteId, "synced")
+                        );
 
-                                // Fetch the log to get the owner, then attach the vote listener
-                                // which handles net bonus recalculation and rejection at -5
-                                db.collection("activity_logs")
-                                        .document(activityLogDocumentId)
-                                        .get()
-                                        .addOnSuccessListener(logDoc -> {
-                                            if (!logDoc.exists()) return;
+                        db.collection("activity_logs")
+                                .document(activityLogDocumentId)
+                                .get()
+                                .addOnSuccessListener(logDoc -> {
+                                    if (!logDoc.exists()) return;
 
-                                            String logOwnerId = logDoc.getString("userId");
+                                    String logOwnerId = logDoc.getString("userId");
+                                    if (logOwnerId == null) return;
 
-                                            if (logOwnerId != null) {
-                                                // Immediately deduct 1 point for a downvote
-                                                // The vote listener handles bonus recalculation
-                                                // but the base -1 per downvote is applied here
-                                                if (!isUpvote) {
-                                                    db.collection("users")
-                                                            .document(logOwnerId)
-                                                            .update("totalPoints",
-                                                                    FieldValue.increment(-1));
-                                                }
+                                    if (!isUpvote) {
+                                        db.collection("users")
+                                                .document(logOwnerId)
+                                                .update("totalPoints", FieldValue.increment(-1));
+                                    }
 
-                                                // Attach listener to recalculate net bonus points
-                                                // and handle rejection if net votes reach -5
-                                                new PointsManager().attachVoteListener(
-                                                        activityLogDocumentId,
-                                                        logOwnerId
-                                                );
-                                            }
-                                        });
+                                    new PointsManager().attachVoteListener(
+                                            activityLogDocumentId,
+                                            logOwnerId
+                                    );
+                                });
 
-                                refreshVoteState(
-                                        logId, activityLogDocumentId,
-                                        textUpvoteCount, btnUpvote, btnDownvote
-                                );
+                        refreshVoteState(
+                                logId,
+                                activityLogDocumentId,
+                                textUpvoteCount,
+                                btnUpvote,
+                                btnDownvote
+                        );
+                    })
+                    .addOnFailureListener(e -> {
+                        executor.execute(() -> voteDao.markFailed(localVoteId));
 
+                        if (isAdded()) {
+                            requireActivity().runOnUiThread(() -> {
                                 Toast.makeText(
                                         requireContext(),
-                                        isUpvote ? "Upvote submitted" : "Downvote submitted",
+                                        "Saved locally — will sync when connected",
                                         Toast.LENGTH_SHORT
                                 ).show();
-                            })
-                            .addOnFailureListener(e -> Toast.makeText(
-                                    requireContext(),
-                                    "Failed to submit vote",
-                                    Toast.LENGTH_SHORT
-                            ).show());
-                })
-                .addOnFailureListener(e -> Toast.makeText(
-                        requireContext(),
-                        "Failed to check existing vote",
-                        Toast.LENGTH_SHORT
-                ).show());
+                                setVoteButtonsEnabled(btnUpvote, btnDownvote, false);
+                            });
+                        }
+
+                        MainActivity.triggerImmediateSync(requireContext());
+                    });
+        });
+    }
+
+    private void setVoteButtonState(@NonNull ImageView btnUpvote,
+                                    @NonNull ImageView btnDownvote,
+                                    @Nullable Boolean isUpvote) {
+        if (isUpvote == null) {
+            btnUpvote.setImageResource(R.drawable.ic_arrow_up_outline);
+            btnDownvote.setImageResource(R.drawable.ic_arrow_down_outline);
+        } else if (isUpvote) {
+            btnUpvote.setImageResource(R.drawable.ic_arrow_up_filled);
+            btnDownvote.setImageResource(R.drawable.ic_arrow_down_outline);
+        } else {
+            btnUpvote.setImageResource(R.drawable.ic_arrow_up_outline);
+            btnDownvote.setImageResource(R.drawable.ic_arrow_down_filled);
+        }
+    }
+
+    private void setVoteButtonsEnabled(@NonNull ImageView btnUpvote,
+                                       @NonNull ImageView btnDownvote,
+                                       boolean enabled) {
+        btnUpvote.setEnabled(enabled);
+        btnDownvote.setEnabled(enabled);
+
+        // Keep arrows visually readable even when duplicate voting is disabled.
+        btnUpvote.setAlpha(1f);
+        btnDownvote.setAlpha(1f);
+    }
+
+    private void animateUpvote(@NonNull ImageView button) {
+        button.animate()
+                .scaleX(1.25f)
+                .scaleY(1.25f)
+                .setDuration(120)
+                .withEndAction(() ->
+                        button.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .setDuration(120)
+                                .start()
+                )
+                .start();
+    }
+
+    private void animateDownvote(@NonNull ImageView button) {
+        button.animate()
+                .translationX(-8f)
+                .setDuration(50)
+                .withEndAction(() ->
+                        button.animate()
+                                .translationX(8f)
+                                .setDuration(50)
+                                .withEndAction(() ->
+                                        button.animate()
+                                                .translationX(0f)
+                                                .setDuration(50)
+                                                .start()
+                                )
+                                .start()
+                )
+                .start();
+    }
+
+    private int parseUpvoteCount(@NonNull TextView textUpvoteCount) {
+        String raw = textUpvoteCount.getText().toString().trim();
+        if (raw.isEmpty() || raw.equalsIgnoreCase("Loading...")) return 0;
+
+        String firstToken = raw.split("\\s+")[0];
+        try {
+            return Integer.parseInt(firstToken);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private String formatTimestamp(@Nullable Timestamp timestamp) {

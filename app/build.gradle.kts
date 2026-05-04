@@ -40,6 +40,8 @@ dependencies {
     implementation(libs.core)
     implementation(libs.androidx.junit)
     implementation(libs.androidx.work.testing)
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.runtime.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -60,5 +62,6 @@ dependencies {
     androidTestImplementation("androidx.work:work-testing:2.9.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
     implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
-    implementation("org.maplibre.gl:android-sdk:11.13.5")
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
 }

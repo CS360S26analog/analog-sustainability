@@ -7,9 +7,9 @@
  * to Firebase Storage and saved to Firestore under the proofUrl field.
  *
  * Quantifiable activities (Cycling, Walking, etc.) show a dynamic slider
- * injected directly into the selected activity card. Points are calculated
+ * beneath the selected activity row. Points are calculated
  * live as the slider moves. Flat-rate activities (Composting, Energy saving)
- * show no slider — fixed points are awarded on submission.
+ * show no slider - fixed points are awarded on submission.
  *
  * Role in design: Part of the UI/Controller layer. Collects user input,
  * uploads proof media when needed, and writes activity log documents.
@@ -31,7 +31,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.net.Uri;
+import com.example.klimate.local.ActivityLogDao;
+import com.example.klimate.local.ActivityLogEntity;
+import com.example.klimate.local.AppDatabase;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
@@ -42,6 +48,7 @@ import android.view.View;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -56,6 +63,8 @@ import androidx.annotation.Nullable;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
+import com.example.klimate.local.ActivityLogEntity;
+import com.example.klimate.local.AppDatabase;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -74,6 +83,7 @@ import java.util.Map;
 public class LogFragment extends Fragment {
 
     private LinearLayout selectedCard = null;
+    private final Executor executor = Executors.newSingleThreadExecutor();
     private String selectedActivityName = null;
     private String selectedStatus = "quick";
     private Uri selectedProofUri = null;
@@ -93,6 +103,10 @@ public class LogFragment extends Fragment {
     private View quickTab;
     private View verifiedTab;
     private NestedScrollView logScrollView;
+    private LinearLayout sliderSlotRow1;
+    private LinearLayout sliderSlotRow2;
+    private LinearLayout sliderSlotRow3;
+    private LinearLayout sliderSlotRow4;
 
     private boolean shouldAutoOpenProofPicker = false;
 
@@ -357,6 +371,10 @@ public class LogFragment extends Fragment {
         quickTab          = view.findViewById(R.id.btn_quick_log);
         verifiedTab       = view.findViewById(R.id.btn_verified_log);
         logScrollView     = view.findViewById(R.id.log_scroll_view);
+        sliderSlotRow1    = view.findViewById(R.id.slider_slot_row_1);
+        sliderSlotRow2    = view.findViewById(R.id.slider_slot_row_2);
+        sliderSlotRow3    = view.findViewById(R.id.slider_slot_row_3);
+        sliderSlotRow4    = view.findViewById(R.id.slider_slot_row_4);
 
         LinearLayout[] cards = new LinearLayout[cardIds.length];
         for (int i = 0; i < cardIds.length; i++) {
@@ -451,7 +469,7 @@ public class LogFragment extends Fragment {
     // -------------------------------------------------------------------
 
     /**
-     * Deselects all cards and removes any previously injected inline slider.
+     * Deselects all cards and hides any row-level quantity slider.
      * Called before selecting a new card.
      *
      * @param cards the full array of activity card views
@@ -459,17 +477,14 @@ public class LogFragment extends Fragment {
     private void deselectAll(LinearLayout[] cards) {
         for (LinearLayout c : cards) {
             c.setBackground(requireContext().getDrawable(R.drawable.bg_activity_card));
-
-            // Remove inline slider that was injected into this card
-            View existingSlider = c.findViewWithTag("inline_slider");
-            if (existingSlider != null) {
-                c.removeView(existingSlider);
-            }
         }
+
+        hideAllSliderSlots();
     }
 
     /**
-     * Selects an activity card, highlights it, and injects the inline slider.
+     * Selects an activity card, highlights it, and shows the quantity slider
+     * beneath the full row that contains the selected card.
      *
      * @param cards the full array of activity card views
      * @param card  the card that was tapped
@@ -480,23 +495,66 @@ public class LogFragment extends Fragment {
         card.setBackground(requireContext().getDrawable(R.drawable.bg_activity_card_selected));
         selectedCard         = card;
         selectedActivityName = name;
-        showInlineSlider(card, name);
+        showRowSlider(card, name);
     }
 
     /**
-     * Builds a quantity slider UI programmatically and injects it into
-     * the bottom of the selected activity card. Tagged "inline_slider"
-     * so deselectAll() can find and remove it when another card is tapped.
+     * Hides and clears every reserved slider slot under the activity rows.
+     */
+    private void hideAllSliderSlots() {
+        LinearLayout[] slots = {
+                sliderSlotRow1,
+                sliderSlotRow2,
+                sliderSlotRow3,
+                sliderSlotRow4
+        };
+
+        for (LinearLayout slot : slots) {
+            if (slot != null) {
+                slot.removeAllViews();
+                slot.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    /**
+     * Returns the full-width slider slot for the row containing the selected card.
+     * Row 1: Cycling/Public Transit, Row 2: Recycling/Plant-based meal,
+     * Row 3: Reusable cup/Composting, Row 4: Walked/Energy saving.
+     *
+     * @param card the selected activity card
+     * @return the matching slider slot, or null if no slot is found
+     */
+    @Nullable
+    private LinearLayout getSliderSlotForCard(@NonNull LinearLayout card) {
+        int cardId = card.getId();
+
+        if (cardId == R.id.card_cycling || cardId == R.id.card_transit) {
+            return sliderSlotRow1;
+        } else if (cardId == R.id.card_recycling || cardId == R.id.card_plantbased) {
+            return sliderSlotRow2;
+        } else if (cardId == R.id.card_reusable || cardId == R.id.card_composting) {
+            return sliderSlotRow3;
+        } else if (cardId == R.id.card_walked || cardId == R.id.card_energy) {
+            return sliderSlotRow4;
+        }
+
+        return null;
+    }
+
+    /**
+     * Builds a quantity slider UI programmatically and places it in the
+     * reserved full-width slot beneath the selected card's row. This keeps
+     * the SeekBar wide and easy to drag on phones.
      *
      * For flat-rate activities (Composting, Energy saving) no slider is
-     * injected — the log button simply updates with the fixed point value.
+     * shown — the log button simply updates with the fixed point value.
      *
      * @param card         the selected activity card LinearLayout
      * @param activityType the selected activity name
      */
-    private void showInlineSlider(LinearLayout card, String activityType) {
+    private void showRowSlider(LinearLayout card, String activityType) {
         if (!isQuantifiable(activityType)) {
-            // Flat rate — just update the log button, no slider needed
             selectedQuantity = 1;
             int pts = calculatePoints(activityType, 1);
             if (btnLogActivity != null) {
@@ -505,38 +563,62 @@ public class LogFragment extends Fragment {
             return;
         }
 
+        LinearLayout targetSlot = getSliderSlotForCard(card);
+        if (targetSlot == null) return;
+
         int dp4  = dpToPx(4);
         int dp8  = dpToPx(8);
-        int dp12 = dpToPx(12);
+        int dp10 = dpToPx(10);
+        int dp14 = dpToPx(14);
 
-        // Outer container — tagged so deselectAll() can remove it
+        targetSlot.removeAllViews();
+        targetSlot.setVisibility(View.VISIBLE);
+        targetSlot.setBackground(requireContext().getDrawable(R.drawable.bg_leaderboard_row));
+        targetSlot.setPadding(dp14, dp14, dp14, dp14);
+
+        // Outer content container
         LinearLayout sliderContainer = new LinearLayout(requireContext());
-        sliderContainer.setTag("inline_slider");
         sliderContainer.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams containerParams = new LinearLayout.LayoutParams(
+        sliderContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        containerParams.topMargin = dp12;
-        sliderContainer.setLayoutParams(containerParams);
+                LinearLayout.LayoutParams.WRAP_CONTENT));
 
-        // Question label
+        // Top row: question on the left, current points on the right
+        LinearLayout headerRow = new LinearLayout(requireContext());
+        headerRow.setOrientation(LinearLayout.HORIZONTAL);
+        headerRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        headerRow.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+
         TextView tvLabel = new TextView(requireContext());
         tvLabel.setText(getQuantityQuestion(activityType));
-        tvLabel.setTextSize(12);
-        tvLabel.setTextColor(0xFF4A8A4A);
+        tvLabel.setTextSize(13);
+        tvLabel.setTextColor(0xFF2F5F3A);
+        tvLabel.setTypeface(null, Typeface.BOLD);
         tvLabel.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT));
-        sliderContainer.addView(tvLabel);
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        headerRow.addView(tvLabel);
 
-        // Slider row: SeekBar + value label side by side
+        TextView tvPts = new TextView(requireContext());
+        int initialPts = calculatePoints(activityType, 1);
+        tvPts.setText("+" + initialPts + " pts");
+        tvPts.setTextSize(13);
+        tvPts.setTextColor(0xFFC17B2F);
+        tvPts.setTypeface(null, Typeface.BOLD);
+        tvPts.setGravity(android.view.Gravity.END);
+        headerRow.addView(tvPts);
+
+        sliderContainer.addView(headerRow);
+
+        // Slider row: wide SeekBar + compact value label
         LinearLayout sliderRow = new LinearLayout(requireContext());
         sliderRow.setOrientation(LinearLayout.HORIZONTAL);
         sliderRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
         LinearLayout.LayoutParams sliderRowParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        sliderRowParams.topMargin = dp8;
+        sliderRowParams.topMargin = dp10;
         sliderRow.setLayoutParams(sliderRowParams);
 
         SeekBar seekBar = new SeekBar(requireContext());
@@ -552,61 +634,51 @@ public class LogFragment extends Fragment {
                 new android.graphics.PorterDuffColorFilter(
                         0xFFC17B2F, android.graphics.PorterDuff.Mode.SRC_IN));
 
-        // Value label — shows e.g. "1 km", "3 meals"
         TextView tvValue = new TextView(requireContext());
         tvValue.setText("1 " + buildUnitLabel(activityType, 1));
-        tvValue.setTextSize(13);
+        tvValue.setTextSize(14);
         tvValue.setTextColor(0xFFC17B2F);
         tvValue.setTypeface(null, Typeface.BOLD);
+        tvValue.setGravity(android.view.Gravity.CENTER);
+        tvValue.setClickable(true);
+        tvValue.setFocusable(true);
+        tvValue.setBackgroundResource(R.drawable.bg_toggle_pill);
+        tvValue.setPadding(dp10, dp4, dp10, dp4);
+        tvValue.setContentDescription("Tap to type amount");
         LinearLayout.LayoutParams valueParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
         valueParams.setMarginStart(dp8);
+        tvValue.setMinWidth(dpToPx(68));
         tvValue.setLayoutParams(valueParams);
 
         sliderRow.addView(seekBar);
         sliderRow.addView(tvValue);
         sliderContainer.addView(sliderRow);
 
-        // Points row: "Points earned" label on the left, dynamic value on right
-        LinearLayout ptsRow = new LinearLayout(requireContext());
-        ptsRow.setOrientation(LinearLayout.HORIZONTAL);
-        ptsRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        LinearLayout.LayoutParams ptsRowParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
+        TextView tvHint = new TextView(requireContext());
+        tvHint.setText("Drag the slider or tap the value to type an amount");
+        tvHint.setTextSize(11);
+        tvHint.setTextColor(0xFF7A8A78);
+        LinearLayout.LayoutParams hintParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        ptsRowParams.topMargin = dp4;
-        ptsRow.setLayoutParams(ptsRowParams);
+        hintParams.topMargin = dp4;
+        tvHint.setLayoutParams(hintParams);
+        sliderContainer.addView(tvHint);
 
-        TextView tvPtsLabel = new TextView(requireContext());
-        tvPtsLabel.setText("Points earned");
-        tvPtsLabel.setTextSize(11);
-        tvPtsLabel.setTextColor(0xFFEEF7EE);
-        LinearLayout.LayoutParams ptsLabelParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        tvPtsLabel.setLayoutParams(ptsLabelParams);
-        ptsRow.addView(tvPtsLabel);
+        targetSlot.addView(sliderContainer);
 
-        TextView tvPts = new TextView(requireContext());
-        int initialPts = calculatePoints(activityType, 1);
-        tvPts.setText("+" + initialPts + " pts");
-        tvPts.setTextSize(13);
-        tvPts.setTextColor(0xFFC17B2F);
-        tvPts.setTypeface(null, Typeface.BOLD);
-        ptsRow.addView(tvPts);
-
-        sliderContainer.addView(ptsRow);
-
-        // Inject into card
-        card.addView(sliderContainer);
-
-        // Initialise state
         selectedQuantity = 1;
         if (btnLogActivity != null) {
             btnLogActivity.setText("Log Activity  •  1 " + buildUnitLabel(activityType, 1) + "  •  +" + initialPts + " pts");
         }
 
-        // SeekBar listener — updates value label, pts label, and log button live
+        tvValue.setOnClickListener(v -> showQuantityInputDialog(activityType, seekBar));
+
+        // Keep lower rows/proof section from hiding the newly opened slider.
+        scrollToSliderSlot(targetSlot);
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -626,6 +698,81 @@ public class LogFragment extends Fragment {
 
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+    }
+
+    /**
+     * Opens a small integer-only input dialog for users who prefer typing
+     * the quantity instead of dragging the slider. Values must stay within
+     * the same min/max bounds as the SeekBar.
+     *
+     * @param activityType the selected activity name
+     * @param seekBar      the active row-level quantity slider
+     */
+    private void showQuantityInputDialog(@NonNull String activityType, @NonNull SeekBar seekBar) {
+        int maxQuantity = getMaxQuantity(activityType);
+
+        EditText input = new EditText(requireContext());
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setSingleLine(true);
+        input.setSelectAllOnFocus(true);
+        input.setText(String.valueOf(selectedQuantity));
+        input.setHint("1 - " + maxQuantity);
+        input.setPadding(dpToPx(12), dpToPx(10), dpToPx(12), dpToPx(10));
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setTitle("Enter amount")
+                .setMessage("Type a whole number from 1 to " + maxQuantity + " "
+                        + buildUnitLabel(activityType, maxQuantity) + ".")
+                .setView(input)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Apply", null)
+                .create();
+
+        dialog.setOnShowListener(dialogInterface -> {
+            input.requestFocus();
+
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                String rawValue = input.getText().toString().trim();
+
+                if (rawValue.isEmpty()) {
+                    input.setError("Enter a value");
+                    return;
+                }
+
+                int typedQuantity;
+                try {
+                    typedQuantity = Integer.parseInt(rawValue);
+                } catch (NumberFormatException e) {
+                    input.setError("Use numbers only");
+                    return;
+                }
+
+                if (typedQuantity < 1 || typedQuantity > maxQuantity) {
+                    input.setError("Enter a number from 1 to " + maxQuantity);
+                    return;
+                }
+
+                selectedQuantity = typedQuantity;
+                seekBar.setProgress(typedQuantity);
+                dialog.dismiss();
+            });
+        });
+
+        dialog.show();
+    }
+
+    /**
+     * Gently scrolls so the expanded row-level slider is visible after a card tap.
+     *
+     * @param slot the visible slider slot
+     */
+    private void scrollToSliderSlot(@NonNull LinearLayout slot) {
+        if (logScrollView == null) return;
+
+        logScrollView.post(() -> {
+            int targetY = Math.max(0, slot.getTop() - dpToPx(24));
+            logScrollView.smoothScrollTo(0, targetY);
         });
     }
 
@@ -825,47 +972,111 @@ public class LogFragment extends Fragment {
                                  int points,
                                  @Nullable String proofUrl,
                                  @NonNull LinearLayout[] cards) {
-        Map<String, Object> logData = new HashMap<>();
-        // Calculate co2 saved once when the log is created.
-// This value is stored on the log so history and campus totals can reuse it.
-        double co2SavedKg = CarbonCalculator.calculateCo2SavedKg(selectedActivityName, selectedQuantity);
-        logData.put("logId",        docRef.getId());
-        logData.put("userId",       userId);
-        logData.put("activityType", selectedActivityName);
-        logData.put("status",       selectedStatus);
-        logData.put("points",       points);
-        logData.put("bonusPoints",  0);
-        logData.put("proofUrl",     proofUrl);
-        logData.put("voteCount",    0);
-        logData.put("quantity",     selectedQuantity);
-        logData.put("co2SavedKg", co2SavedKg);
-        logData.put("unit",         getUnit(selectedActivityName));
-        logData.put("timestamp",    Timestamp.now());
 
-        docRef.set(logData)
-                .addOnSuccessListener(unused -> {
-                    new PointsManager().awardBasePoints(userId, points);
+        double co2SavedKg = CarbonCalculator.calculateCo2SavedKg(
+                selectedActivityName, selectedQuantity);
 
-                    db.collection("users")
-                            .document(userId)
-                            .update("co2SavedKg", FieldValue.increment(co2SavedKg));
+        // ── 1. Write to Room immediately (instant UI feedback) ───────────────
+        ActivityLogEntity entity = new ActivityLogEntity(
+                docRef.getId(),         // logId already generated
+                userId,
+                selectedActivityName,
+                selectedStatus,
+                points,
+                selectedQuantity,
+                co2SavedKg,
+                getUnit(selectedActivityName),
+                proofUrl,
+                System.currentTimeMillis()
+        );
 
-                    String message = "pending_verification".equals(selectedStatus)
-                            ? "Verified log submitted with proof"
-                            : selectedActivityName + " logged — +" + points + " pts ✅";
+        Context context = requireContext();
 
-                    Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
-                    resetForm(cards);
-                    setLogButtonEnabled(true);
-                })
-                .addOnFailureListener(e -> {
-                    setLogButtonEnabled(true);
-                    Toast.makeText(getContext(), "Failed to save log: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
+        executor.execute(() -> {
+            AppDatabase app_database = AppDatabase.getInstance(requireContext());
+            int localId = (int) app_database.activityLogDao().insert(entity);
+
+            // Increment user stats in Room immediately (optimistic update)
+            app_database.userDao().incrementPoints(userId, points);
+            app_database.userDao().incrementCo2(userId, co2SavedKg);
+
+            // ── 2. Push to Firestore in background ───────────────────────────
+            Map<String, Object> logData = new HashMap<>();
+            logData.put("logId",        docRef.getId());
+            logData.put("userId",       userId);
+            logData.put("activityType", selectedActivityName);
+            logData.put("status",       selectedStatus);
+            logData.put("points",       points);
+            logData.put("bonusPoints",  0);
+            logData.put("proofUrl",     proofUrl);
+            logData.put("voteCount",    0);
+            logData.put("quantity",     selectedQuantity);
+            logData.put("co2SavedKg",   co2SavedKg);
+            logData.put("unit",         getUnit(selectedActivityName));
+            logData.put("timestamp",    Timestamp.now());
+
+            docRef.set(logData)
+                    .addOnSuccessListener(unused -> {
+                        // Mark synced in Room
+                        executor.execute(() ->
+                                app_database.activityLogDao()
+                                        .markSynced(localId, docRef.getId(), "synced")
+                        );
+
+                        // Firestore user stats update (keeps Firestore in sync with Room)
+                        db.collection("users")
+                                .document(userId)
+                                .update("co2SavedKg", FieldValue.increment(co2SavedKg));
+
+                        new PointsManager().awardBasePoints(context, userId, points);
+
+                        if (isAdded() && getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                String message = "pending_verification".equals(selectedStatus)
+                                        ? "Verified log submitted with proof"
+                                        : selectedActivityName + " logged — +" + points + " pts ✅";
+                                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                                resetForm(cards);
+                                setLogButtonEnabled(true);
+                            });
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        // Mark failed in Room — SyncWorker will retry
+                        executor.execute(() ->
+                                app_database.activityLogDao().markFailed(localId)
+                        );
+
+                        if (isAdded() && getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                boolean isVerified =
+                                        "pending_verification".equals(selectedStatus);
+
+                                if (isVerified) {
+                                    // Verified logs: tell the user explicitly
+                                    Toast.makeText(getContext(),
+                                            "Saved locally — will upload when connected 📶",
+                                            Toast.LENGTH_LONG).show();
+                                } else {
+                                    // Quick logs: silently queue, show success to keep UX smooth
+                                    Toast.makeText(getContext(),
+                                            selectedActivityName + " logged ✅",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+
+                                resetForm(cards);
+                                setLogButtonEnabled(true);
+
+                                // Trigger immediate retry if connected
+                                MainActivity.triggerImmediateSync(requireContext());
+                            });
+                        }
+                    });
+        });
     }
 
     private void resetForm(@NonNull LinearLayout[] cards) {
-        deselectAll(cards); // also removes any inline slider
+        deselectAll(cards); // also hides any row-level slider
         selectedCard              = null;
         selectedActivityName      = null;
         selectedProofUri          = null;
@@ -934,7 +1145,7 @@ public class LogFragment extends Fragment {
                 "Use this when food scraps are composted. Flat reward of +20 pts per log.",
                 "Log this when you walk instead of using a fuel-based ride. Select how many km. +2 pts per km.",
                 "Use this when you reduce electricity use like switching off lights. Flat reward of +15 pts per log.",
-                "Pick an activity card first. For quantifiable activities a slider appears inside the card — drag it to set your amount. Use Quick Log for a simple submission, or Verified Log to attach proof."
+                "Pick an activity card first. For quantifiable activities a full-width slider appears beneath the selected row — drag it to set your amount. Use Quick Log for a simple submission, or Verified Log to attach proof."
         };
 
         StringBuilder fullText = new StringBuilder();

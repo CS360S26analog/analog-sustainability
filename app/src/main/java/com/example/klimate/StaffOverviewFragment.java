@@ -14,7 +14,8 @@
  * @author Maryam Waseem
  */
 package com.example.klimate;
-
+import androidx.core.content.ContextCompat;
+import java.util.Locale;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -68,11 +69,15 @@ public class StaffOverviewFragment extends Fragment {
         TextView tvFlagged  = view.findViewById(R.id.tv_staff_flagged_count);
         TextView tvPending  = view.findViewById(R.id.tv_staff_pending_count);
         TextView btnReview  = view.findViewById(R.id.btn_go_review);
+        TextView btnReviewDuplicate = view.findViewById(R.id.btn_go_review_duplicate);
         LinearLayout llTopActivities = view.findViewById(R.id.ll_top_activities);
 
-        // Wire review button → validation feed tab
         if (btnReview != null) {
             btnReview.setOnClickListener(v -> switchStaffTab(R.id.staff_nav_feed));
+        }
+
+        if (btnReviewDuplicate != null) {
+            btnReviewDuplicate.setOnClickListener(v -> switchStaffTab(R.id.staff_nav_feed));
         }
 
         // CO₂ + active users (live)
@@ -168,14 +173,24 @@ public class StaffOverviewFragment extends Fragment {
     }
 
     private void wireQuickActions(View view) {
-        View btnManage  = view.findViewById(R.id.btn_quick_manage);
-        View btnTips    = view.findViewById(R.id.btn_quick_tips);
+        View btnManage = view.findViewById(R.id.btn_quick_manage);
+        View btnTips = view.findViewById(R.id.btn_quick_tips);
         View btnReports = view.findViewById(R.id.btn_quick_reports);
-        View btnLogs    = view.findViewById(R.id.btn_quick_logs);
+        View btnLogs = view.findViewById(R.id.btn_quick_logs);
 
-        if (btnManage != null)
+        TextView btnReview = view.findViewById(R.id.btn_go_review);
+        TextView btnReviewDuplicate = view.findViewById(R.id.btn_go_review_duplicate);
+
+        View challengesStat = view.findViewById(R.id.card_staff_challenges_stat);
+        View flaggedStat = view.findViewById(R.id.card_staff_flagged_stat);
+        View pendingStat = view.findViewById(R.id.card_staff_pending_stat);
+        View summaryCard = view.findViewById(R.id.card_staff_summary);
+
+        if (btnManage != null) {
             btnManage.setOnClickListener(v -> switchStaffTab(R.id.staff_nav_manage));
-        if (btnTips != null)
+        }
+
+        if (btnTips != null) {
             btnTips.setOnClickListener(v -> {
                 if (getActivity() != null) {
                     getActivity().getSupportFragmentManager()
@@ -185,18 +200,45 @@ public class StaffOverviewFragment extends Fragment {
                             .commit();
                 }
             });
-        if (btnReports != null)
+        }
+
+        if (btnReports != null) {
             btnReports.setOnClickListener(v -> switchStaffTab(R.id.staff_nav_reports));
-        if (btnLogs != null)
-            btnLogs.setOnClickListener(v -> {
-                if (getActivity() != null) {
-                    getActivity().getSupportFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.fragment_container, new StaffLogsFragment())
-                            .addToBackStack(null)
-                            .commit();
-                }
-            });
+        }
+        if (summaryCard != null) {
+            summaryCard.setOnClickListener(v -> switchStaffTab(R.id.staff_nav_reports));
+        }
+
+        /*
+         * If your project has a separate staff_nav_logs item, change this to:
+         * switchStaffTab(R.id.staff_nav_logs)
+         *
+         * For now, this safely opens Reports because logs/flagged submissions
+         * are handled there in your current staff flow.
+         */
+        if (btnLogs != null) {
+            btnLogs.setOnClickListener(v -> switchStaffTab(R.id.staff_nav_reports));
+        }
+
+        if (btnReview != null) {
+            btnReview.setOnClickListener(v -> switchStaffTab(R.id.staff_nav_feed));
+        }
+
+        if (btnReviewDuplicate != null) {
+            btnReviewDuplicate.setOnClickListener(v -> switchStaffTab(R.id.staff_nav_feed));
+        }
+
+        if (challengesStat != null) {
+            challengesStat.setOnClickListener(v -> switchStaffTab(R.id.staff_nav_manage));
+        }
+
+        if (flaggedStat != null) {
+            flaggedStat.setOnClickListener(v -> switchStaffTab(R.id.staff_nav_reports));
+        }
+
+        if (pendingStat != null) {
+            pendingStat.setOnClickListener(v -> switchStaffTab(R.id.staff_nav_feed));
+        }
     }
 
     private void switchStaffTab(int navItemId) {
@@ -213,72 +255,66 @@ public class StaffOverviewFragment extends Fragment {
         window.setStatusBarColor(ContextCompat.getColor(requireContext(), R.color.color_green_header));
     }
 
-    /**
-     * Builds a horizontal bar row showing an activity type and its
-     * log count relative to the most-logged activity this week.
-     *
-     * @param activityType the activity name
-     * @param count        number of logs this week
-     * @param max          highest count (used to scale the bar width)
-     */
     private View buildActivityBar(String activityType, int count, int max) {
         LinearLayout row = new LinearLayout(requireContext());
         row.setOrientation(LinearLayout.VERTICAL);
+
         LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        rowLp.setMargins(0, 0, 0, dpToPx(10));
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        rowLp.setMargins(0, 0, 0, dpToPx(12));
         row.setLayoutParams(rowLp);
 
-        // Label row: emoji + name + count
-        LinearLayout labelRow = new LinearLayout(requireContext());
-        labelRow.setOrientation(LinearLayout.HORIZONTAL);
-        labelRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        LinearLayout.LayoutParams labelLp = new LinearLayout.LayoutParams(
+        LinearLayout top = new LinearLayout(requireContext());
+        top.setOrientation(LinearLayout.HORIZONTAL);
+        top.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
+        TextView name = new TextView(requireContext());
+        name.setText(getActivityEmoji(activityType) + "  " + activityType);
+        name.setTextSize(15f);
+        name.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_text_primary));
+
+        LinearLayout.LayoutParams nameLp = new LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                1
+        );
+        name.setLayoutParams(nameLp);
+        top.addView(name);
+
+        TextView countText = new TextView(requireContext());
+        countText.setText(count + (count == 1 ? " log" : " logs"));
+        countText.setTextSize(14f);
+        countText.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_green_text));
+        countText.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        top.addView(countText);
+
+        row.addView(top);
+
+        android.widget.ProgressBar bar = new android.widget.ProgressBar(
+                requireContext(),
+                null,
+                android.R.attr.progressBarStyleHorizontal
+        );
+
+        LinearLayout.LayoutParams barLp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        labelLp.setMargins(0, 0, 0, dpToPx(4));
-        labelRow.setLayoutParams(labelLp);
+                dpToPx(7)
+        );
+        barLp.setMargins(0, dpToPx(5), 0, 0);
+        bar.setLayoutParams(barLp);
+        bar.setMax(Math.max(max, 1));
+        bar.setProgress(count);
+        bar.setProgressTintList(android.content.res.ColorStateList.valueOf(
+                ContextCompat.getColor(requireContext(), R.color.color_green_header)
+        ));
+        bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                ContextCompat.getColor(requireContext(), R.color.color_auth_input_stroke)
+        ));
 
-        TextView tvLabel = new TextView(requireContext());
-        tvLabel.setLayoutParams(new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        tvLabel.setText(getEmoji(activityType) + "  " + activityType);
-        tvLabel.setTextSize(13f);
-        tvLabel.setTextColor(requireContext().getColor(R.color.color_text_primary));
+        row.addView(bar);
 
-        TextView tvCount = new TextView(requireContext());
-        tvCount.setText(count + " log" + (count != 1 ? "s" : ""));
-        tvCount.setTextSize(12f);
-        tvCount.setTextColor(requireContext().getColor(R.color.color_green_text));
-        tvCount.setTypeface(null, android.graphics.Typeface.BOLD);
-
-        labelRow.addView(tvLabel);
-        labelRow.addView(tvCount);
-
-        // Progress bar
-        android.widget.FrameLayout barBg = new android.widget.FrameLayout(requireContext());
-        LinearLayout.LayoutParams barBgLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dpToPx(6));
-        barBg.setLayoutParams(barBgLp);
-        barBg.setBackgroundColor(0xFFE8E2D8);
-
-        View barFill = new View(requireContext());
-        int fillWidth = max > 0 ? (int) ((count / (float) max) * 100) : 0;
-        // Use post to set width after layout
-        barBg.post(() -> {
-            int totalWidth = barBg.getWidth();
-            android.widget.FrameLayout.LayoutParams fillLp =
-                    new android.widget.FrameLayout.LayoutParams(
-                            (int) (totalWidth * (fillWidth / 100f)),
-                            ViewGroup.LayoutParams.MATCH_PARENT);
-            barFill.setLayoutParams(fillLp);
-        });
-        barFill.setBackgroundColor(requireContext().getColor(R.color.color_green_header));
-        barBg.addView(barFill);
-
-        row.addView(labelRow);
-        row.addView(barBg);
         return row;
     }
 
@@ -297,7 +333,25 @@ public class StaffOverviewFragment extends Fragment {
         }
     }
 
+    private String getActivityEmoji(String activityType) {
+        if (activityType == null) return "🌿";
+
+        String lower = activityType.toLowerCase(Locale.ROOT);
+
+        if (lower.contains("plant")) return "🥗";
+        if (lower.contains("cycling") || lower.contains("bike")) return "🚲";
+        if (lower.contains("recycling")) return "♻️";
+        if (lower.contains("transit") || lower.contains("bus")) return "🚌";
+        if (lower.contains("energy")) return "💡";
+        if (lower.contains("compost")) return "🍂";
+        if (lower.contains("walk")) return "🚶";
+        if (lower.contains("cup")) return "☕";
+
+        return "🌿";
+    }
+
     private int dpToPx(int dp) {
         return Math.round(dp * requireContext().getResources().getDisplayMetrics().density);
     }
+
 }

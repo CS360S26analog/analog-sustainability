@@ -1,6 +1,7 @@
 package com.example.klimate;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -17,6 +18,14 @@ import androidx.viewpager2.widget.ViewPager2;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import com.example.klimate.local.AppDatabase;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+
 
 import com.getkeepsafe.taptargetview.TapTarget;
 import com.getkeepsafe.taptargetview.TapTargetSequence;
@@ -24,6 +33,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.PersistentCacheSettings;
 
 import java.util.concurrent.TimeUnit;
 
@@ -58,7 +68,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         requestNotificationPermissionIfNeeded();
+        enableFirestoreOfflinePersistence();
+        initRoomDatabase();
         scheduleStreakNotificationWorker();
+        scheduleSyncWorker();
 
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
 
@@ -93,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.inflateMenu(R.menu.bottom_nav_menu);
 
         viewPager.setAdapter(new MainPagerAdapter(this));
-        viewPager.setOffscreenPageLimit(2);
+        viewPager.setOffscreenPageLimit(4);
         viewPager.setCurrentItem(0, false);
         showPager();
 
@@ -137,7 +150,14 @@ public class MainActivity extends AppCompatActivity {
         });
 
         bottomNav.setSelectedItemId(R.id.nav_home);
-        showNavigationTutorialIfNeeded(bottomNav);
+        showNavigationTutorialIfNeeded(bottomNav, false);
+    }
+
+    public void startStudentTutorialAgain() {
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
+        if (bottomNav == null) return;
+
+        showNavigationTutorialIfNeeded(bottomNav, true);
     }
 
     private int getStudentPositionForNavId(int id) {
@@ -243,9 +263,10 @@ public class MainActivity extends AppCompatActivity {
     // NAVIGATION TUTORIAL
     // ═══════════════════════════════════════════════════
 
-    private void showNavigationTutorialIfNeeded(BottomNavigationView bottomNav) {
+    private void showNavigationTutorialIfNeeded(BottomNavigationView bottomNav, boolean forceShow) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if (prefs.getBoolean("tutorial_shown", false)) return;
+
+        if (!forceShow && prefs.getBoolean("tutorial_shown", false)) return;
 
         bottomNav.postDelayed(() -> {
             if (isDestroyed() || isFinishing()) return;
@@ -254,78 +275,111 @@ public class MainActivity extends AppCompatActivity {
                 new TapTargetSequence(this)
                         .targets(
                                 TapTarget.forView(
-                                                bottomNav.findViewById(R.id.nav_log),
-                                                "Step 1 of 5 — Log Activities",
-                                                "This is your most-used screen. Tap here to log a sustainable activity like cycling, recycling, or choosing a plant-based meal. Quick Log takes 5 seconds. Verified Log lets you attach a proof photo for bonus points from the community."
-                                        ).outerCircleColor(R.color.color_green_header)
-                                        .targetCircleColor(android.R.color.white)
-                                        .titleTextColor(android.R.color.white)
-                                        .descriptionTextColor(android.R.color.white)
-                                        .cancelable(false)
-                                        .tintTarget(true)
-                                        .titleTextSize(18)
-                                        .descriptionTextSize(13),
-
-                                TapTarget.forView(
                                                 bottomNav.findViewById(R.id.nav_home),
-                                                "Step 2 of 5 — Your Dashboard",
-                                                "Your personal home screen shows your current streak, total CO₂ saved, points earned, and your monthly challenge progress. The campus impact card shows how much CO₂ all Klimate users have saved together — in real time."
-                                        ).outerCircleColor(R.color.color_green_header)
+                                                "Home Dashboard",
+                                                "This is your main screen. Here you can see your current streak, best streak, points, CO₂ saved, quick log suggestions, campus impact, EcoPicks, and monthly challenge progress.\n\nUse this screen when you want a quick summary of your sustainability progress."
+                                        )
+                                        .outerCircleColor(R.color.color_green_header)
                                         .targetCircleColor(android.R.color.white)
                                         .titleTextColor(android.R.color.white)
                                         .descriptionTextColor(android.R.color.white)
                                         .cancelable(false)
                                         .tintTarget(true)
-                                        .titleTextSize(18)
-                                        .descriptionTextSize(13),
-
-                                TapTarget.forView(
-                                                bottomNav.findViewById(R.id.nav_rankings),
-                                                "Step 3 of 5 — Rankings & Challenges",
-                                                "See where you rank on the campus leaderboard. Browse active sustainability challenges and join one to compete with other students as a team. Your nemesis — the person just above and just below you — is highlighted so you always know who to chase."
-                                        ).outerCircleColor(R.color.color_green_header)
-                                        .targetCircleColor(android.R.color.white)
-                                        .titleTextColor(android.R.color.white)
-                                        .descriptionTextColor(android.R.color.white)
-                                        .cancelable(false)
-                                        .tintTarget(true)
-                                        .titleTextSize(18)
-                                        .descriptionTextSize(13),
+                                        .titleTextSize(20)
+                                        .descriptionTextSize(14),
 
                                 TapTarget.forView(
                                                 bottomNav.findViewById(R.id.nav_friends),
-                                                "Step 4 of 5 — Community Feed",
-                                                "Browse the community feed to see recent activity from other students. Switch to the Tips tab to read sustainability advice published by LUMS staff. Use Challenges to discover and join active team challenges directly from the feed."
-                                        ).outerCircleColor(R.color.color_green_header)
+                                                "Community Feed",
+                                                "This screen shows the social side of Klimate. You can see activity from other students, browse sustainability tips, and get ideas for what to log next.\n\nUse this when you want motivation or want to see how others are participating."
+                                        )
+                                        .outerCircleColor(R.color.color_green_header)
                                         .targetCircleColor(android.R.color.white)
                                         .titleTextColor(android.R.color.white)
                                         .descriptionTextColor(android.R.color.white)
                                         .cancelable(false)
                                         .tintTarget(true)
-                                        .titleTextSize(18)
-                                        .descriptionTextSize(13),
+                                        .titleTextSize(20)
+                                        .descriptionTextSize(14),
+
+                                TapTarget.forView(
+                                                bottomNav.findViewById(R.id.nav_log),
+                                                "Log an Activity",
+                                                "Tap here whenever you do something sustainable.\n\nExamples include walking, cycling, recycling, composting, using a reusable cup, saving energy, using public transit, or eating a plant-based meal.\n\nSome logs may need proof, like a photo, and can be reviewed by the community or staff."
+                                        )
+                                        .outerCircleColor(R.color.color_green_header)
+                                        .targetCircleColor(android.R.color.white)
+                                        .titleTextColor(android.R.color.white)
+                                        .descriptionTextColor(android.R.color.white)
+                                        .cancelable(false)
+                                        .tintTarget(true)
+                                        .titleTextSize(20)
+                                        .descriptionTextSize(14),
+
+                                TapTarget.forView(
+                                                bottomNav.findViewById(R.id.nav_rankings),
+                                                "Rankings",
+                                                "This is the leaderboard. It ranks students by total points earned from sustainable actions.\n\nYou can compare your progress with others, see your rank, and use nearby rivals as motivation to keep logging activities."
+                                        )
+                                        .outerCircleColor(R.color.color_green_header)
+                                        .targetCircleColor(android.R.color.white)
+                                        .titleTextColor(android.R.color.white)
+                                        .descriptionTextColor(android.R.color.white)
+                                        .cancelable(false)
+                                        .tintTarget(true)
+                                        .titleTextSize(20)
+                                        .descriptionTextSize(14),
 
                                 TapTarget.forView(
                                                 bottomNav.findViewById(R.id.nav_profile),
-                                                "Step 5 of 5 — Your Profile",
-                                                "View your badges (earned and locked), redeem your points for real campus rewards like free coffee or a bike voucher, and track your total CO₂ impact. The more you log, the more badges you unlock and the more rewards you can redeem. You're all set — happy logging! 🌿"
-                                        ).outerCircleColor(R.color.color_green_header)
+                                                "Profile",
+                                                "Your profile keeps track of your personal progress. You can view your badges, achievements, rewards, points, streaks, and account options.\n\nYou can also restart this tutorial anytime from the Tutorial button on this screen."
+                                        )
+                                        .outerCircleColor(R.color.color_green_header)
                                         .targetCircleColor(android.R.color.white)
                                         .titleTextColor(android.R.color.white)
                                         .descriptionTextColor(android.R.color.white)
                                         .cancelable(false)
                                         .tintTarget(true)
-                                        .titleTextSize(18)
-                                        .descriptionTextSize(13)
+                                        .titleTextSize(20)
+                                        .descriptionTextSize(14)
                         )
                         .listener(new TapTargetSequence.Listener() {
+                            int step = 0;
+
                             @Override
                             public void onSequenceFinish() {
                                 prefs.edit().putBoolean("tutorial_shown", true).apply();
+
+                                bottomNav.setSelectedItemId(R.id.nav_home);
+
+                                new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this)
+                                        .setTitle("You're ready to use Klimate 🌱")
+                                        .setMessage("Quick reminder:\n\n• Log sustainable activities from the + button\n• Check Home for your impact and challenges\n• Use Community for ideas and tips\n• Use Rankings to compare progress\n• Visit Profile to see badges, rewards, and restart this tutorial anytime")
+                                        .setPositiveButton("Got it", null)
+                                        .show();
                             }
 
                             @Override
-                            public void onSequenceStep(TapTarget lastTarget, boolean targetClicked) {}
+                            public void onSequenceStep(TapTarget lastTarget, boolean targetClicked) {
+                                /*
+                                 * This opens each screen as the tutorial moves forward.
+                                 * The short delay gives the fragment time to load before the next tooltip.
+                                 */
+                                if (step == 0) {
+                                    bottomNav.setSelectedItemId(R.id.nav_home);
+                                } else if (step == 1) {
+                                    bottomNav.setSelectedItemId(R.id.nav_friends);
+                                } else if (step == 2) {
+                                    bottomNav.setSelectedItemId(R.id.nav_log);
+                                } else if (step == 3) {
+                                    bottomNav.setSelectedItemId(R.id.nav_rankings);
+                                } else if (step == 4) {
+                                    bottomNav.setSelectedItemId(R.id.nav_profile);
+                                }
+
+                                step++;
+                            }
 
                             @Override
                             public void onSequenceCanceled(TapTarget lastTarget) {
@@ -337,7 +391,7 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 prefs.edit().putBoolean("tutorial_shown", true).apply();
             }
-        }, 800);
+        }, 900);
     }
 
     private void showStaffTutorialIfNeeded(BottomNavigationView bottomNav) {
@@ -452,6 +506,58 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void enableFirestoreOfflinePersistence() {
+        FirebaseFirestoreSettings settings =
+                new FirebaseFirestoreSettings.Builder()
+                        .setLocalCacheSettings(
+                                PersistentCacheSettings.newBuilder()
+                                        .setSizeBytes(100*1024*1024)
+                                        .build()
+                        )
+                        .build();
+
+        FirebaseFirestore.getInstance().setFirestoreSettings(settings);
+    }
+    private void initRoomDatabase() {
+        // Kick off the initialisation off the main thread
+        new Thread(() ->
+                AppDatabase.getInstance(getApplicationContext()),
+                "room-init"
+        ).start();
+    }
+
+    private void scheduleSyncWorker() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+
+        PeriodicWorkRequest syncWork = new PeriodicWorkRequest.Builder(
+                com.example.klimate.SyncWorker.class,
+                15, TimeUnit.MINUTES
+        )
+                .setConstraints(constraints)
+                .build();
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "klimate_sync",
+                ExistingPeriodicWorkPolicy.KEEP,
+                syncWork
+        );
+    }
+
+    public static void triggerImmediateSync(Context context) {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+
+        androidx.work.OneTimeWorkRequest syncNow =
+                new androidx.work.OneTimeWorkRequest.Builder(com.example.klimate.SyncWorker.class)
+                        .setConstraints(constraints)
+                        .build();
+
+        WorkManager.getInstance(context).enqueue(syncNow);
+    }
+
     private void showFragmentContainer() {
         if (viewPager != null) {
             viewPager.setVisibility(View.GONE);
@@ -506,7 +612,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (viewPager != null) {
             showPager();
-            viewPager.setCurrentItem(1, true);
+            viewPager.setCurrentItem(2, true);
         }
     }
 
@@ -570,6 +676,7 @@ public class MainActivity extends AppCompatActivity {
             bottomNav.setVisibility(visible ? View.VISIBLE : View.GONE);
         }
     }
+
 
     public void navigateToHome() {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
