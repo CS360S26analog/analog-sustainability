@@ -24,6 +24,13 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+import android.widget.ImageView;
+
+import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.preference.PreferenceManager;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -105,6 +112,7 @@ public class HomeFragment extends Fragment {
         TextView tvGreetingMessage        = view.findViewById(R.id.tv_greeting_message);
         TextView tvUserName               = view.findViewById(R.id.tv_user_name);
         TextView tvProfileInitial         = view.findViewById(R.id.tv_profile_initial);
+        ImageView ivProfilePhoto          = view.findViewById(R.id.iv_profile_photo);
         FrameLayout profileAvatarContainer = view.findViewById(R.id.profile_avatar_container);
 
         // ── Streak bar ────────────────────────────────────────────────────────
@@ -255,7 +263,7 @@ public class HomeFragment extends Fragment {
 
         // ── Live data load ────────────────────────────────────────────────────
         if (currentUser != null) {
-            loadUserHeader(tvUserName, tvProfileInitial);
+            loadUserHeader(tvUserName, tvProfileInitial, ivProfilePhoto);
             loadUserStreakFromLogs(tvStreakNumber, tvStreakMessage, tvStreakPercent,
                     progressStreak, tvBottomStreakDays);
             loadActivityCards(tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
@@ -282,6 +290,7 @@ public class HomeFragment extends Fragment {
 
         TextView tvUserName        = view.findViewById(R.id.tv_user_name);
         TextView tvProfileInitial  = view.findViewById(R.id.tv_profile_initial);
+        ImageView ivProfilePhoto   = view.findViewById(R.id.iv_profile_photo);
 
         TextView tvStreakNumber    = view.findViewById(R.id.tv_streak_number);
         TextView tvStreakMessage   = view.findViewById(R.id.tv_streak_message);
@@ -301,7 +310,7 @@ public class HomeFragment extends Fragment {
         TextView tvChallengeDays     = view.findViewById(R.id.tv_challenge_days);
         TextView tvChallengePercent  = view.findViewById(R.id.tv_challenge_percent);
 
-        loadUserHeader(tvUserName, tvProfileInitial);
+        loadUserHeader(tvUserName, tvProfileInitial, ivProfilePhoto);
         loadUserStreakFromLogs(tvStreakNumber, tvStreakMessage, tvStreakPercent,
                 progressStreak, tvBottomStreakDays);
         loadActivityCards(tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
@@ -440,47 +449,94 @@ public class HomeFragment extends Fragment {
      * Loads the user's display name and avatar initial.
      * Room gives an instant result; Firestore refreshes and updates the cache.
      */
-    private void loadUserHeader(TextView tvUserName, TextView tvProfileInitial) {
+    private void loadUserHeader(TextView tvUserName, TextView tvProfileInitial, ImageView ivProfilePhoto) {
         String uid = currentUser.getUid();
 
         executor.execute(() -> {
-            // ── Room first ───────────────────────────────────────────────────
+            // ── Room first: instant initials/name ───────────────────────────────
             UserEntity cached = AppDatabase.getInstance(requireContext())
                     .userDao().getUserSync(uid);
-            if (cached != null && !cached.displayName.isEmpty()) {
+
+            if (cached != null && cached.displayName != null && !cached.displayName.isEmpty()) {
                 String first = cached.displayName.trim().split("\\s+")[0];
-                if (isAdded()) requireActivity().runOnUiThread(() -> {
-                    tvUserName.setText(first + "!");
-                    tvProfileInitial.setText(
-                            String.valueOf(Character.toUpperCase(first.charAt(0))));
-                });
+
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() -> {
+                        tvUserName.setText(first + "!");
+                        tvProfileInitial.setText(
+                                String.valueOf(Character.toUpperCase(first.charAt(0)))
+                        );
+
+                        // Room does not currently store the Base64 profile photo,
+                        // so keep initials visible until Firestore refreshes.
+                        updateHomeAvatar(tvProfileInitial, ivProfilePhoto, null);
+                    });
+                }
             }
 
-            // ── Firestore refresh ────────────────────────────────────────────
+            // ── Firestore refresh: name + saved avatar photo ─────────────────────
             db.collection("users").document(uid).get()
                     .addOnSuccessListener(document -> {
                         if (!document.exists() || !isAdded()) return;
+
                         String displayName = document.getString("displayName");
-                        if (displayName == null || displayName.trim().isEmpty()) return;
+                        String profilePhotoBase64 = document.getString("profilePhotoBase64");
 
-                        String cleanName  = displayName.trim();
-                        String firstName  = cleanName.split("\\s+")[0];
+                        if (displayName != null && !displayName.trim().isEmpty()) {
+                            String cleanName = displayName.trim();
+                            String firstName = cleanName.split("\\s+")[0];
 
-                        // Update Room cache
-                        executor.execute(() -> {
-                            UserEntity u = AppDatabase.getInstance(requireContext())
-                                    .userDao().getUserSync(uid);
-                            if (u != null) {
-                                u.displayName = displayName;
-                                AppDatabase.getInstance(requireContext()).userDao().update(u);
-                            }
-                        });
+                            executor.execute(() -> {
+                                UserEntity u = AppDatabase.getInstance(requireContext())
+                                        .userDao().getUserSync(uid);
 
-                        tvUserName.setText(firstName + "!");
-                        tvProfileInitial.setText(
-                                String.valueOf(Character.toUpperCase(firstName.charAt(0))));
+                                if (u != null) {
+                                    u.displayName = displayName;
+                                    AppDatabase.getInstance(requireContext()).userDao().update(u);
+                                }
+                            });
+
+                            tvUserName.setText(firstName + "!");
+                            tvProfileInitial.setText(
+                                    String.valueOf(Character.toUpperCase(firstName.charAt(0)))
+                            );
+                        }
+
+                        updateHomeAvatar(tvProfileInitial, ivProfilePhoto, profilePhotoBase64);
                     });
         });
+    }
+
+    private void updateHomeAvatar(TextView tvProfileInitial, ImageView ivProfilePhoto, String profilePhotoBase64) {
+        if (tvProfileInitial == null || ivProfilePhoto == null) return;
+
+        if (profilePhotoBase64 == null || profilePhotoBase64.trim().isEmpty()) {
+            ivProfilePhoto.setVisibility(View.GONE);
+            tvProfileInitial.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        try {
+            byte[] imageBytes = Base64.decode(profilePhotoBase64, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+
+            if (bitmap != null) {
+                RoundedBitmapDrawable roundedDrawable =
+                        RoundedBitmapDrawableFactory.create(getResources(), bitmap);
+                roundedDrawable.setCircular(true);
+
+                ivProfilePhoto.setImageDrawable(roundedDrawable);
+                ivProfilePhoto.setVisibility(View.VISIBLE);
+                tvProfileInitial.setVisibility(View.GONE);
+            } else {
+                ivProfilePhoto.setVisibility(View.GONE);
+                tvProfileInitial.setVisibility(View.VISIBLE);
+            }
+
+        } catch (Exception e) {
+            ivProfilePhoto.setVisibility(View.GONE);
+            tvProfileInitial.setVisibility(View.VISIBLE);
+        }
     }
 
     /**
