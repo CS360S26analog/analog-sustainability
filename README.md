@@ -244,6 +244,7 @@ Monday, March 30, 2026
 
 <img src="./screenshots/UML_class_diagram.png" width="800"/>
 
+
 The UML class diagram represents the core architecture of the application and how different components interact.
 
 <details>
@@ -265,6 +266,38 @@ Shows the overall structure of the application, including key classes such as us
 - Models represent data (User, Activity, Log)
 - Logic/Managers handle processing (Validation, Leaderboard)
 - UI components interact with these layers to display information
+
+</details>
+
+
+<img src="./screenshots/Final_Uml.png" width="800"/>
+
+The UML class diagram represents the core architecture of the Klimate application and how its main components interact.
+
+<details>
+<summary><strong>Diagram Description</strong></summary>
+
+Shows the overall structure of the application, including authentication, user screens, activity logging, validation, points, challenges, staff tools, local storage, and background workers.
+
+- **User** — Central profile model storing user data such as points, streaks, progress, and account information.
+- **ActivityLog** — Records each sustainable action logged by a user, including timestamp, impact, and quick vs. verified status.
+- **Vote** — Represents community validation actions on submitted activity logs.
+- **PointsManager** — Handles point updates and reward logic.
+- **LogPointsPolicy** — Defines how many points different logged actions should receive.
+- **CarbonCalculator** — Calculates environmental impact from logged activities.
+- **BadgeDefinition** — Defines badge and milestone reward rules.
+- **DashboardViewModel** — Connects dashboard data to the Home screen.
+- **Fragments** — Represent UI screens such as Home, Log, History, Profile, Rankings, Challenges, Feed, EcoPicks, and ValidationFeed.
+- **Staff Fragments** — Provide staff-facing screens for overview, reports, tips, logs, management, and profile.
+- **Room Database / DAOs** — Provide local caching for users, logs, votes, feed data, and challenges.
+- **Workers / Notifications** — Handle background sync, streak reminders, and app notifications.
+
+**Layered structure:**
+- Models represent app data such as `User`, `ActivityLog`, and `Vote`.
+- Managers and helpers handle logic such as points, badges, carbon impact, and validation.
+- Local database classes handle cached offline data.
+- UI fragments display data and allow users or staff to interact with the app.
+- Workers run background tasks such as sync and reminders.
 
 </details>
 
