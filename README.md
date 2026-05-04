@@ -1179,6 +1179,229 @@ app/src/androidTest/java/com/example/klimate/
 </details>
 
 ---
+---
+
+<details>
+<summary><strong>Sprint 3 — April 6 to April 13</strong></summary>
+
+### Sprint Planning (April 6)
+
+**Goal:** Continue after the half-checkpoint merge, clean up the demo build, improve the home/logging flow, and prepare the remaining full-checkpoint stories for implementation.
+
+| User Story / Area | Owner | Plan |
+|-------------------|-------|------|
+| Home logging flow | Izza | Improve the home page logging entry point and make the dashboard-to-log flow easier to use |
+| Code documentation | Izza | Add comments and small documentation updates after the half-checkpoint merge |
+| Dashboard polish | Maryam A | Review dashboard calculations and prepare improvements for CO₂, streaks, and progress displays |
+| Staff and content features | Maryam W | Plan staff-side work for goals, tips, challenges, and campus impact |
+| Rankings and profile fixes | Karar | Plan leaderboard, profile, and sharing-related improvements |
+| Logging and rewards polish | Haroon | Plan improvements for activity logging controls, reward redemption, and validation feed behavior |
+
+### Sprint Review (April 13)
+
+**Summary:** The team completed immediate post-checkpoint cleanup and began preparing the remaining full-checkpoint features. The home logging flow and comments were updated on `main`, while larger features continued in branches for later integration.
+
+| Story / Area | Status |
+|--------------|--------|
+| Home logging flow | ✅ Done |
+| Code comments and cleanup | ✅ Done |
+| Dashboard, staff features, rankings, rewards, and feed improvements | 🔄 In Progress |
+
+**Additional Contributions:**
+- Izza updated the homepage logging flow.
+- Izza added comments and minor cleanup after the checkpoint.
+- The team prepared the next sprint around full-checkpoint user stories.
+
+</details>
+
+---
+
+<details>
+<summary><strong>Sprint 4 — April 13 to April 20</strong></summary>
+
+### Sprint Planning (April 13)
+
+**Goal:** Build full-checkpoint features in parallel branches before merging them into `main`.
+
+| User Story / Area | Owner | Plan |
+|-------------------|-------|------|
+| US-10 — Monthly goals | Maryam W | Implement monthly goal support and goal display logic |
+| US-11 — Campus impact summary | Maryam W | Add campus-wide impact totals and connect them to dashboard/community views |
+| US-13 — Staff tips/articles | Maryam W | Build staff-side tips publishing and student-facing feed integration |
+| US-14 — Join challenges | Maryam W / Izza | Improve challenge browsing, joining, and challenge progress flow |
+| US-17 — Reward redemption | Haroon | Complete reward redemption behavior from the profile/rewards area |
+| US-20 / US-21 — Team challenge features | Izza | Start team challenge participation and team progress features |
+| Rankings/Profile improvements | Karar | Continue profile, ranking, and sharing-related fixes |
+| Badge and proof improvements | Maryam A | Prepare badge awarding and verified log proof improvements |
+
+### Sprint Review (April 20)
+
+**Summary:** Most full-checkpoint stories were still being implemented in feature branches. The team focused on dividing the remaining work by feature area and preparing larger merges for the following sprint.
+
+| Story / Area | Status |
+|--------------|--------|
+| Monthly goals and campus impact | 🔄 In Progress |
+| Staff tips and staff-side features | 🔄 In Progress |
+| Team challenges and Eco Picks planning | 🔄 In Progress |
+| Reward redemption and activity logging improvements | 🔄 In Progress |
+| Rankings/profile improvements | 🔄 In Progress |
+| Badge/proof improvements | 🔄 In Progress |
+
+**Additional Contributions:**
+- Work continued mainly in branches rather than direct `main` commits.
+- The team prepared larger feature merges for the final implementation period.
+
+</details>
+
+---
+
+<details>
+<summary><strong>Sprint 5 — April 20 to April 27</strong></summary>
+
+### Sprint Planning (April 20)
+
+**Goal:** Merge major full-checkpoint features into `main`, including monthly goals, campus impact, staff tips, reward redemption, improved logging, and final sprint features.
+
+| User Story / Area | Owner | Plan |
+|-------------------|-------|------|
+| US-02 / US-08 / US-09 — Logging, CO₂, streaks | Haroon | Improve activity logging, CO₂ tracking, streak tracking, and related UI behavior |
+| US-17 — Reward redemption | Haroon | Implement and polish reward redemption from the profile area |
+| Activity logging sliders | Haroon | Add sliders for activity logging quantities and improve logging input controls |
+| Profile caching and university selection | Haroon | Add caching in ProfileFragment and university selection during sign up |
+| US-10 — Monthly goals | Maryam W | Implement personal monthly goals and related goal dialog |
+| US-11 — Campus impact | Maryam W | Add campus impact summary and campus-wide CO₂ display |
+| US-13 — Staff tips/articles | Maryam W | Implement staff tips publishing and staff content flow |
+| US-14 — Challenges | Maryam W | Add challenge joining and challenge-related improvements |
+| CO₂ equivalents | Maryam W | Add real-world CO₂ equivalent display |
+| Staff registration | Maryam W | Add staff registration flow and role handling |
+| Share progress | Maryam W | Add sharing support for user progress |
+| Karar final sprint features | Karar | Implement final assigned profile, ranking, and interaction features |
+| Team challenge and Eco Picks preparation | Izza | Prepare Eco Picks, team challenge features, and EcoMap work for the next sprint |
+
+### Sprint Review (April 27)
+
+**Summary:** Major final-checkpoint work was merged. Haroon completed logging, streak, CO₂, slider, reward, caching, and sign-up related updates. Maryam W completed monthly goals, campus impact, staff tips, staff registration, CO₂ equivalents, share progress, and challenge-related features. Karar merged final sprint features and conflict fixes.
+
+| Story / Area | Status |
+|--------------|--------|
+| US-02, US-08, US-09 improvements | ✅ Done |
+| US-10 Monthly goals | ✅ Done |
+| US-11 Campus impact summary | ✅ Done |
+| US-13 Staff tips/articles | ✅ Done |
+| US-14 Challenge joining improvements | ✅ Done |
+| US-17 Reward redemption | 🔄 In Progress / Needs final verification |
+| CO₂ equivalents | ✅ Done |
+| Staff registration | ✅ Done |
+| Share progress | 🔄 In Progress |
+| Profile caching and university selection | ✅ Done |
+| Karar final sprint features | ✅ Done |
+
+**Additional Contributions:**
+- Haroon added activity logging sliders.
+- Haroon added caching in the profile area and university selection during sign up.
+- Maryam W resolved merge conflicts in User and RegisterActivity.
+- Karar resolved merge conflicts and merged final sprint work.
+
+</details>
+
+---
+
+<details>
+<summary><strong>Sprint 6 — April 27 to May 4</strong></summary>
+
+### Sprint Planning (April 27)
+
+**Goal:** Polish the final feature set, add Eco Picks and EcoMap features, improve staff UI, add badge/proof improvements, add caching support, and fix final UI/navigation issues.
+
+| User Story / Area | Owner | Plan |
+|-------------------|-------|------|
+| US-20 / US-21 — Team challenge features | Izza | Add Eco Picks and team challenge features |
+| US-31 — Eco Picks @ LUMS | Izza | Build the Eco Picks sustainable alternatives screen |
+| US-42 — EcoMap | Izza | Add interactive zoomable EcoMap, sticky notes, location tags, and real map layers |
+| Home dashboard redesign | Izza | Refine home dashboard widgets, challenge navigation, and progress rings |
+| EcoMap staff review suggestions | Izza | Add EcoMap tip suggestions for staff review |
+| Auth and EcoPicks polish | Izza | Polish auth screens and EcoPicks staff tips |
+| US-18 / US-19 — Badges | Maryam A | Add milestone badge awarding and badge display support |
+| Verified log proof capture | Maryam A | Add camera proof capture for verified logs |
+| ViewPager navigation | Maryam A | Add ViewPager2 swipe navigation |
+| CO₂ calculation fixes | Maryam A | Add CarbonCalculator tests, restore bonus point calculation, and improve monthly CO₂ fallback |
+| Staff UI / tutorial | Maryam W | Update staff screens, staff navigation, tutorials, feed improvements, and test fixes |
+| Rankings and profile | Karar | Add live rankings, nemesis UI, profile persistence, account settings fixes, and dashboard CO₂ saved usage |
+| Share button | Karar | Add share button to profile |
+| Feed, caching, and navigation fixes | Haroon | Improve community feed, caching, dashboard lag, navigation bar, sliders, and voting buttons |
+
+### Sprint Review (May 4)
+
+**Summary:** The team completed most final-polish features. Izza implemented Eco Picks, team challenge features, EcoMap, sticky notes, real map layer work, and home dashboard redesign. Maryam A completed badge awarding, proof capture, ViewPager navigation, CarbonCalculator tests, and CO₂ calculation fixes. Maryam W completed staff UI, staff navigation, tutorials, and feed improvements. Karar improved rankings, profile, account settings, CO₂ saved dashboard usage, and sharing. Haroon improved caching, feed behavior, sliders, navigation, dashboard performance, and vote buttons.
+
+| Story / Area | Status |
+|--------------|--------|
+| US-18 / US-19 Badges | 🔄 In Progress / Needs final verification |
+| US-20 / US-21 Team challenge features | ✅ Done |
+| US-23 Reminder/caching-related support | 🔄 In Progress |
+| US-24 / US-38 CO₂ equivalents and CO₂ fallback | ✅ Done |
+| US-27 Account settings screen | ✅ Done |
+| US-30 Guided tutorial | ✅ Done |
+| US-31 Eco Picks @ LUMS | ✅ Done |
+| US-32 Staff approve/reject flagged activity logs | ✅ Done |
+| US-33 Share CO₂/progress summary | 🔄 In Progress / Needs issue closure |
+| US-37 Live campus-wide CO₂ and active users | ✅ Done |
+| US-42 Real EcoMap / campus sustainability map layer | ✅ Done |
+| US-43 Local caching and sync support | ✅ Done |
+| US-44 Staff dashboard overview | ✅ Done |
+| US-45 Separate staff navigation/profile flow | ✅ Done |
+
+**Additional Contributions:**
+- Izza added the interactive EcoMap with sticky notes, location tags, zoom support, real map layers, and Eco Picks improvements.
+- Maryam A added camera proof capture, milestone badge awarding, ViewPager2 swipe navigation, CarbonCalculator tests, and CO₂ fallback fixes.
+- Maryam W updated staff screens, staff UI, staff navigation, tutorial flow, feed improvements, login/register UI, and tests.
+- Karar added live rankings, nemesis UI, persistent profile picture support, account settings/rankings fixes, dashboard CO₂ saved usage, and profile sharing.
+- Haroon added caching, improved community feed behavior, fixed dashboard/home lag, fixed sliders, fixed navigation, and fixed voting buttons.
+
+</details>
+
+---
+
+<details>
+<summary><strong>Sprint 7 — May 4 to May 5</strong></summary>
+
+### Sprint Planning (May 4)
+
+**Goal:** Final cleanup before submission, remove generated/local files, merge the real EcoMap layer work, verify final feature status, and update documentation.
+
+| User Story / Area | Owner | Plan |
+|-------------------|-------|------|
+| Final EcoMap merge | Izza | Merge real EcoMap layers and final EcoMap navigation improvements |
+| Repository cleanup | Karar | Remove generated local files from the repository |
+| Final voting/feed checks | Haroon | Verify upvote/downvote buttons and community feed behavior |
+| Final CO₂/dashboard checks | Maryam A | Verify CarbonCalculator tests, CO₂ fallback, and dashboard values |
+| Final staff UI checks | Maryam W | Verify staff dashboard, staff navigation, tutorial, and staff profile flow |
+| README documentation | Team | Update backlog and sprint records for the final checkpoint |
+
+### Sprint Review (May 5)
+
+**Summary:** Final cleanup and verification were completed for submission. The latest merged work focused on real EcoMap layers, EcoMap sticky note navigation, removing generated files, profile sharing, voting button fixes, CO₂/dashboard calculation fixes, caching, and staff UI/tutorial verification.
+
+| Story / Area | Status |
+|--------------|--------|
+| Real EcoMap layers | ✅ Done |
+| EcoMap sticky note navigation | ✅ Done |
+| Generated/local files removed | ✅ Done |
+| Profile share button | ✅ Done / Needs issue closure |
+| Voting button fixes | ✅ Done |
+| CO₂/dashboard fixes | ✅ Done |
+| Staff UI/tutorial final check | ✅ Done |
+| README sprint and backlog update | ✅ Done |
+
+**Additional Contributions:**
+- Izza merged the real EcoMap layer work and improved EcoMap sticky note navigation.
+- Karar removed generated local files and added profile sharing work.
+- Haroon fixed upvote/downvote buttons and continued feed/caching polish.
+- Maryam A completed final CO₂ calculation and dashboard-related verification.
+- Maryam W completed final staff UI, tutorial, and staff navigation verification.
+- The team updated documentation for the final checkpoint.
+
+</details>
 
 ### Key Observations
 
