@@ -89,11 +89,15 @@ public class HomeFragment extends Fragment {
     private float impactCo2SavedKg = 0f;
     private float impactPersonalGoalKg = 0f;
     private float impactChallengeProgress = 0f;
-    private boolean impactHasMonthlyChallenge = true;
+    private boolean impactHasMonthlyChallenge = false;
 
     // ── V2: Callback for monthly CO₂ calculation ─────────────────────────────
     private interface Co2ResultCallback {
         void onResult(double monthlyCo2);
+    }
+
+    private interface JoinedChallengeCallback {
+        void onResult(@Nullable QueryDocumentSnapshot challengeDoc);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -420,7 +424,7 @@ public class HomeFragment extends Fragment {
                         }
 
                         impactHasMonthlyChallenge =
-                                joinedMonthlyChallenge != null ? joinedMonthlyChallenge : true;
+                                joinedMonthlyChallenge != null && joinedMonthlyChallenge;
 
                         // Now fetch month-scoped CO₂ for the ring and the co2 label
                         loadCurrentMonthCo2ForDashboard(view, tvCo2Saved);
@@ -870,62 +874,55 @@ public class HomeFragment extends Fragment {
                                       ProgressBar progressChallenge,
                                       TextView tvChallengeDays,
                                       TextView tvChallengePercent) {
+        if (currentUser == null) {
+            showNoMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
+            return;
+        }
+
         String uid = currentUser.getUid();
-        int target = 20;
 
-        executor.execute(() -> {
-            // ── Room first (all-time count as placeholder) ────────────────────
-            List<ActivityLogEntity> roomLogs =
-                    AppDatabase.getInstance(requireContext())
-                            .activityLogDao().getLogsForUserSync(uid);
-            int roomProgress = Math.min(roomLogs.size(), target);
-            int roomPercent  = (int) ((roomProgress / (double) target) * 100);
+        showNoMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
 
-            if (isAdded()) requireActivity().runOnUiThread(() -> {
-                tvChallengeTitle.setText("Zero Waste February ♻️");
-                progressChallenge.setMax(target);
-                progressChallenge.setProgress(roomProgress);
-                tvChallengeDays.setText(roomProgress + " / " + target + " logs");
-                tvChallengePercent.setText(roomLogs.isEmpty()
-                        ? "Start logging to make progress"
-                        : roomPercent + "% complete");
-            });
+        db.collection("challenges")
+                .whereEqualTo("active", true)
+                .get()
+                .addOnSuccessListener(challengeSnapshots -> {
+                    if (!isAdded()) return;
 
-            // ── Firestore refresh (month-scoped, per V2) ─────────────────────
-            long monthStartMillis = getStartOfCurrentMonthMillis();
-            db.collection("activity_logs")
-                    .whereEqualTo("userId", uid)
-                    .get()
-                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<QueryDocumentSnapshot> activeChallenges = new ArrayList<>();
+
+                    for (QueryDocumentSnapshot challengeDoc : challengeSnapshots) {
+                        activeChallenges.add(challengeDoc);
+                    }
+
+                    if (activeChallenges.isEmpty()) {
+                        showNoMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
+                        return;
+                    }
+
+                    findFirstJoinedChallenge(activeChallenges, 0, uid, joinedChallengeDoc -> {
                         if (!isAdded()) return;
-                        int logCount = 0;
-                        for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                            Timestamp ts = doc.getTimestamp("timestamp");
-                            if (ts != null && ts.toDate().getTime() >= monthStartMillis) logCount++;
+
+                        if (joinedChallengeDoc == null) {
+                            showNoMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
+                            return;
                         }
-                        int progress = Math.min(logCount, target);
-                        int percent  = (int) ((progress / (double) target) * 100);
 
-                        impactChallengeProgress = progress / (float) target;
-                        refreshImpactRing();
-
-                        final int finalLogCount = logCount;
-                        requireActivity().runOnUiThread(() -> {
-                            progressChallenge.setMax(target);
-                            progressChallenge.setProgress(progress);
-                            tvChallengeDays.setText(progress + " / " + target + " logs");
-                            tvChallengePercent.setText(finalLogCount == 0
-                                    ? "Start logging to make progress"
-                                    : percent + "% complete");
-                        });
-                    })
-                    .addOnFailureListener(e -> {
-                        impactChallengeProgress = 0f;
-                        refreshImpactRing();
-                        if (isAdded()) requireActivity().runOnUiThread(() ->
-                                tvChallengePercent.setText("Couldn't load challenge"));
+                        bindJoinedMonthlyChallenge(
+                                joinedChallengeDoc,
+                                tvChallengeTitle,
+                                progressChallenge,
+                                tvChallengeDays,
+                                tvChallengePercent
+                        );
                     });
-        });
+                })
+                .addOnFailureListener(e -> {
+                    if (!isAdded()) return;
+
+                    showNoMonthlyChallenge(tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent);
+                    tvChallengePercent.setText("Couldn't load challenges");
+                });
     }
 
     /**
@@ -1355,11 +1352,13 @@ public class HomeFragment extends Fragment {
         tvRecent2Title.setText("RECENT ACTIVITY");
         tvRecent2Subtitle.setText("Your latest activity will appear here once you log one.");
 
-        tvChallengeTitle.setText("Zero Waste February ♻️");
-        progressChallenge.setMax(20);
+        tvChallengeTitle.setText("No monthly challenge joined");
+        progressChallenge.setMax(1);
         progressChallenge.setProgress(0);
-        tvChallengeDays.setText("0 / 20 logs");
-        tvChallengePercent.setText("Start logging to make progress");
+        tvChallengeDays.setText("Join a challenge to track progress");
+        tvChallengePercent.setText("Browse challenges to get started");
+        impactHasMonthlyChallenge = false;
+        impactChallengeProgress = 0f;
     }
 
     /**
@@ -1574,5 +1573,160 @@ public class HomeFragment extends Fragment {
     /** Formats a whole number with locale-appropriate thousands separators (V2). */
     private String formatWholeNumber(long value) {
         return String.format(Locale.getDefault(), "%,d", value);
+    }
+
+    private void findFirstJoinedChallenge(@NonNull List<QueryDocumentSnapshot> challenges,
+                                          int index,
+                                          @NonNull String uid,
+                                          @NonNull JoinedChallengeCallback callback) {
+        if (index >= challenges.size()) {
+            callback.onResult(null);
+            return;
+        }
+
+        QueryDocumentSnapshot challengeDoc = challenges.get(index);
+        String challengeId = challengeDoc.getId();
+
+        db.collection("challenges")
+                .document(challengeId)
+                .collection("members")
+                .document(uid)
+                .get()
+                .addOnSuccessListener(memberDoc -> {
+                    if (!isAdded()) return;
+
+                    if (memberDoc.exists()) {
+                        callback.onResult(challengeDoc);
+                    } else {
+                        findFirstJoinedChallenge(challenges, index + 1, uid, callback);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (!isAdded()) return;
+                    findFirstJoinedChallenge(challenges, index + 1, uid, callback);
+                });
+    }
+
+    private void bindJoinedMonthlyChallenge(@NonNull QueryDocumentSnapshot challengeDoc,
+                                            @NonNull TextView tvChallengeTitle,
+                                            @NonNull ProgressBar progressChallenge,
+                                            @NonNull TextView tvChallengeDays,
+                                            @NonNull TextView tvChallengePercent) {
+        String challengeName = challengeDoc.getString("name");
+
+        if (challengeName == null || challengeName.trim().isEmpty()) {
+            challengeName = "Monthly Challenge";
+        }
+
+        Long targetLong = challengeDoc.getLong("target");
+        int target = targetLong != null && targetLong > 0 ? targetLong.intValue() : 20;
+
+        Timestamp startDate = challengeDoc.getTimestamp("startDate");
+        Timestamp endDate = challengeDoc.getTimestamp("endDate");
+
+        long startMillis = startDate != null
+                ? startDate.toDate().getTime()
+                : getStartOfCurrentMonthMillis();
+
+        long endMillis = endDate != null
+                ? endDate.toDate().getTime()
+                : Long.MAX_VALUE;
+
+        List<String> allowedActivities = readAllowedActivities(challengeDoc);
+
+        String finalChallengeName = challengeName;
+        int finalTarget = target;
+
+        db.collection("activity_logs")
+                .whereEqualTo("userId", currentUser.getUid())
+                .get()
+                .addOnSuccessListener(logSnapshots -> {
+                    if (!isAdded()) return;
+
+                    int logCount = 0;
+
+                    for (QueryDocumentSnapshot logDoc : logSnapshots) {
+                        Timestamp timestamp = logDoc.getTimestamp("timestamp");
+                        if (timestamp == null) continue;
+
+                        long logMillis = timestamp.toDate().getTime();
+
+                        if (logMillis < startMillis || logMillis > endMillis) {
+                            continue;
+                        }
+
+                        String activityType = logDoc.getString("activityType");
+
+                        if (!allowedActivities.isEmpty()
+                                && (activityType == null || !allowedActivities.contains(activityType))) {
+                            continue;
+                        }
+
+                        logCount++;
+                    }
+
+                    int progress = Math.min(logCount, finalTarget);
+                    int percent = finalTarget > 0
+                            ? (int) ((progress / (double) finalTarget) * 100)
+                            : 0;
+
+                    impactHasMonthlyChallenge = true;
+                    impactChallengeProgress = finalTarget > 0
+                            ? progress / (float) finalTarget
+                            : 0f;
+
+                    refreshImpactRing();
+
+                    tvChallengeTitle.setText(finalChallengeName);
+                    progressChallenge.setMax(finalTarget);
+                    progressChallenge.setProgress(progress);
+                    tvChallengeDays.setText(progress + " / " + finalTarget + " logs");
+                    tvChallengePercent.setText(logCount == 0
+                            ? "Start logging to make progress"
+                            : percent + "% complete");
+                })
+                .addOnFailureListener(e -> {
+                    if (!isAdded()) return;
+
+                    impactHasMonthlyChallenge = true;
+                    impactChallengeProgress = 0f;
+                    refreshImpactRing();
+
+                    tvChallengeTitle.setText(finalChallengeName);
+                    progressChallenge.setMax(finalTarget);
+                    progressChallenge.setProgress(0);
+                    tvChallengeDays.setText("0 / " + finalTarget + " logs");
+                    tvChallengePercent.setText("Couldn't load progress");
+                });
+    }
+
+    private List<String> readAllowedActivities(@NonNull QueryDocumentSnapshot challengeDoc) {
+        List<String> allowedActivities = new ArrayList<>();
+        Object rawAllowedActivities = challengeDoc.get("allowedActivities");
+
+        if (rawAllowedActivities instanceof List<?>) {
+            for (Object item : (List<?>) rawAllowedActivities) {
+                if (item instanceof String && !((String) item).trim().isEmpty()) {
+                    allowedActivities.add((String) item);
+                }
+            }
+        }
+
+        return allowedActivities;
+    }
+
+    private void showNoMonthlyChallenge(@NonNull TextView tvChallengeTitle,
+                                        @NonNull ProgressBar progressChallenge,
+                                        @NonNull TextView tvChallengeDays,
+                                        @NonNull TextView tvChallengePercent) {
+        impactHasMonthlyChallenge = false;
+        impactChallengeProgress = 0f;
+        refreshImpactRing();
+
+        tvChallengeTitle.setText("No monthly challenge joined");
+        progressChallenge.setMax(1);
+        progressChallenge.setProgress(0);
+        tvChallengeDays.setText("Join a challenge to track progress");
+        tvChallengePercent.setText("Browse challenges to get started");
     }
 }
