@@ -22,6 +22,7 @@
   - [Part 1](#wireframes--project-part-1)
   - [Part 2](#wireframes--project-part-2)
   - [Part 3](#wireframes--project-part-3)
+  - [Part 4](#wireframes--project-part-4)
 - [Acceptance Criteria](#acceptance-criteria)
 - [App Repo Structure – Project Part 3](#klimate-android-app---project-part-3)
 - [Sprint Planning and Reviews](#sprint-planning-and-reviews)
