@@ -19,7 +19,6 @@
  * @author Maryam Ali
  */
 package com.example.klimate;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
@@ -1018,11 +1017,12 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        int basePoints = getBasePoints(activityName);
-        if (basePoints <= 0) {
+        if (getBasePoints(activityName) <= 0) {
             Toast.makeText(getContext(), "Invalid activity selected", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        int quickLogPoints = 0;
 
         String uid   = user.getUid();
         DocumentReference docRef = db.collection("activity_logs").document();
@@ -1032,13 +1032,12 @@ public class HomeFragment extends Fragment {
         // ── 1. Room write (instant) ──────────────────────────────────────────
         ActivityLogEntity entity = new ActivityLogEntity(
                 docRef.getId(), uid, activityName, "quick",
-                basePoints, 1, co2, "", null, System.currentTimeMillis()
+                quickLogPoints, 1, co2, "", null, System.currentTimeMillis()
         );
 
         executor.execute(() -> {
             AppDatabase localDb = AppDatabase.getInstance(context);
             int localId = (int) localDb.activityLogDao().insert(entity);
-            localDb.userDao().incrementPoints(uid, basePoints);
             localDb.userDao().incrementCo2(uid, co2);
             NotificationHelper.scheduleMimiHungryReminder(context);
 
@@ -1056,7 +1055,7 @@ public class HomeFragment extends Fragment {
             logData.put("userId",       uid);
             logData.put("activityType", activityName);
             logData.put("status",       "quick");
-            logData.put("points",       basePoints);
+            logData.put("points", quickLogPoints);
             logData.put("bonusPoints",  0);
             logData.put("proofUrl",     null);
             logData.put("voteCount",    0);
@@ -1068,7 +1067,6 @@ public class HomeFragment extends Fragment {
                         executor.execute(() ->
                                 localDb.activityLogDao().markSynced(localId, docRef.getId(), "synced")
                         );
-                        new PointsManager().awardBasePoints(context, uid, basePoints);
                     })
                     .addOnFailureListener(e -> {
                         executor.execute(() ->
