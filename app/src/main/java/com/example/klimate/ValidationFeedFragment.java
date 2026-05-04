@@ -15,6 +15,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -128,7 +130,18 @@ public class ValidationFeedFragment extends Fragment {
 
         String userId = document.getString("userId");
         String activityType = document.getString("activityType");
+
         String proofUrl = document.getString("proofUrl");
+        if (TextUtils.isEmpty(proofUrl)) {
+            proofUrl = document.getString("proofImageUrl");
+        }
+        if (TextUtils.isEmpty(proofUrl)) {
+            proofUrl = document.getString("imageUrl");
+        }
+        if (TextUtils.isEmpty(proofUrl)) {
+            proofUrl = document.getString("photoUrl");
+        }
+
         Timestamp timestamp = document.getTimestamp("timestamp");
 
         if (textName != null) {
@@ -213,6 +226,15 @@ public class ValidationFeedFragment extends Fragment {
                 proofImageContainer.setVisibility(View.GONE);
             }
 
+            if (imageProof != null) {
+                imageProof.setImageDrawable(null);
+                imageProof.setVisibility(View.GONE);
+            }
+
+            if (textProofOverlay != null) {
+                textProofOverlay.setVisibility(View.GONE);
+            }
+
             return;
         }
 
@@ -224,12 +246,19 @@ public class ValidationFeedFragment extends Fragment {
             proofImageContainer.setVisibility(View.VISIBLE);
         }
 
-        if (imageProof != null) {
-            imageProof.setVisibility(View.GONE);
+        if (textProofOverlay != null) {
+            textProofOverlay.setVisibility(View.GONE);
         }
 
-        if (textProofOverlay != null) {
-            textProofOverlay.setVisibility(View.VISIBLE);
+        if (imageProof != null) {
+            imageProof.setVisibility(View.VISIBLE);
+            imageProof.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+            Glide.with(imageProof.getContext())
+                    .load(proofUrl)
+                    .centerCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(imageProof);
         }
     }
 
