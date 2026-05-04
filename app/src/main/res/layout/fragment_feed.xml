@@ -39,13 +39,14 @@
         android:layout_height="wrap_content"
         android:background="@color/white"
         android:elevation="2dp"
+        android:fillViewport="true"
         android:scrollbars="none">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
             android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:paddingStart="16dp"
             android:paddingTop="10dp"
             android:paddingEnd="16dp"
@@ -55,57 +56,81 @@
                 android:id="@+id/chip_feed"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
+                android:minWidth="76dp"
                 android:background="@drawable/bg_button_amber"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:singleLine="true"
                 android:text="Verified"
                 android:textColor="@color/white"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
             <TextView
                 android:id="@+id/chip_news"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
+                android:minWidth="64dp"
                 android:background="@drawable/bg_card_outline"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:singleLine="true"
                 android:text="News"
                 android:textColor="@color/color_text_secondary"
                 android:textSize="13sp" />
 
-            <!-- This now represents BOTH Tips and Challenges -->
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
             <TextView
                 android:id="@+id/chip_explore"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
+                android:minWidth="72dp"
                 android:background="@drawable/bg_card_outline"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
-                android:text="Explore"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:singleLine="true"
+                android:text="Challenges"
                 android:textColor="@color/color_text_secondary"
                 android:textSize="13sp" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
             <TextView
                 android:id="@+id/chip_teams"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
+                android:minWidth="88dp"
                 android:background="@drawable/bg_card_outline"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:singleLine="true"
                 android:text="My Teams"
                 android:textColor="@color/color_text_secondary"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
-                android:gravity="center" />
+                android:textSize="13sp" />
 
         </LinearLayout>
     </HorizontalScrollView>

@@ -221,6 +221,14 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/slider_slot_row_1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:orientation="vertical"
+                android:visibility="gone" />
+
             <!-- Row 2: Recycling + Plant-based meal -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -300,6 +308,14 @@
                         android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/slider_slot_row_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:orientation="vertical"
+                android:visibility="gone" />
 
             <!-- Row 3: Reusable cup + Composting -->
             <LinearLayout
@@ -381,6 +397,14 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/slider_slot_row_3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:orientation="vertical"
+                android:visibility="gone" />
+
             <!-- Row 4: Walked + Energy saving -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -460,6 +484,14 @@
                         android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/slider_slot_row_4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:orientation="vertical"
+                android:visibility="gone" />
 
             <!-- Verified proof section — shown only when Verified Log tab active -->
             <LinearLayout

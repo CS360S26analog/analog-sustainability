@@ -40,6 +40,8 @@ dependencies {
     implementation(libs.core)
     implementation(libs.androidx.junit)
     implementation(libs.androidx.work.testing)
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.runtime.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
