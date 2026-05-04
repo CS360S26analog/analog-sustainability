@@ -7,9 +7,9 @@
  * to Firebase Storage and saved to Firestore under the proofUrl field.
  *
  * Quantifiable activities (Cycling, Walking, etc.) show a dynamic slider
- * beneath the selected activity row. Points are calculated
- * live as the slider moves. Flat-rate activities (Composting, Energy saving)
- * show no slider - fixed points are awarded on submission.
+ * beneath the selected activity row. Verified logs calculate points
+ * live as the slider moves. Quick logs save the activity and CO₂ impact
+ * without awarding points.
  *
  * Role in design: Part of the UI/Controller layer. Collects user input,
  * uploads proof media when needed, and writes activity log documents.
@@ -31,22 +31,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.net.Uri;
-import com.example.klimate.local.ActivityLogDao;
-import com.example.klimate.local.ActivityLogEntity;
-import com.example.klimate.local.AppDatabase;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -54,31 +46,35 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import java.io.File;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
 import com.example.klimate.local.ActivityLogEntity;
 import com.example.klimate.local.AppDatabase;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class LogFragment extends Fragment {
 
@@ -136,13 +132,6 @@ public class LogFragment extends Fragment {
     // Activity configuration — unit, slider max, pts per unit
     // -------------------------------------------------------------------
 
-    /**
-     * Returns the unit label for a given activity type.
-     * Returns empty string for flat-rate activities that have no unit.
-     *
-     * @param activityType the activity name
-     * @return unit string e.g. "km", "meal", "item", or ""
-     */
     private String getUnit(String activityType) {
         switch (activityType) {
             case "Cycling":
@@ -156,16 +145,10 @@ public class LogFragment extends Fragment {
             case "Recycling":
                 return "item";
             default:
-                return ""; // Composting and Energy saving — flat rate, no unit
+                return "";
         }
     }
 
-    /**
-     * Returns the maximum slider value for a given activity type.
-     *
-     * @param activityType the activity name
-     * @return maximum quantity the slider can reach
-     */
     private int getMaxQuantity(String activityType) {
         switch (activityType) {
             case "Cycling":          return 20;
@@ -178,13 +161,6 @@ public class LogFragment extends Fragment {
         }
     }
 
-    /**
-     * Returns the points awarded per unit of quantity for a given activity.
-     * For flat-rate activities this is the total fixed award.
-     *
-     * @param activityType the activity name
-     * @return points per unit, or fixed points for flat-rate activities
-     */
     private int getPointsPerUnit(String activityType) {
         switch (activityType) {
             case "Cycling":          return 3;
@@ -193,8 +169,8 @@ public class LogFragment extends Fragment {
             case "Plant-based meal": return 25;
             case "Reusable cup":     return 10;
             case "Recycling":        return 2;
-            case "Composting":       return 20; // flat
-            case "Energy saving":    return 15; // flat
+            case "Composting":       return 20;
+            case "Energy saving":    return 15;
             default:                 return 5;
         }
     }
@@ -260,12 +236,6 @@ public class LogFragment extends Fragment {
     // Activity configuration — quantity helpers
     // -------------------------------------------------------------------
 
-    /**
-     * Returns the slider question label for a given activity type.
-     *
-     * @param activityType the activity name
-     * @return human-readable question string shown above the slider
-     */
     private String getQuantityQuestion(String activityType) {
         switch (activityType) {
             case "Cycling":          return "How far did you cycle?";
@@ -278,13 +248,6 @@ public class LogFragment extends Fragment {
         }
     }
 
-    /**
-     * Returns whether an activity shows a quantity slider.
-     * Composting and Energy saving are flat rate — no slider shown.
-     *
-     * @param activityType the activity name
-     * @return true if the activity has a quantity slider
-     */
     private boolean isQuantifiable(String activityType) {
         switch (activityType) {
             case "Cycling":
@@ -299,14 +262,6 @@ public class LogFragment extends Fragment {
         }
     }
 
-    /**
-     * Calculates total points for a log based on activity type and quantity.
-     * For flat-rate activities quantity is ignored — fixed points returned.
-     *
-     * @param activityType the activity name
-     * @param quantity     the slider quantity selected by the user
-     * @return total points to award for this log
-     */
     private int calculatePoints(String activityType, int quantity) {
         if (!isQuantifiable(activityType)) {
             return getPointsPerUnit(activityType);
@@ -314,20 +269,42 @@ public class LogFragment extends Fragment {
         return getPointsPerUnit(activityType) * quantity;
     }
 
-    /**
-     * Builds a correctly pluralised unit label for a given quantity.
-     *
-     * @param activityType the activity name
-     * @param quantity     the current slider value
-     * @return unit string e.g. "km", "meal", "meals", "item", "items"
-     */
     private String buildUnitLabel(String activityType, int quantity) {
         String unit = getUnit(activityType);
         switch (unit) {
             case "meal": return quantity == 1 ? "meal"  : "meals";
             case "cup":  return quantity == 1 ? "cup"   : "cups";
             case "item": return quantity == 1 ? "item"  : "items";
-            default:     return unit; // km does not pluralise
+            default:     return unit;
+        }
+    }
+
+    private boolean isVerifiedMode() {
+        return "pending_verification".equals(selectedStatus);
+    }
+
+    private void updateLogButtonText(String activityType, int quantity) {
+        if (btnLogActivity == null || activityType == null) return;
+
+        boolean isVerified = isVerifiedMode();
+
+        if (!isQuantifiable(activityType)) {
+            if (isVerified) {
+                int pts = calculatePoints(activityType, 1);
+                btnLogActivity.setText("Log Activity  •  +" + pts + " pts");
+            } else {
+                btnLogActivity.setText("Log Activity");
+            }
+            return;
+        }
+
+        String quantityText = quantity + " " + buildUnitLabel(activityType, quantity);
+
+        if (isVerified) {
+            int pts = calculatePoints(activityType, quantity);
+            btnLogActivity.setText("Log Activity  •  " + quantityText + "  •  +" + pts + " pts");
+        } else {
+            btnLogActivity.setText("Log Activity  •  " + quantityText);
         }
     }
 
@@ -390,12 +367,18 @@ public class LogFragment extends Fragment {
                 selectedStatus = "quick";
                 setActiveTab(quickTab, verifiedTab);
                 updateProofSection();
+                if (selectedCard != null && selectedActivityName != null) {
+                    showRowSlider(selectedCard, selectedActivityName);
+                }
             });
 
             verifiedTab.setOnClickListener(v -> {
                 selectedStatus = "pending_verification";
                 setActiveTab(verifiedTab, quickTab);
                 updateProofSection();
+                if (selectedCard != null && selectedActivityName != null) {
+                    showRowSlider(selectedCard, selectedActivityName);
+                }
                 scrollToProofSection(false);
             });
 
@@ -434,11 +417,6 @@ public class LogFragment extends Fragment {
     // Camera
     // -------------------------------------------------------------------
 
-    /**
-     * Creates a temporary file in the app cache, obtains a FileProvider Uri
-     * for it, and launches the system camera. The Uri is stored in
-     * cameraImageUri so the TakePicture launcher can read it on return.
-     */
     private void launchCamera() {
         try {
             File imageFile = File.createTempFile(
@@ -468,12 +446,6 @@ public class LogFragment extends Fragment {
     // Card selection + inline slider
     // -------------------------------------------------------------------
 
-    /**
-     * Deselects all cards and hides any row-level quantity slider.
-     * Called before selecting a new card.
-     *
-     * @param cards the full array of activity card views
-     */
     private void deselectAll(LinearLayout[] cards) {
         for (LinearLayout c : cards) {
             c.setBackground(requireContext().getDrawable(R.drawable.bg_activity_card));
@@ -482,14 +454,6 @@ public class LogFragment extends Fragment {
         hideAllSliderSlots();
     }
 
-    /**
-     * Selects an activity card, highlights it, and shows the quantity slider
-     * beneath the full row that contains the selected card.
-     *
-     * @param cards the full array of activity card views
-     * @param card  the card that was tapped
-     * @param name  the activity name associated with that card
-     */
     private void selectCard(LinearLayout[] cards, LinearLayout card, String name) {
         deselectAll(cards);
         card.setBackground(requireContext().getDrawable(R.drawable.bg_activity_card_selected));
@@ -498,9 +462,6 @@ public class LogFragment extends Fragment {
         showRowSlider(card, name);
     }
 
-    /**
-     * Hides and clears every reserved slider slot under the activity rows.
-     */
     private void hideAllSliderSlots() {
         LinearLayout[] slots = {
                 sliderSlotRow1,
@@ -517,14 +478,6 @@ public class LogFragment extends Fragment {
         }
     }
 
-    /**
-     * Returns the full-width slider slot for the row containing the selected card.
-     * Row 1: Cycling/Public Transit, Row 2: Recycling/Plant-based meal,
-     * Row 3: Reusable cup/Composting, Row 4: Walked/Energy saving.
-     *
-     * @param card the selected activity card
-     * @return the matching slider slot, or null if no slot is found
-     */
     @Nullable
     private LinearLayout getSliderSlotForCard(@NonNull LinearLayout card) {
         int cardId = card.getId();
@@ -542,24 +495,10 @@ public class LogFragment extends Fragment {
         return null;
     }
 
-    /**
-     * Builds a quantity slider UI programmatically and places it in the
-     * reserved full-width slot beneath the selected card's row. This keeps
-     * the SeekBar wide and easy to drag on phones.
-     *
-     * For flat-rate activities (Composting, Energy saving) no slider is
-     * shown — the log button simply updates with the fixed point value.
-     *
-     * @param card         the selected activity card LinearLayout
-     * @param activityType the selected activity name
-     */
     private void showRowSlider(LinearLayout card, String activityType) {
         if (!isQuantifiable(activityType)) {
             selectedQuantity = 1;
-            int pts = calculatePoints(activityType, 1);
-            if (btnLogActivity != null) {
-                btnLogActivity.setText("Log Activity  •  +" + pts + " pts");
-            }
+            updateLogButtonText(activityType, 1);
             return;
         }
 
@@ -576,14 +515,12 @@ public class LogFragment extends Fragment {
         targetSlot.setBackground(requireContext().getDrawable(R.drawable.bg_leaderboard_row));
         targetSlot.setPadding(dp14, dp14, dp14, dp14);
 
-        // Outer content container
         LinearLayout sliderContainer = new LinearLayout(requireContext());
         sliderContainer.setOrientation(LinearLayout.VERTICAL);
         sliderContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
 
-        // Top row: question on the left, current points on the right
         LinearLayout headerRow = new LinearLayout(requireContext());
         headerRow.setOrientation(LinearLayout.HORIZONTAL);
         headerRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
@@ -602,7 +539,7 @@ public class LogFragment extends Fragment {
 
         TextView tvPts = new TextView(requireContext());
         int initialPts = calculatePoints(activityType, 1);
-        tvPts.setText("+" + initialPts + " pts");
+        tvPts.setText(isVerifiedMode() ? "+" + initialPts + " pts" : "Verified logs earn points");
         tvPts.setTextSize(13);
         tvPts.setTextColor(0xFFC17B2F);
         tvPts.setTypeface(null, Typeface.BOLD);
@@ -611,7 +548,6 @@ public class LogFragment extends Fragment {
 
         sliderContainer.addView(headerRow);
 
-        // Slider row: wide SeekBar + compact value label
         LinearLayout sliderRow = new LinearLayout(requireContext());
         sliderRow.setOrientation(LinearLayout.HORIZONTAL);
         sliderRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
@@ -670,13 +606,10 @@ public class LogFragment extends Fragment {
         targetSlot.addView(sliderContainer);
 
         selectedQuantity = 1;
-        if (btnLogActivity != null) {
-            btnLogActivity.setText("Log Activity  •  1 " + buildUnitLabel(activityType, 1) + "  •  +" + initialPts + " pts");
-        }
+        updateLogButtonText(activityType, 1);
 
         tvValue.setOnClickListener(v -> showQuantityInputDialog(activityType, seekBar));
 
-        // Keep lower rows/proof section from hiding the newly opened slider.
         scrollToSliderSlot(targetSlot);
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -688,12 +621,9 @@ public class LogFragment extends Fragment {
                 tvValue.setText(quantity + " " + buildUnitLabel(activityType, quantity));
 
                 int pts = calculatePoints(activityType, quantity);
-                tvPts.setText("+" + pts + " pts");
+                tvPts.setText(isVerifiedMode() ? "+" + pts + " pts" : "Verified logs earn points");
 
-                if (btnLogActivity != null) {
-                    btnLogActivity.setText("Log Activity  •  " + quantity + " "
-                            + buildUnitLabel(activityType, quantity) + "  •  +" + pts + " pts");
-                }
+                updateLogButtonText(activityType, quantity);
             }
 
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
@@ -701,14 +631,6 @@ public class LogFragment extends Fragment {
         });
     }
 
-    /**
-     * Opens a small integer-only input dialog for users who prefer typing
-     * the quantity instead of dragging the slider. Values must stay within
-     * the same min/max bounds as the SeekBar.
-     *
-     * @param activityType the selected activity name
-     * @param seekBar      the active row-level quantity slider
-     */
     private void showQuantityInputDialog(@NonNull String activityType, @NonNull SeekBar seekBar) {
         int maxQuantity = getMaxQuantity(activityType);
 
@@ -762,11 +684,6 @@ public class LogFragment extends Fragment {
         dialog.show();
     }
 
-    /**
-     * Gently scrolls so the expanded row-level slider is visible after a card tap.
-     *
-     * @param slot the visible slider slot
-     */
     private void scrollToSliderSlot(@NonNull LinearLayout slot) {
         if (logScrollView == null) return;
 
@@ -801,6 +718,9 @@ public class LogFragment extends Fragment {
             selectedStatus = "pending_verification";
             setActiveTab(verifiedTab, quickTab);
             updateProofSection();
+            if (selectedCard != null && selectedActivityName != null) {
+                showRowSlider(selectedCard, selectedActivityName);
+            }
             scrollToProofSection(shouldAutoOpenProofPicker);
         }
     }
@@ -881,26 +801,20 @@ public class LogFragment extends Fragment {
 
         setLogButtonEnabled(false);
 
-        int calculatedPoints = calculatePoints(selectedActivityName, selectedQuantity);
+        boolean isVerifiedLog = "pending_verification".equals(selectedStatus);
+        int calculatedPoints = isVerifiedLog
+                ? calculatePoints(selectedActivityName, selectedQuantity)
+                : 0;
+
         DocumentReference docRef = db.collection("activity_logs").document();
 
-        if ("pending_verification".equals(selectedStatus)) {
+        if (isVerifiedLog) {
             uploadProofAndSaveLog(docRef, currentUser.getUid(), calculatedPoints, cards);
         } else {
             saveLogDocument(docRef, currentUser.getUid(), calculatedPoints, null, cards);
         }
     }
 
-    /**
-     * Compresses the selected proof image then uploads the bytes to
-     * Firebase Storage. Falls back to uploading the original file if
-     * compression fails so the flow never breaks.
-     *
-     * @param docRef Firestore document reference for this log
-     * @param userId UID of the submitting user
-     * @param points calculated points for this log
-     * @param cards  activity card array used to reset form on success
-     */
     private void uploadProofAndSaveLog(@NonNull DocumentReference docRef,
                                        @NonNull String userId,
                                        int points,
@@ -973,12 +887,13 @@ public class LogFragment extends Fragment {
                                  @Nullable String proofUrl,
                                  @NonNull LinearLayout[] cards) {
 
+        final boolean isVerifiedLog = "pending_verification".equals(selectedStatus);
+
         double co2SavedKg = CarbonCalculator.calculateCo2SavedKg(
                 selectedActivityName, selectedQuantity);
 
-        // ── 1. Write to Room immediately (instant UI feedback) ───────────────
         ActivityLogEntity entity = new ActivityLogEntity(
-                docRef.getId(),         // logId already generated
+                docRef.getId(),
                 userId,
                 selectedActivityName,
                 selectedStatus,
@@ -993,15 +908,16 @@ public class LogFragment extends Fragment {
         Context context = requireContext();
 
         executor.execute(() -> {
-            AppDatabase app_database = AppDatabase.getInstance(requireContext());
-            int localId = (int) app_database.activityLogDao().insert(entity);
+            AppDatabase appDatabase = AppDatabase.getInstance(context);
+            int localId = (int) appDatabase.activityLogDao().insert(entity);
 
-            // Increment user stats in Room immediately (optimistic update)
-            app_database.userDao().incrementPoints(userId, points);
-            app_database.userDao().incrementCo2(userId, co2SavedKg);
-            NotificationHelper.scheduleMimiHungryReminder(requireContext());
+            if (isVerifiedLog) {
+                appDatabase.userDao().incrementPoints(userId, points);
+            }
 
-            // ── 2. Push to Firestore in background ───────────────────────────
+            appDatabase.userDao().incrementCo2(userId, co2SavedKg);
+            NotificationHelper.scheduleMimiHungryReminder(context);
+
             Map<String, Object> logData = new HashMap<>();
             logData.put("logId",        docRef.getId());
             logData.put("userId",       userId);
@@ -1018,24 +934,24 @@ public class LogFragment extends Fragment {
 
             docRef.set(logData)
                     .addOnSuccessListener(unused -> {
-                        // Mark synced in Room
                         executor.execute(() ->
-                                app_database.activityLogDao()
+                                appDatabase.activityLogDao()
                                         .markSynced(localId, docRef.getId(), "synced")
                         );
 
-                        // Firestore user stats update (keeps Firestore in sync with Room)
                         db.collection("users")
                                 .document(userId)
                                 .update("co2SavedKg", FieldValue.increment(co2SavedKg));
 
-                        new PointsManager().awardBasePoints(context, userId, points);
+                        if (isVerifiedLog) {
+                            new PointsManager().awardBasePoints(context, userId, points);
+                        }
 
                         if (isAdded() && getActivity() != null) {
                             getActivity().runOnUiThread(() -> {
-                                String message = "pending_verification".equals(selectedStatus)
+                                String message = isVerifiedLog
                                         ? "Verified log submitted with proof"
-                                        : selectedActivityName + " logged — +" + points + " pts ✅";
+                                        : selectedActivityName + " logged ✅";
                                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                                 resetForm(cards);
                                 setLogButtonEnabled(true);
@@ -1043,23 +959,17 @@ public class LogFragment extends Fragment {
                         }
                     })
                     .addOnFailureListener(e -> {
-                        // Mark failed in Room — SyncWorker will retry
                         executor.execute(() ->
-                                app_database.activityLogDao().markFailed(localId)
+                                appDatabase.activityLogDao().markFailed(localId)
                         );
 
                         if (isAdded() && getActivity() != null) {
                             getActivity().runOnUiThread(() -> {
-                                boolean isVerified =
-                                        "pending_verification".equals(selectedStatus);
-
-                                if (isVerified) {
-                                    // Verified logs: tell the user explicitly
+                                if (isVerifiedLog) {
                                     Toast.makeText(getContext(),
                                             "Saved locally — will upload when connected 📶",
                                             Toast.LENGTH_LONG).show();
                                 } else {
-                                    // Quick logs: silently queue, show success to keep UX smooth
                                     Toast.makeText(getContext(),
                                             selectedActivityName + " logged ✅",
                                             Toast.LENGTH_SHORT).show();
@@ -1068,7 +978,6 @@ public class LogFragment extends Fragment {
                                 resetForm(cards);
                                 setLogButtonEnabled(true);
 
-                                // Trigger immediate retry if connected
                                 MainActivity.triggerImmediateSync(requireContext());
                             });
                         }
@@ -1077,7 +986,7 @@ public class LogFragment extends Fragment {
     }
 
     private void resetForm(@NonNull LinearLayout[] cards) {
-        deselectAll(cards); // also hides any row-level slider
+        deselectAll(cards);
         selectedCard              = null;
         selectedActivityName      = null;
         selectedProofUri          = null;
@@ -1138,15 +1047,15 @@ public class LogFragment extends Fragment {
         };
 
         String[] bodies = {
-                "Log this when you use a bicycle instead of a car. Use the slider to select how many km you cycled. +3 pts per km.",
-                "Use this when you travel by bus, train, or shuttle. Slide to select the distance. +1 pt per km.",
-                "Log this when you recycle paper, plastic, cans, or other materials. Select how many items. +2 pts per item.",
-                "Use this when you choose a vegetarian or vegan meal. Select how many meals. +25 pts per meal.",
-                "Log this when you use your own reusable cup. Select how many times. +10 pts per cup.",
-                "Use this when food scraps are composted. Flat reward of +20 pts per log.",
-                "Log this when you walk instead of using a fuel-based ride. Select how many km. +2 pts per km.",
-                "Use this when you reduce electricity use like switching off lights. Flat reward of +15 pts per log.",
-                "Pick an activity card first. For quantifiable activities a full-width slider appears beneath the selected row — drag it to set your amount. Use Quick Log for a simple submission, or Verified Log to attach proof."
+                "Log this when you use a bicycle instead of a car. Use the slider to select how many km you cycled. Verified logs earn +3 pts per km.",
+                "Use this when you travel by bus, train, or shuttle. Slide to select the distance. Verified logs earn +1 pt per km.",
+                "Log this when you recycle paper, plastic, cans, or other materials. Select how many items. Verified logs earn +2 pts per item.",
+                "Use this when you choose a vegetarian or vegan meal. Select how many meals. Verified logs earn +25 pts per meal.",
+                "Log this when you use your own reusable cup. Select how many times. Verified logs earn +10 pts per cup.",
+                "Use this when food scraps are composted. Verified logs earn a flat reward of +20 pts per log.",
+                "Log this when you walk instead of using a fuel-based ride. Select how many km. Verified logs earn +2 pts per km.",
+                "Use this when you reduce electricity use like switching off lights. Verified logs earn a flat reward of +15 pts per log.",
+                "Pick an activity card first. For quantifiable activities a full-width slider appears beneath the selected row. Quick Log saves the activity and CO₂ impact without points. Verified Log requires proof and can earn points."
         };
 
         StringBuilder fullText = new StringBuilder();
@@ -1179,15 +1088,6 @@ public class LogFragment extends Fragment {
     // Image compression
     // -------------------------------------------------------------------
 
-    /**
-     * Compresses and resizes a Uri-referenced image before upload.
-     * Resizes so the longest side is at most 1080px preserving aspect ratio,
-     * then compresses to JPEG at 80% quality.
-     *
-     * @param context  application context for ContentResolver
-     * @param imageUri the Uri returned by the image picker or camera
-     * @return compressed image as a byte array, or null if processing failed
-     */
     @Nullable
     private byte[] compressImage(@NonNull Context context, @NonNull Uri imageUri) {
         final int MAX_IMAGE_DIMENSION = 1080;
