@@ -19,13 +19,17 @@
 
 package com.example.klimate;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -98,11 +102,13 @@ public class RankingsFragment extends Fragment {
     private static class LeaderboardUser {
         String uid;
         String displayName;
+        String profilePhotoBase64;
         long totalPoints;
 
-        LeaderboardUser(String uid, String displayName, long totalPoints) {
+        LeaderboardUser(String uid, String displayName, String profilePhotoBase64, long totalPoints) {
             this.uid = uid;
             this.displayName = displayName;
+            this.profilePhotoBase64 = profilePhotoBase64;
             this.totalPoints = totalPoints;
         }
     }
@@ -213,7 +219,8 @@ public class RankingsFragment extends Fragment {
                             }
                             Long pointsValue = doc.getLong("totalPoints");
                             long totalPoints = pointsValue != null ? pointsValue : 0;
-                            users.add(new LeaderboardUser(uid, displayName, totalPoints));
+                            String profilePhotoBase64 = doc.getString("profilePhotoBase64");
+                            users.add(new LeaderboardUser(uid, displayName, profilePhotoBase64, totalPoints));
 
                             // ── Upsert into Room (cache for offline display) ──
                             final String finalName = displayName;
@@ -486,17 +493,38 @@ public class RankingsFragment extends Fragment {
         ));
         row.addView(rankText);
 
-        TextView avatarText = new TextView(requireContext());
+        FrameLayout avatarContainer = new FrameLayout(requireContext());
         LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dpToPx(44), dpToPx(44));
         avatarParams.setMargins(dpToPx(8), 0, 0, 0);
-        avatarText.setLayoutParams(avatarParams);
+        avatarContainer.setLayoutParams(avatarParams);
+
+        TextView avatarText = new TextView(requireContext());
+        avatarText.setLayoutParams(new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
         avatarText.setGravity(Gravity.CENTER);
         avatarText.setText(getInitials(user.displayName));
         avatarText.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
         avatarText.setTextSize(13);
         avatarText.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         avatarText.setBackgroundResource(getAvatarBackground(rank, isCurrentUser));
-        row.addView(avatarText);
+        avatarContainer.addView(avatarText);
+
+        ImageView avatarImage = new ImageView(requireContext());
+        avatarImage.setLayoutParams(new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        avatarImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        avatarImage.setBackgroundResource(getAvatarBackground(rank, isCurrentUser));
+        avatarImage.setClipToOutline(true);
+        avatarImage.setVisibility(View.GONE);
+        avatarContainer.addView(avatarImage);
+
+        bindProfilePhoto(avatarText, avatarImage, user.profilePhotoBase64);
+
+        row.addView(avatarContainer);
 
         LinearLayout textColumn = new LinearLayout(requireContext());
         textColumn.setOrientation(LinearLayout.VERTICAL);
@@ -554,6 +582,30 @@ public class RankingsFragment extends Fragment {
         row.addView(medalImage);
 
         return row;
+    }
+
+    private void bindProfilePhoto(TextView avatarText, ImageView avatarImage, String profilePhotoBase64) {
+        if (TextUtils.isEmpty(profilePhotoBase64)) {
+            avatarImage.setVisibility(View.GONE);
+            avatarText.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        try {
+            byte[] imageBytes = Base64.decode(profilePhotoBase64, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+
+            if (bitmap != null) {
+                avatarImage.setImageBitmap(bitmap);
+                avatarImage.setVisibility(View.VISIBLE);
+                avatarText.setVisibility(View.GONE);
+                return;
+            }
+        } catch (Exception ignored) {
+        }
+
+        avatarImage.setVisibility(View.GONE);
+        avatarText.setVisibility(View.VISIBLE);
     }
 
     private void updatePodium(@NonNull List<LeaderboardUser> users) {

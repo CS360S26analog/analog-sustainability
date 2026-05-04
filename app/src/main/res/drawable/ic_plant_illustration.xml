@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="140dp"
+    android:height="140dp"
+    android:viewportWidth="140"
+    android:viewportHeight="140">
+
+    <!-- soft floor shadow -->
+    <path
+        android:fillColor="#14000000"
+        android:pathData="M42,116 C42,111 53,108 70,108 C87,108 98,111 98,116 C98,121 87,124 70,124 C53,124 42,121 42,116 Z" />
+
+    <!-- pot body -->
+    <path
+        android:fillColor="#F7F7F5"
+        android:pathData="M50,90 L90,90 L82,117 L58,117 Z" />
+
+    <!-- pot rim -->
+    <path
+        android:fillColor="#ECECE8"
+        android:pathData="M46,84 L94,84 C95.5,84 96,84.8 96,86 L96,91 L44,91 L44,86 C44,84.8 44.5,84 46,84 Z" />
+
+    <!-- soil -->
+    <path
+        android:fillColor="#9B7454"
+        android:pathData="M52,84 C58,81 82,81 88,84 L86,90 L54,90 Z" />
+
+    <!-- main stem -->
+    <path
+        android:fillColor="#4C7A2E"
+        android:pathData="M68,91 C68,78 67,66 66,55 C65,44 65,35 66,27 L72,27 C72,35 72,44 73,55 C74,66 74,78 74,91 Z" />
+
+    <!-- left branch -->
+    <path
+        android:fillColor="#4C7A2E"
+        android:pathData="M67,49 C59,44 51,40 43,35 L45,31 C54,35 62,39 70,45 Z" />
+
+    <!-- right branch -->
+    <path
+        android:fillColor="#4C7A2E"
+        android:pathData="M72,45 C80,39 88,33 96,26 L99,30 C91,37 83,43 74,49 Z" />
+
+    <!-- small mid-right branch -->
+    <path
+        android:fillColor="#4C7A2E"
+        android:pathData="M70,66 C77,63 84,60 91,56 L93,60 C86,64 79,67 71,70 Z" />
+
+    <!-- left big leaf -->
+    <path
+        android:fillColor="#7BC043"
+        android:pathData="M42,34 C28,29 21,19 18,11 C27,13 38,19 48,30 C49,32 49,35 48,38 C46,37 44,36 42,34 Z" />
+
+    <!-- left big leaf inner shade -->
+    <path
+        android:fillColor="#66A83A"
+        android:pathData="M42,34 C36,27 32,19 31,12 C36,18 41,25 46,33 C46,35 45,36 44,38 Z" />
+
+    <!-- tall middle leaf -->
+    <path
+        android:fillColor="#7BC043"
+        android:pathData="M64,29 C63,15 67,6 72,2 C75,8 76,18 73,31 C71,37 69,42 67,48 C65,42 64,36 64,29 Z" />
+
+    <!-- tall middle leaf shade -->
+    <path
+        android:fillColor="#66A83A"
+        android:pathData="M67,47 C68,34 69,22 71,9 C72,16 72,24 72,31 C71,37 70,42 67,47 Z" />
+
+    <!-- right upper leaf -->
+    <path
+        android:fillColor="#7BC043"
+        android:pathData="M96,26 C101,14 109,7 117,4 C114,13 107,24 98,32 C95,35 92,37 89,39 C90,34 92,30 96,26 Z" />
+
+    <!-- right upper leaf shade -->
+    <path
+        android:fillColor="#66A83A"
+        android:pathData="M97,31 C103,22 108,14 113,7 C110,15 105,23 99,31 C97,33 95,35 92,38 Z" />
+
+    <!-- right lower small leaf -->
+    <path
+        android:fillColor="#8ED15A"
+        android:pathData="M90,56 C99,53 107,52 114,54 C108,60 100,65 91,67 C88,68 85,68 82,69 C84,64 86,59 90,56 Z" />
+
+    <!-- small lower left leaf -->
+    <path
+        android:fillColor="#8ED15A"
+        android:pathData="M58,69 C51,62 44,57 37,54 C44,54 52,57 61,63 C63,65 64,67 65,70 C62,70 60,70 58,69 Z" />
+
+    <!-- subtle stem highlight -->
+    <path
+        android:fillColor="#5F9337"
+        android:pathData="M69,91 C69,78 68,66 67,55 C66,44 66,35 67,27 L69,27 C69,35 69,44 70,55 C71,66 71,78 71,91 Z" />
+</vector>
