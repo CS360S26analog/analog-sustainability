@@ -582,6 +582,66 @@ Shows the overall structure of the application, including key classes such as us
 
 </details>
 
+
+---
+
+### Product Backlog – Final Checkpoint
+
+<details>
+<summary><strong>View Updated Backlog for Final Checkpoint</strong></summary>
+
+The product backlog was updated for the final checkpoint based on the current codebase, GitHub Issues, and recent commits. Stories completed by this checkpoint are marked as **Done**. Stories with code present but still open as GitHub Issues are marked as **In Progress / Needs final issue closure**. Stories not implemented or still open are marked as **Backlog**.
+
+| ID | User Story | Priority | Status | Progress | Story Points | Risk | Checkpoint | GitHub Issue / Code Evidence | Checkpoint Status |
+|----|------------|----------|--------|----------|--------------|------|------------|------------------------------|-------------------|
+| US-01 | Register account | High | Backlog | Done | 5 | Medium | Half | RegisterActivity.java | Completed earlier |
+| US-02 | Log activity | High | Backlog | Done | 5 | Low | Half | LogFragment.java, ActivityLog model | Completed earlier |
+| US-03 | Frequent activities | Medium | Backlog | Done | 3 | Low | Full | LogFragment.java | Completed earlier |
+| US-04 | Mark quick/verified logs | High | Backlog | Done | 3 | Low | Half | LogFragment.java, HistoryFragment.java | Completed earlier |
+| US-05 | Attach proof for verification | High | Backlog | Done | 8 | High | Full | Verified log proof upload flow | Completed earlier |
+| US-06 | Edit log entry | Medium | Backlog | Done | 3 | Low | Full | HistoryFragment.java, dialog_edit_log.xml | Completed earlier |
+| US-07 | Dashboard overview | High | Backlog | Done | 8 | Medium | Half | HomeFragment.java, DashboardViewModel.java | Completed earlier |
+| US-08 | CO₂ & waste tracking | High | Backlog | Done | 5 | Medium | Half | CarbonCalculator.java, DashboardViewModel.java | Completed earlier |
+| US-09 | Streak tracking | Medium | Backlog | Done | 3 | Low | Full | HomeFragment.java, ProfileFragment.java, Issue #12 | Completed |
+| US-10 | Monthly goals | Low | Backlog | Done | 3 | Low | Full | Issue #13 | Completed |
+| US-11 | Campus impact summary | Medium | Backlog | Done | 5 | Medium | Full | Issue #52, HomeFragment.java | Completed |
+| US-12 | Create challenges (admin/staff) | High | Backlog | Done | 8 | Medium | Full | Issue #15, StaffManageFragment.java | Completed |
+| US-13 | Publish tips/articles | Medium | Backlog | Done | 5 | Low | Full | Issue #16, StaffTipsFragment.java, FeedFragment.java | Completed |
+| US-14 | Join challenges | High | Backlog | Done | 5 | Medium | Full | Issue #17, Issue #54, ChallengesFragment.java | Completed |
+| US-15 | Points from votes | High | Backlog | Done | 5 | High | Full | PointsManager.java, ValidationFeedFragment.java | Completed earlier |
+| US-16 | View points & rewards | High | Backlog | Done | 3 | Low | Half | ProfileFragment.java | Completed earlier |
+| US-17 | Redeem rewards | High | Backlog | In Progress | 5 | Medium | Full | ProfileFragment.java | Needs final verification |
+| US-18 | Earn badges | Medium | Backlog | In Progress | 3 | Medium | Full | BadgeDefinition.java, ProfileFragment.java | Needs final verification |
+| US-19 | View badges | Medium | Backlog | In Progress | 3 | Low | Full | BadgeDefinition.java, ProfileFragment.java | Needs final verification |
+| US-20 | Team participation | Medium | Backlog | Done | 5 | Medium | Full | Issue #22, ChallengesFragment.java | Completed |
+| US-21 | Team progress tracking | Medium | Backlog | Done | 5 | Medium | Full | TeamProgressFragment.java, fragment_team_progress.xml | Completed in codebase |
+| US-22 | Leaderboard | Medium | Backlog | Done | 5 | Medium | Full | RankingsFragment.java | Completed earlier |
+| US-23 | Reminder notifications | Low | Backlog | In Progress | 3 | Medium | Full | StreakNotificationWorker.java | Implemented in codebase but needs final verification |
+| US-24 | CO₂ equivalence display | Low | Backlog | Done | 2 | Low | Full | Issue #53, CarbonEquivalentHelper.java | Implemented in codebase |
+| US-25 | Validation feed | High | Backlog | Done | 5 | High | Half | ValidationFeedFragment.java | Completed earlier |
+| US-26 | Voting on logs | High | Backlog | Done | 3 | High | Half | ValidationFeedFragment.java, Vote model | Completed earlier |
+| US-27 | Account settings screen | Medium | Backlog | Done | 3 | Low | Full | AccountSettingsFragment.java, fragment_account_settings.xml | Completed in codebase |
+| US-28 | Activity history screen | Medium | Backlog | Done | 3 | Low | Full | HistoryFragment.java, item_history_log.xml | Completed in codebase |
+| US-29 | Friends / social screen | Low | Backlog | Done | 2 | Low | Full | FriendsFragment.java, fragment_friends.xml | Completed in codebase |
+| US-30 | First-launch guided spotlight tutorial | Medium | Backlog | Done | 3 | Low | Full | Issue #46, Staff UI/tutorial commit | Completed |
+| US-31 | Eco Picks @ LUMS sustainable alternatives screen | Medium | Backlog | Done | 3 | Low | Full | Issue #47, EcoPicksFragment.java, LumsAlternatives.java | Completed |
+| US-32 | Staff approve or reject flagged activity logs | High | Backlog | Done | 5 | Medium | Full | Issue #48, StaffReportsFragment.java, StaffLogsFragment.java | Completed |
+| US-33 | Share CO₂ savings summary from Home screen | Medium | Backlog | In Progress | 3 | Low | Full | Issue #49, share button commit | Open / needs final issue closure |
+| US-34 | Mimi the LUMS Cat mood widget on Home screen | Medium | Backlog | Backlog | 3 | Low | Full | Issue #50 | Open |
+| US-35 | Push notification from Mimi after two days without logging | Low | Backlog | Backlog | 3 | Medium | Full | Issue #51 | Open |
+| US-36 | Personal monthly CO₂ savings goal with progress bar | Medium | Backlog | Backlog | 3 | Low | Full | Issue #56 | Open |
+| US-37 | Live campus-wide CO₂ total and active student count on Home | Medium | Backlog | Done | 5 | Medium | Full | Issue #52, HomeFragment.java | Completed |
+| US-38 | CO₂ savings shown as real-world equivalents | Low | Backlog | Done | 2 | Low | Full | Issue #53, CarbonEquivalentHelper.java | Implemented in codebase |
+| US-39 | Browse and join active challenges from Challenges tab | High | Backlog | Done | 5 | Medium | Full | Issue #54, ChallengesFragment.java | Completed |
+| US-40 | Staff publish sustainability tips with category tag | Medium | Backlog | Backlog | 3 | Low | Full | Issue #55 | Open |
+| US-41 | Badge received notification | Low | Backlog | Backlog | 2 | Low | Full | Issue #65 | Open |
+| US-42 | Real Eco Map / campus sustainability map layer | Medium | Backlog | Done | 3 | Medium | Full | EcoPicksFragment.java, fragment_real_eco_map.xml, latest map commit | Completed in codebase |
+| US-43 | Local caching and sync for app data | Medium | Backlog | Done | 5 | Medium | Full | local database package, SyncWorker.java, Room dependency commits | Completed in codebase |
+| US-44 | Staff dashboard overview with live impact, active users, challenges, and pending reports | High | Backlog | Done | 5 | Medium | Full | StaffOverviewFragment.java, fragment_staff_overview.xml | Completed in codebase |
+| US-45 | Separate staff navigation and staff profile flow | Medium | Backlog | Done | 3 | Low | Full | StaffPagerAdapter.java, StaffProfileFragment.java, staff layout files | Completed in codebase |
+
+</details>
+
 ---
 
 ## Wireframes & Screenshots
