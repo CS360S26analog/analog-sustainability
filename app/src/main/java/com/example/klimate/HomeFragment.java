@@ -452,7 +452,7 @@ public class HomeFragment extends Fragment {
 
     /**
      * Queries activity_logs for the current month and sums CO₂ saved.
-     * Falls back to per-activity estimates when co2SavedKg is absent on a doc.
+     * Falls back through CarbonCalculator when co2SavedKg is absent on an older doc.
      */
     private void calculateCurrentMonthCo2(Co2ResultCallback callback) {
         long monthStartMillis = getStartOfCurrentMonthMillis();
@@ -467,9 +467,17 @@ public class HomeFragment extends Fragment {
                         if (ts == null || ts.toDate().getTime() < monthStartMillis) continue;
 
                         Double saved = doc.getDouble("co2SavedKg");
-                        monthlyCo2 += saved != null
-                                ? saved
-                                : getCo2SavedForActivity(doc.getString("activityType"));
+
+                        if (saved != null) {
+                            monthlyCo2 += saved;
+                        } else {
+                            String activityType = doc.getString("activityType");
+
+                            Long quantityLong = doc.getLong("quantity");
+                            double quantity = quantityLong != null ? quantityLong.doubleValue() : 1.0;
+
+                            monthlyCo2 += getCo2SavedForActivity(activityType, quantity);
+                        }
                     }
                     if (callback != null) callback.onResult(monthlyCo2);
                 })
@@ -1525,20 +1533,12 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    /** Fallback CO₂ estimate per activity when the log doc has no co2SavedKg field (V2). */
-    private double getCo2SavedForActivity(String activityType) {
-        if (activityType == null) return 0.0;
-        switch (activityType) {
-            case "Cycling":          return 2.6;
-            case "Public Transit":   return 1.8;
-            case "Recycling":        return 0.7;
-            case "Plant-based meal": return 1.5;
-            case "Reusable cup":     return 0.2;
-            case "Composting":       return 0.5;
-            case "Walked":           return 1.2;
-            case "Energy saving":    return 0.8;
-            default:                 return 0.0;
-        }
+    /**
+     * Fallback CO₂ estimate when older log documents do not have co2SavedKg.
+     * Uses CarbonCalculator so all CO₂ logic stays in one central place.
+     */
+    private double getCo2SavedForActivity(String activityType, double quantity) {
+        return CarbonCalculator.calculateCo2SavedKg(activityType, quantity);
     }
 
     private String getRandomSuggestedActivity(String excludeActivity) {
