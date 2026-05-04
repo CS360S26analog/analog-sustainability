@@ -173,6 +173,10 @@ public class HomeFragment extends Fragment {
         if (tvSeeMoreLogs != null) {
             tvSeeMoreLogs.setOnClickListener(v -> navigateToLog());
         }
+        TextView btnMimiLogNow = view.findViewById(R.id.btn_mimi_log_now);
+        if (btnMimiLogNow != null) {
+            btnMimiLogNow.setOnClickListener(v -> navigateToLog());
+        }
 
         if (btnRecent1 != null) {
             btnRecent1.setOnClickListener(v ->

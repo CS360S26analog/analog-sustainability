@@ -68,4 +68,6 @@ dependencies {
     implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
     implementation("androidx.room:room-runtime:2.8.4")
     annotationProcessor("androidx.room:room-compiler:2.8.4")
+    implementation("androidx.startup:startup-runtime:1.1.1")
+    implementation("app.rive:rive-android:9.11.3")
 }

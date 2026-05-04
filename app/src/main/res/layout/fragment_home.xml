@@ -87,7 +87,8 @@
                 </FrameLayout>
             </LinearLayout>
 
-            <!-- Dynamic streak card -->
+            <!-- Hidden streak card.
+                 Keep these IDs in the layout so HomeFragment can still find/update them safely. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -95,7 +96,8 @@
                 android:background="@drawable/bg_streak_card"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="14dp">
+                android:padding="14dp"
+                android:visibility="gone">
 
                 <TextView
                     android:id="@+id/tv_streak_number"
@@ -156,6 +158,76 @@
             android:paddingTop="18dp"
             android:paddingEnd="16dp"
             android:paddingBottom="16dp">
+
+            <!-- Mimi card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_mimi_home"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="3dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="18dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="18dp"
+                    android:paddingBottom="16dp">
+
+                    <app.rive.runtime.kotlin.RiveAnimationView
+                        android:id="@+id/rive_mimi_home"
+                        android:layout_width="104dp"
+                        android:layout_height="104dp"
+                        app:riveFit="CONTAIN"
+                        app:riveResource="@raw/mimi_cat_3" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="18dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Log to feed me"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Mimi gets happier when you log a green action."
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/btn_mimi_log_now"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:layout_marginTop="12dp"
+                            android:background="@drawable/bg_button_amber"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:minWidth="100dp"
+                            android:paddingStart="18dp"
+                            android:paddingEnd="18dp"
+                            android:text="Log now"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <!-- Impact Dashboard -->
             <androidx.cardview.widget.CardView
@@ -564,7 +636,6 @@
                 android:layout_marginBottom="18dp"
                 android:orientation="horizontal">
 
-                <!-- Campus Impact -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/card_campus_impact_compact"
                     android:layout_width="0dp"
@@ -629,7 +700,6 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- EcoPicks Near You -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/card_ecopicks_widget"
                     android:layout_width="0dp"
