@@ -179,7 +179,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="3 pts/km"
+                        android:text="Distance logged"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -215,7 +215,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="1 pt/km"
+                        android:text="Distance logged"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -267,7 +267,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="2 pts/item"
+                        android:text="Items logged"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -303,7 +303,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="25 pts/meal"
+                        android:text="Meals logged"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -355,7 +355,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="10 pts/cup"
+                        android:text="Cups logged"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -391,7 +391,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+20 pts"
+                        android:text="Action logged"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -443,7 +443,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="2 pts/km"
+                        android:text="Distance logged"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -479,7 +479,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+15 pts"
+                        android:text="Action logged"
                         android:textColor="@color/color_green_text"
                         android:textSize="12sp" />
                 </LinearLayout>
