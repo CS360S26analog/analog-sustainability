@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.inflateMenu(R.menu.bottom_nav_menu);
 
         viewPager.setAdapter(new MainPagerAdapter(this));
-        viewPager.setOffscreenPageLimit(2);
+        viewPager.setOffscreenPageLimit(4);
         viewPager.setCurrentItem(0, false);
         showPager();
 

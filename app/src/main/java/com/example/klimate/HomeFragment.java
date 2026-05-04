@@ -48,6 +48,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.klimate.local.ActivityLogEntity;
 import com.example.klimate.local.AppDatabase;
@@ -78,6 +79,7 @@ public class HomeFragment extends Fragment {
     private FirebaseFirestore db;
     private final Executor executor = Executors.newSingleThreadExecutor();
     private FirebaseUser currentUser;
+    private DashboardViewModel dashboardViewModel;
 
     // ── V2: Impact ring UI references ────────────────────────────────────────
     private DoubleProgressRingView progressRingMonthly;
@@ -107,6 +109,7 @@ public class HomeFragment extends Fragment {
 
         db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        dashboardViewModel = new ViewModelProvider(requireActivity()).get(DashboardViewModel.class);
 
         // ── Header ────────────────────────────────────────────────────────────
         TextView tvGreetingMessage        = view.findViewById(R.id.tv_greeting_message);
@@ -249,20 +252,31 @@ public class HomeFragment extends Fragment {
                     });
         }
 
-        // ── Default / placeholder state before data loads ─────────────────────
-        setDefaultDashboard(
-                tvStreakNumber, tvStreakMessage, tvStreakPercent, progressStreak,
-                tvBottomStreakDays,
-                tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
-                tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle,
-                tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent
-        );
+        // ── Default state only for signed-out users ───────────────────────────
+        // Do NOT reset logged-in users to placeholders here. When this fragment is
+        // recreated from the bottom navigation, resetting first causes the visible
+        // "0 / placeholder → Firebase value" flash. Logged-in users render from
+        // Room first below, then refresh from Firestore.
+        if (currentUser == null) {
+            setDefaultDashboard(
+                    tvStreakNumber, tvStreakMessage, tvStreakPercent, progressStreak,
+                    tvBottomStreakDays,
+                    tvRecent1Icon, tvRecent1Title, tvRecent1Subtitle,
+                    tvRecent2Icon, tvRecent2Title, tvRecent2Subtitle,
+                    tvChallengeTitle, progressChallenge, tvChallengeDays, tvChallengePercent
+            );
 
-        if (tvStatsCurrentStreak != null) tvStatsCurrentStreak.setText("0");
-        refreshImpactRing();
+            if (tvStatsCurrentStreak != null) tvStatsCurrentStreak.setText("0");
+            refreshImpactRing();
+        }
 
         // ── Live data load ────────────────────────────────────────────────────
         if (currentUser != null) {
+            // Warm/update the shared Room cache through the dashboard ViewModel.
+            // HomeFragment still owns the current UI binding below, but this makes
+            // the next Home open render from Room instead of waiting for Firebase.
+            dashboardViewModel.refreshDashboard(requireContext());
+
             loadUserHeader(tvUserName, tvProfileInitial, ivProfilePhoto);
             loadUserStreakFromLogs(tvStreakNumber, tvStreakMessage, tvStreakPercent,
                     progressStreak, tvBottomStreakDays);
@@ -283,6 +297,10 @@ public class HomeFragment extends Fragment {
 
         View view = getView();
         if (view == null || currentUser == null) return;
+
+        if (dashboardViewModel != null) {
+            dashboardViewModel.refreshDashboard(requireContext());
+        }
 
         // Re-bind ring refs in case the view was recreated
         progressRingMonthly  = view.findViewById(R.id.progress_ring_monthly);
@@ -341,15 +359,27 @@ public class HomeFragment extends Fragment {
         // ── Room first (instant) ─────────────────────────────────────────────
         executor.execute(() -> {
             AppDatabase localDb = AppDatabase.getInstance(requireContext());
-            int    roomPoints = localDb.activityLogDao().getTotalPointsForUser(uid);
-            double roomCo2    = localDb.activityLogDao().getTotalCo2ForUser(uid);
+            UserEntity cachedUser = localDb.userDao().getUserSync(uid);
 
-            if (isAdded()) requireActivity().runOnUiThread(() -> {
-                if (tvPoints != null) tvPoints.setText(formatWholeNumber(roomPoints));
-                // Room gives all-time CO₂; monthly value is refined below
-                if (tvCo2Saved != null)
-                    tvCo2Saved.setText(String.format(Locale.getDefault(), "%.1f kg", roomCo2));
-            });
+            if (cachedUser != null && isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    if (tvPoints != null) {
+                        tvPoints.setText(formatWholeNumber(cachedUser.totalPoints));
+                    }
+
+                    // Keep this as cached all-time user CO₂ for now.
+                    // Firestore/monthly CO₂ may refine it below if your dashboard wants monthly CO₂.
+                    if (tvCo2Saved != null) {
+                        tvCo2Saved.setText(String.format(
+                                Locale.getDefault(),
+                                "%.1f kg",
+                                cachedUser.co2SavedKg
+                        ));
+                    }
+
+
+                });
+            }
 
             // ── Firestore refresh ────────────────────────────────────────────
             db.collection("users").document(uid).get()
@@ -372,7 +402,13 @@ public class HomeFragment extends Fragment {
                                         (int)(streakDays != null ? streakDays : 0))
                         );
 
-                        if (tvPoints != null) tvPoints.setText(formatWholeNumber(pts));
+                        if (tvPoints != null) {
+                            tvPoints.setText(formatWholeNumber(pts));
+                        }
+
+                        if (tvCo2Saved != null) {
+                            tvCo2Saved.setText(String.format(Locale.getDefault(), "%.1f kg", co2));
+                        }
 
                         // Resolve personal goal (Firestore wins over SharedPreferences)
                         if (monthlyGoalKg != null && monthlyGoalKg > 0) {
@@ -400,11 +436,8 @@ public class HomeFragment extends Fragment {
         calculateCurrentMonthCo2(monthlyCo2 -> {
             if (!isAdded()) return;
 
+            // Ring uses monthly CO₂ because it is monthly goal progress
             impactCo2SavedKg = (float) monthlyCo2;
-
-            if (tvCo2Saved != null) {
-                tvCo2Saved.setText(String.format(Locale.getDefault(), "%.1f kg", monthlyCo2));
-            }
 
             TextView tvEquiv = view.findViewById(R.id.tv_co2_equivalent);
             if (tvEquiv != null) {

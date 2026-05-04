@@ -2,38 +2,32 @@
  * DashboardViewModel.java
  *
  * ViewModel for the home dashboard screen (HomeFragment).
- * Queries Firestore to retrieve the current user's profile stats
- * (streak, points, CO2 saved) and their activity logs.
- * Exposes LiveData objects that HomeFragment observes to update the UI
- * whenever data changes.
+ *
+ * Room-first dashboard loading:
+ * 1. Read cached user/profile stats from Room immediately.
+ * 2. Read cached activity logs from Room immediately.
+ * 3. Refresh both from Firestore.
+ * 4. Write the fresh Firestore result back into Room for the next app open.
  *
  * Role in design: Part of the ViewModel layer (MVVM pattern).
- * Sits between HomeFragment (View) and Firestore (Model).
- * Uses User.java and ActivityLog.java model classes.
- *
- * Outstanding issues: Time period filter (weekly/monthly) not yet
- * implemented — currently loads all logs for the current user.
+ * Sits between HomeFragment (View), Room cache, and Firestore.
  *
  * @author Maryam Ali
  */
 package com.example.klimate;
 
+import android.content.Context;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import android.app.Application;
-import android.content.Context;
-
-import com.example.klimate.local.ActivityLogDao;
 import com.example.klimate.local.ActivityLogEntity;
 import com.example.klimate.local.AppDatabase;
 import com.example.klimate.local.UserEntity;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 import com.example.klimate.model.ActivityLog;
 import com.example.klimate.model.User;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -42,12 +36,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class DashboardViewModel extends ViewModel {
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
-    private final Executor executor = Executors.newSingleThreadExecutor();
     private final FirebaseAuth auth = FirebaseAuth.getInstance();
+    private final Executor executor = Executors.newSingleThreadExecutor();
 
     private final MutableLiveData<User> userLiveData = new MutableLiveData<>();
     private final MutableLiveData<List<ActivityLog>> logsLiveData = new MutableLiveData<>();
@@ -55,8 +51,7 @@ public class DashboardViewModel extends ViewModel {
     private final MutableLiveData<Map<String, Integer>> categoryCountLiveData = new MutableLiveData<>();
 
     /**
-     * Returns LiveData holding the current user's profile (name, streak, points).
-     * HomeFragment observes this to update the greeting and stat cards.
+     * Returns LiveData holding the current user's profile.
      *
      * @return LiveData wrapping a User object
      */
@@ -66,7 +61,6 @@ public class DashboardViewModel extends ViewModel {
 
     /**
      * Returns LiveData holding the list of activity logs for the current user.
-     * HomeFragment observes this to display activity counts.
      *
      * @return LiveData wrapping a list of ActivityLog objects
      */
@@ -75,159 +69,333 @@ public class DashboardViewModel extends ViewModel {
     }
 
     /**
-     * Returns LiveData holding the calculated total CO2 saved in kilograms.
-     * Value is derived from the co2SavedKg value stored on each activity log.
+     * Returns LiveData holding total CO2 saved in kilograms.
      *
-     * @return LiveData wrapping a Double representing kg of CO2 saved
+     * @return LiveData wrapping total kg of CO2 saved
      */
     public LiveData<Double> getCo2LiveData() {
         return co2LiveData;
     }
 
     /**
-     * Returns LiveData holding a map of activity category names to log counts.
-     * Used to display a breakdown of activities by category on the dashboard.
+     * Returns LiveData holding activity type counts.
      *
-     * @return LiveData wrapping a Map of category name to count
+     * @return LiveData wrapping a Map of activity type to count
      */
     public LiveData<Map<String, Integer>> getCategoryCountLiveData() {
         return categoryCountLiveData;
     }
 
     /**
-     * Loads the current user's profile document from Firestore.
-     * Updates userLiveData on success so the UI can display
-     * the real display name, streak, and points balance.
+     * Loads the current user's profile using Room first, then Firestore.
+     * The cached Room value appears immediately. Firestore then becomes
+     * the source of truth and updates Room.
+     *
+     * @param context any valid Context; applicationContext is used internally
      */
     public void loadUserData(Context context) {
-        String uid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
-        if (uid == null) return;
+        String uid = getCurrentUid();
+        if (uid == null || context == null) return;
 
-        // ── Room first ───────────────────────────────────────────────────────
+        Context appContext = context.getApplicationContext();
+
         executor.execute(() -> {
-            UserEntity cached = AppDatabase.getInstance(context).userDao().getUserSync(uid);
+            AppDatabase localDb = AppDatabase.getInstance(appContext);
+
+            // ── 1. Room first: instant cached dashboard profile ──────────────
+            UserEntity cached = localDb.userDao().getUserSync(uid);
             if (cached != null) {
-                // Convert UserEntity → model User to keep LiveData type consistent
-                com.example.klimate.model.User u = new com.example.klimate.model.User();
-                u.setUid(cached.uid);
-                u.setDisplayName(cached.displayName);
-                u.setEmail(cached.email);
-                u.setTotalPoints(cached.totalPoints);
-                u.setStreakDays(cached.streakDays);
-                u.setCo2SavedKg(cached.co2SavedKg);
-                userLiveData.postValue(u);
+                userLiveData.postValue(toUserModel(cached));
             }
 
-            // ── Firestore refresh ────────────────────────────────────────────
-            db.collection("users").document(uid).get()
+            // ── 2. Firestore refresh: authoritative latest profile ───────────
+            db.collection("users")
+                    .document(uid)
+                    .get()
                     .addOnSuccessListener(documentSnapshot -> {
-                        com.example.klimate.model.User user =
-                                documentSnapshot.toObject(com.example.klimate.model.User.class);
-                        userLiveData.setValue(user);
+                        if (!documentSnapshot.exists()) return;
 
-                        // Update Room cache
-                        if (user != null) {
-                            executor.execute(() -> {
-                                UserEntity u = AppDatabase.getInstance(context)
-                                        .userDao().getUserSync(uid);
-                                if (u == null) {
-                                    u = new UserEntity(uid, user.getDisplayName(),
-                                            user.getEmail(), user.getUniversity(),
-                                            user.getRole(), user.getTotalPoints(),
-                                            user.getStreakDays(), user.getCo2SavedKg(), 0);
-                                } else {
-                                    u.totalPoints = user.getTotalPoints();
-                                    u.streakDays  = user.getStreakDays();
-                                    u.co2SavedKg  = user.getCo2SavedKg();
-                                    u.displayName = user.getDisplayName();
-                                }
-                                AppDatabase.getInstance(context).userDao().update(u);
-                            });
-                        }
+                        User user = documentSnapshot.toObject(User.class);
+                        if (user == null) return;
+
+                        user.setUid(uid);
+                        userLiveData.postValue(user);
+
+                        // ── 3. Update Room cache for next app launch ─────────
+                        executor.execute(() -> {
+                            UserEntity existing = localDb.userDao().getUserSync(uid);
+
+                            if (existing == null) {
+                                UserEntity newUser = new UserEntity(
+                                        uid,
+                                        safeString(user.getDisplayName()),
+                                        safeString(user.getEmail()),
+                                        safeString(user.getUniversity()),
+                                        safeString(user.getRole()),
+                                        user.getTotalPoints(),
+                                        user.getStreakDays(),
+                                        user.getCo2SavedKg(),
+                                        0
+                                );
+                                localDb.userDao().insert(newUser);
+                                localDb.userDao().markSynced(uid);
+                            } else {
+                                existing.displayName = safeString(user.getDisplayName());
+                                existing.email = safeString(user.getEmail());
+                                existing.university = safeString(user.getUniversity());
+                                existing.role = safeString(user.getRole());
+                                existing.totalPoints = user.getTotalPoints();
+                                existing.streakDays = user.getStreakDays();
+                                existing.co2SavedKg = user.getCo2SavedKg();
+                                localDb.userDao().update(existing);
+                                localDb.userDao().markSynced(uid);
+                            }
+                        });
                     });
         });
     }
 
     /**
-     * Loads all activity logs belonging to the current user from Firestore.
-     * After loading, calculates CO2 savings and category counts and posts
-     * results to their respective LiveData objects.
+     * Loads the current user's activity logs using Room first, then Firestore.
+     * The cached logs appear immediately. Firestore then refreshes the list,
+     * recalculates dashboard summaries, and updates Room.
+     *
+     * @param context any valid Context; applicationContext is used internally
      */
     public void loadActivityLogs(Context context) {
-        String uid = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
-        if (uid == null) return;
+        String uid = getCurrentUid();
+        if (uid == null || context == null) return;
 
-        // ── Room first ───────────────────────────────────────────────────────
+        Context appContext = context.getApplicationContext();
+
         executor.execute(() -> {
-            List<ActivityLogEntity> roomEntities =
-                    AppDatabase.getInstance(context).activityLogDao().getLogsForUserSync(uid);
+            AppDatabase localDb = AppDatabase.getInstance(appContext);
 
-            if (!roomEntities.isEmpty()) {
-                List<com.example.klimate.model.ActivityLog> roomLogs = new java.util.ArrayList<>();
-                for (ActivityLogEntity e : roomEntities) {
-                    com.example.klimate.model.ActivityLog log =
-                            new com.example.klimate.model.ActivityLog();
-                    log.setLogId(e.logId);
-                    log.setUserId(e.userId);
-                    log.setActivityType(e.activityType);
-                    log.setStatus(e.status);
-                    log.setPoints(e.points);
-                    log.setCo2SavedKg(e.co2SavedKg);
-                    roomLogs.add(log);
+            // ── 1. Room first: instant cached logs ───────────────────────────
+            List<ActivityLogEntity> cachedEntities =
+                    localDb.activityLogDao().getLogsForUserSync(uid);
+
+            if (cachedEntities != null && !cachedEntities.isEmpty()) {
+                List<ActivityLog> cachedLogs = new ArrayList<>();
+
+                for (ActivityLogEntity entity : cachedEntities) {
+                    cachedLogs.add(toActivityLogModel(entity));
                 }
-                logsLiveData.postValue(roomLogs);
-                calculateCo2(roomLogs);
-                calculateCategoryCounts(roomLogs);
+
+                publishLogsAndSummaries(cachedLogs);
+            } else {
+                publishLogsAndSummaries(new ArrayList<>());
             }
 
-            // ── Firestore refresh ────────────────────────────────────────────
+            // ── 2. Firestore refresh: authoritative latest logs ──────────────
             db.collection("activity_logs")
                     .whereEqualTo("userId", uid)
                     .get()
                     .addOnSuccessListener(querySnapshot -> {
-                        List<com.example.klimate.model.ActivityLog> logs = new java.util.ArrayList<>();
+                        List<ActivityLog> firestoreLogs = new ArrayList<>();
+                        List<ActivityLogEntity> roomEntitiesToCache = new ArrayList<>();
+
                         for (QueryDocumentSnapshot doc : querySnapshot) {
-                            com.example.klimate.model.ActivityLog log =
-                                    doc.toObject(com.example.klimate.model.ActivityLog.class);
+                            ActivityLog log = doc.toObject(ActivityLog.class);
                             log.setLogId(doc.getId());
-                            logs.add(log);
+
+                            // Some older docs may be missing userId in the object.
+                            if (log.getUserId() == null || log.getUserId().trim().isEmpty()) {
+                                log.setUserId(uid);
+                            }
+
+                            firestoreLogs.add(log);
+                            roomEntitiesToCache.add(toActivityLogEntity(doc, uid));
                         }
-                        logsLiveData.setValue(logs);
-                        calculateCo2(logs);
-                        calculateCategoryCounts(logs);
+
+                        publishLogsAndSummaries(firestoreLogs);
+
+                        // ── 3. Update Room cache for next app launch ─────────
+                        executor.execute(() -> {
+                            for (ActivityLogEntity entity : roomEntitiesToCache) {
+                                long localId = localDb.activityLogDao().insert(entity);
+                                localDb.activityLogDao().markSynced((int) localId, entity.logId, "synced");
+                            }
+                        });
+                    })
+                    .addOnFailureListener(e -> {
+                        // Keep the Room data already published above.
+                        // If Room was empty, the UI will simply remain empty.
                     });
         });
     }
 
     /**
-     * Calculates the total estimated CO2 saved from a list of activity logs.
-     * Uses the co2SavedKg value saved when each log was created.
-     * Logs without a saved CO2 value contribute 0.0 kg.
+     * Convenience method for HomeFragment when it wants to refresh everything.
      *
-     * @param logs list of ActivityLog objects to calculate from
+     * @param context any valid Context
      */
-    private void calculateCo2(List<ActivityLog> logs) {
-        double total = 0.0;
-
-        for (ActivityLog log : logs) {
-            total += log.getCo2SavedKg();
-        }
-
-        co2LiveData.setValue(total);
+    public void refreshDashboard(Context context) {
+        loadUserData(context);
+        loadActivityLogs(context);
     }
 
     /**
-     * Counts how many logs exist per activity category.
-     * Posts the resulting map to categoryCountLiveData.
+     * Posts logs plus all derived dashboard summaries.
+     * Uses postValue so it is safe from both Room background threads
+     * and Firestore callbacks.
      *
-     * @param logs list of ActivityLog objects to count
+     * @param logs list of dashboard activity logs
      */
-    private void calculateCategoryCounts(List<ActivityLog> logs) {
-        Map<String, Integer> counts = new HashMap<>();
+    private void publishLogsAndSummaries(List<ActivityLog> logs) {
+        if (logs == null) {
+            logs = new ArrayList<>();
+        }
+
+        logsLiveData.postValue(logs);
+        co2LiveData.postValue(calculateCo2(logs));
+        categoryCountLiveData.postValue(calculateCategoryCounts(logs));
+    }
+
+    /**
+     * Converts a Room user row into the app's User model.
+     *
+     * @param entity cached Room user
+     * @return User model for LiveData
+     */
+    private User toUserModel(UserEntity entity) {
+        User user = new User();
+        user.setUid(entity.uid);
+        user.setDisplayName(entity.displayName);
+        user.setEmail(entity.email);
+        user.setUniversity(entity.university);
+        user.setRole(entity.role);
+        user.setTotalPoints(entity.totalPoints);
+        user.setStreakDays(entity.streakDays);
+        user.setCo2SavedKg(entity.co2SavedKg);
+        return user;
+    }
+
+    /**
+     * Converts a Room activity log row into the app's ActivityLog model.
+     *
+     * @param entity cached Room activity log
+     * @return ActivityLog model for LiveData
+     */
+    private ActivityLog toActivityLogModel(ActivityLogEntity entity) {
+        ActivityLog log = new ActivityLog();
+        log.setLogId(entity.logId);
+        log.setUserId(entity.userId);
+        log.setActivityType(entity.activityType);
+        log.setStatus(entity.status);
+        log.setPoints(entity.points);
+        log.setCo2SavedKg(entity.co2SavedKg);
+        return log;
+    }
+
+    /**
+     * Converts a Firestore activity log document into a Room entity.
+     * This keeps the Room cache aligned with Firestore after each refresh.
+     *
+     * Expected ActivityLogEntity constructor, based on the current local model:
+     * ActivityLogEntity(logId, userId, activityType, status, points, quantity,
+     *                   co2SavedKg, proofUrl, localProofPath, timestampMillis)
+     *
+     * @param doc Firestore activity log document
+     * @param fallbackUid current authenticated user's uid
+     * @return ActivityLogEntity ready to insert into Room
+     */
+    private ActivityLogEntity toActivityLogEntity(QueryDocumentSnapshot doc, String fallbackUid) {
+        String logId = doc.getId();
+
+        String userId = doc.getString("userId");
+        if (userId == null || userId.trim().isEmpty()) {
+            userId = fallbackUid;
+        }
+
+        String activityType = safeString(doc.getString("activityType"));
+        String status = safeString(doc.getString("status"));
+
+        Long pointsLong = doc.getLong("points");
+        int points = pointsLong != null ? pointsLong.intValue() : 0;
+
+        Long quantityLong = doc.getLong("quantity");
+        int quantity = quantityLong != null ? quantityLong.intValue() : 1;
+
+        Double co2 = doc.getDouble("co2SavedKg");
+        double co2SavedKg = co2 != null ? co2 : 0.0;
+
+        String proofUrl = safeString(doc.getString("proofUrl"));
+
+        Timestamp timestamp = doc.getTimestamp("timestamp");
+        long timestampMillis = timestamp != null
+                ? timestamp.toDate().getTime()
+                : System.currentTimeMillis();
+
+        return new ActivityLogEntity(
+                logId,
+                userId,
+                activityType,
+                status,
+                points,
+                quantity,
+                co2SavedKg,
+                proofUrl,
+                null,
+                timestampMillis
+        );
+    }
+
+    /**
+     * Calculates total CO2 saved from loaded logs.
+     *
+     * @param logs list of ActivityLog objects
+     * @return total CO2 saved in kg
+     */
+    private double calculateCo2(List<ActivityLog> logs) {
+        double total = 0.0;
+
         for (ActivityLog log : logs) {
+            if (log != null) {
+                total += log.getCo2SavedKg();
+            }
+        }
+
+        return total;
+    }
+
+    /**
+     * Counts how many logs exist for each activity type.
+     *
+     * @param logs list of ActivityLog objects
+     * @return map of activity type to count
+     */
+    private Map<String, Integer> calculateCategoryCounts(List<ActivityLog> logs) {
+        Map<String, Integer> counts = new HashMap<>();
+
+        for (ActivityLog log : logs) {
+            if (log == null) continue;
+
             String type = log.getActivityType();
+            if (type == null || type.trim().isEmpty()) continue;
+
             counts.put(type, counts.getOrDefault(type, 0) + 1);
         }
-        categoryCountLiveData.setValue(counts);
+
+        return counts;
+    }
+
+    /**
+     * Gets the current Firebase user's uid safely.
+     *
+     * @return uid, or null if signed out
+     */
+    private String getCurrentUid() {
+        return auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
+    }
+
+    /**
+     * Converts null strings to empty strings for Room-safe writes.
+     *
+     * @param value nullable string
+     * @return non-null string
+     */
+    private String safeString(String value) {
+        return value != null ? value : "";
     }
 }
