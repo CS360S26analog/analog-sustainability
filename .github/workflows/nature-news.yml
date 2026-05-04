@@ -1,0 +1,33 @@
+name: Refresh Nature News
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs every day at 6:00 AM Pakistan time (1:00 AM UTC)
+    - cron: "0 1 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  refresh-nature-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install firebase-admin feedparser beautifulsoup4
+
+      - name: Refresh Firestore news articles
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+        run: python scripts/refresh_nature_news.py
