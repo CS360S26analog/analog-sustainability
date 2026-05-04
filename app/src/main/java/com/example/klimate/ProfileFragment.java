@@ -317,7 +317,7 @@ public class ProfileFragment extends Fragment {
 
         loadBadges(uid);
         loadHistoryPreview(uid);
-        wireSettingsRows(view, uid);
+        wireSettingsRows(view);
         wireLogout(view);
 
         // ── Role gate for rewards ─────────────────────────────────────────────
@@ -848,25 +848,25 @@ public class ProfileFragment extends Fragment {
      * Wires all settings rows. Account and notifications have functional
      * destinations; privacy and help show "coming soon" toasts. (merged V1+V2)
      */
-    private void wireSettingsRows(View view, String uid) {
-        LinearLayout rowAccount       = view.findViewById(R.id.row_account);
-        LinearLayout rowNotifications = view.findViewById(R.id.row_notifications);
-        LinearLayout rowHelp          = view.findViewById(R.id.row_help);
+    private void wireSettingsRows(View view) {
+        LinearLayout rowAccount = view.findViewById(R.id.row_account);
+        LinearLayout rowHelp = view.findViewById(R.id.row_help);
 
-        if (rowAccount != null)
-            rowAccount.setOnClickListener(v -> openAccountSettings());
+        if (rowAccount != null) {
+            rowAccount.setOnClickListener(v ->
+                    Toast.makeText(getContext(), "Account Settings — coming soon!", Toast.LENGTH_SHORT).show()
+            );
+        }
 
-        if (rowNotifications != null)
-            rowNotifications.setOnClickListener(v -> showNotifications(uid));
-
-        if (rowHelp != null)
-            rowHelp.setOnClickListener(v ->
-                    Toast.makeText(getContext(), "Help & Support — coming soon!", Toast.LENGTH_SHORT).show());
-
-        TextView tvViewAll = view.findViewById(R.id.tv_view_all);
-        if (tvViewAll != null)
-            tvViewAll.setOnClickListener(v ->
-                    Toast.makeText(getContext(), "All badges are shown below", Toast.LENGTH_SHORT).show());
+        if (rowHelp != null) {
+            rowHelp.setOnClickListener(v -> {
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).startStudentTutorialAgain();
+                } else {
+                    Toast.makeText(getContext(), "Tutorial unavailable right now", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     private void wireLogout(View view) {
