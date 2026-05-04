@@ -5,6 +5,12 @@
  * to browse challenges, create teams, join teams using a code, and view
  * joined team progress from the My Teams tab.
  *
+ * Room-first implementation:
+ * - Browse mode renders cached active challenges immediately.
+ * - My Teams mode renders cached joined teams immediately.
+ * - Firestore refreshes in the background and replaces the local cache.
+ * - Per-card progress still updates from Firestore listeners so progress stays fresh.
+ *
  * Firestore schemas used:
  *
  * challenges/{challengeId}
@@ -16,14 +22,8 @@
  * teams/{teamId}/memberProgress/{uid}
  * {uid, contributionCount}
  *
- * A compatibility mirror is also written to:
+ * Compatibility mirror:
  * challenges/{challengeId}/members/{uid}
- * so older challenge UI and participant count logic do not break.
- *
- * Role in design: View layer for Challenges and Teams.
- * Uses Firestore snapshot/query reads as Observer-style updates.
- *
- * Outstanding issues: None.
  *
  * @author Izza
  * @author Maryam Waseem
@@ -48,6 +48,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
+import com.example.klimate.local.AppDatabase;
+import com.example.klimate.local.ChallengeCacheDao;
+import com.example.klimate.local.ChallengeCacheEntity;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -58,10 +61,13 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class ChallengesFragment extends Fragment {
 
@@ -70,8 +76,15 @@ public class ChallengesFragment extends Fragment {
     private static final String SUBCOLLECTION_MEMBER_PROGRESS = "memberProgress";
     private static final String SUBCOLLECTION_LEGACY_MEMBERS = "members";
 
+    private static final String CACHE_MODE_BROWSE = "browse";
+    private static final String CACHE_MODE_TEAMS = "teams";
+
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
+
+    private AppDatabase appDatabase;
+    private ChallengeCacheDao challengeCacheDao;
+    private final Executor executor = Executors.newSingleThreadExecutor();
 
     private LinearLayout llChallengesList;
     private LinearLayout llMyTeamsList;
@@ -82,8 +95,28 @@ public class ChallengesFragment extends Fragment {
     private TextView tvBrowseEmpty;
     private TextView tvMyTeamsEmpty;
 
+    /**
+     * Used to ignore old async callbacks when a newer load has started.
+     */
+    private int renderVersion = 0;
+
     private interface AlreadyJoinedCallback {
         void onResult(boolean alreadyJoined);
+    }
+
+    /**
+     * Simple UI model that can come from either Firestore or Room.
+     */
+    private static class ChallengeCardData {
+        String challengeId;
+        String name;
+        String description;
+        long endDateMillis;
+        Long target;
+        boolean joined;
+        String teamId;
+        String joinCode;
+        long sortMillis;
     }
 
     @Nullable
@@ -92,65 +125,81 @@ public class ChallengesFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        String mode = getArguments() != null ? getArguments().getString("mode") : "browse";
-        View view;
+        String mode = getArguments() != null ? getArguments().getString("mode") : CACHE_MODE_BROWSE;
+
         db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        appDatabase = AppDatabase.getInstance(requireContext());
+        challengeCacheDao = appDatabase.challengeCacheDao();
 
-        if ("teams".equals(mode)) {
-            // Inflate the new dedicated Teams XML
+        View view;
+
+        if (CACHE_MODE_TEAMS.equals(mode)) {
             view = inflater.inflate(R.layout.fragment_challenges_my_teams, container, false);
 
             llMyTeamsList = view.findViewById(R.id.ll_my_teams_list);
             tvMyTeamsEmpty = view.findViewById(R.id.tv_my_teams_empty);
 
-            loadMyTeams(); // Run the Teams query
+            loadMyTeams();
         } else {
-            // Inflate the new dedicated Browse XML
             view = inflater.inflate(R.layout.fragment_challenges, container, false);
 
             llChallengesList = view.findViewById(R.id.ll_challenges_list);
             tvBrowseEmpty = view.findViewById(R.id.tv_browse_empty);
 
-            loadActiveChallenges(); // Run the Browse query with Descending sort
+            loadActiveChallenges();
         }
 
         return view;
     }
 
     /**
-     * Switches between Browse and My Teams tabs.
+     * Keeps compatibility if an older layout still uses internal Browse/My Teams tabs.
      *
      * @param showBrowse true to show Browse, false to show My Teams
      */
     private void showTab(boolean showBrowse) {
         if (showBrowse) {
-            panelBrowse.setVisibility(View.VISIBLE);
-            panelMyTeams.setVisibility(View.GONE);
+            if (panelBrowse != null) panelBrowse.setVisibility(View.VISIBLE);
+            if (panelMyTeams != null) panelMyTeams.setVisibility(View.GONE);
 
-            tabBrowse.setBackgroundResource(R.drawable.bg_tab_selected);
-            tabBrowse.setTextColor(getResources().getColor(R.color.color_green_header, null));
+            if (tabBrowse != null) {
+                tabBrowse.setBackgroundResource(R.drawable.bg_tab_selected);
+                tabBrowse.setTextColor(getResources().getColor(R.color.color_green_header, null));
+            }
 
-            tabMyTeams.setBackgroundColor(getResources().getColor(R.color.white, null));
-            tabMyTeams.setTextColor(getResources().getColor(R.color.color_text_secondary, null));
+            if (tabMyTeams != null) {
+                tabMyTeams.setBackgroundColor(getResources().getColor(R.color.white, null));
+                tabMyTeams.setTextColor(getResources().getColor(R.color.color_text_secondary, null));
+            }
 
             loadActiveChallenges();
         } else {
-            panelBrowse.setVisibility(View.GONE);
-            panelMyTeams.setVisibility(View.VISIBLE);
+            if (panelBrowse != null) panelBrowse.setVisibility(View.GONE);
+            if (panelMyTeams != null) panelMyTeams.setVisibility(View.VISIBLE);
 
-            tabMyTeams.setBackgroundResource(R.drawable.bg_tab_selected);
-            tabMyTeams.setTextColor(getResources().getColor(R.color.color_green_header, null));
+            if (tabMyTeams != null) {
+                tabMyTeams.setBackgroundResource(R.drawable.bg_tab_selected);
+                tabMyTeams.setTextColor(getResources().getColor(R.color.color_green_header, null));
+            }
 
-            tabBrowse.setBackgroundColor(getResources().getColor(R.color.white, null));
-            tabBrowse.setTextColor(getResources().getColor(R.color.color_text_secondary, null));
+            if (tabBrowse != null) {
+                tabBrowse.setBackgroundColor(getResources().getColor(R.color.white, null));
+                tabBrowse.setTextColor(getResources().getColor(R.color.color_text_secondary, null));
+            }
 
             loadMyTeams();
         }
     }
 
+    // ─────────────────────────────────────────────────
+    // BROWSE — ROOM FIRST, FIRESTORE REFRESH SECOND
+    // ─────────────────────────────────────────────────
+
     /**
-     * Loads all active challenges from Firestore.
+     * Loads all active challenges.
+     *
+     * Room renders first so the tab does not appear blank while Firestore responds.
      */
     private void loadActiveChallenges() {
         if (currentUser == null) {
@@ -158,31 +207,101 @@ public class ChallengesFragment extends Fragment {
             return;
         }
 
+        int version = ++renderVersion;
+        String uid = currentUser.getUid();
+
+        showBrowseLoading();
+
+        // 1. Room first.
+        executor.execute(() -> {
+            List<ChallengeCacheEntity> cached = challengeCacheDao.getItems(uid, CACHE_MODE_BROWSE);
+
+            if (!isAdded()) return;
+
+            requireActivity().runOnUiThread(() -> {
+                if (!isCurrent(version)) return;
+
+                if (!cached.isEmpty()) {
+                    renderBrowseCards(toCardDataList(cached, false));
+                }
+            });
+        });
+
+        // 2. Firestore refresh second.
         db.collection(COLLECTION_CHALLENGES)
                 .whereEqualTo("active", true)
                 .orderBy("startDate", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(snapshots -> {
-                    llChallengesList.removeAllViews();
+                    if (!isAdded()) return;
 
-                    if (snapshots.isEmpty()) {
-                        showBrowseEmpty("No active challenges right now.\nCheck back soon! 🌿");
-                        return;
-                    }
-
-                    tvBrowseEmpty.setVisibility(View.GONE);
+                    List<ChallengeCardData> freshCards = new ArrayList<>();
 
                     for (QueryDocumentSnapshot doc : snapshots) {
-                        addChallengeCard(doc, false, null, null);
+                        freshCards.add(mapChallengeDocument(doc, false, null, null, getStartMillis(doc)));
+                    }
+
+                    executor.execute(() ->
+                            challengeCacheDao.replaceMode(
+                                    uid,
+                                    CACHE_MODE_BROWSE,
+                                    toCacheEntities(uid, CACHE_MODE_BROWSE, freshCards)
+                            )
+                    );
+
+                    if (!isCurrent(version)) return;
+
+                    if (freshCards.isEmpty()) {
+                        showBrowseEmpty("No active challenges right now.\nCheck back soon! 🌿");
+                    } else {
+                        renderBrowseCards(freshCards);
                     }
                 })
-                .addOnFailureListener(e ->
-                        showBrowseEmpty("Could not load challenges: " + e.getMessage())
-                );
+                .addOnFailureListener(e -> {
+                    if (!isAdded() || !isCurrent(version)) return;
+
+                    // Keep cached cards if they are already visible.
+                    if (llChallengesList == null || llChallengesList.getChildCount() == 0) {
+                        showBrowseEmpty("Could not load challenges: " + e.getMessage());
+                    }
+                });
     }
+
+    private void renderBrowseCards(@NonNull List<ChallengeCardData> cards) {
+        if (llChallengesList == null || tvBrowseEmpty == null) return;
+
+        llChallengesList.removeAllViews();
+
+        if (cards.isEmpty()) {
+            showBrowseEmpty("No active challenges right now.\nCheck back soon! 🌿");
+            return;
+        }
+
+        tvBrowseEmpty.setVisibility(View.GONE);
+
+        for (ChallengeCardData data : cards) {
+            addChallengeCard(data);
+        }
+    }
+
+    private void showBrowseLoading() {
+        if (llChallengesList != null) {
+            llChallengesList.removeAllViews();
+        }
+        if (tvBrowseEmpty != null) {
+            tvBrowseEmpty.setText("Loading challenges…");
+            tvBrowseEmpty.setVisibility(View.VISIBLE);
+        }
+    }
+
+    // ─────────────────────────────────────────────────
+    // MY TEAMS — ROOM FIRST, FIRESTORE REFRESH SECOND
+    // ─────────────────────────────────────────────────
 
     /**
      * Loads teams joined by the current user.
+     *
+     * Room renders first so My Teams appears immediately on repeated visits.
      */
     private void loadMyTeams() {
         if (currentUser == null) {
@@ -190,32 +309,52 @@ public class ChallengesFragment extends Fragment {
             return;
         }
 
+        int version = ++renderVersion;
         String uid = currentUser.getUid();
 
-        llMyTeamsList.removeAllViews();
+        showMyTeamsLoading();
 
+        // 1. Room first.
+        executor.execute(() -> {
+            List<ChallengeCacheEntity> cached = challengeCacheDao.getItems(uid, CACHE_MODE_TEAMS);
+
+            if (!isAdded()) return;
+
+            requireActivity().runOnUiThread(() -> {
+                if (!isCurrent(version)) return;
+
+                if (!cached.isEmpty()) {
+                    renderMyTeamCards(toCardDataList(cached, true));
+                }
+            });
+        });
+
+        // 2. Firestore refresh second.
         db.collection(COLLECTION_TEAMS)
                 .whereArrayContains("memberUids", uid)
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(teamSnapshots -> {
+                    if (!isAdded() || !isCurrent(version)) return;
+
                     if (teamSnapshots.isEmpty()) {
-                        loadLegacyJoinedChallenges(uid);
+                        loadLegacyJoinedChallenges(uid, version);
                         return;
                     }
 
                     final int totalTeams = teamSnapshots.size();
                     final int[] finished = {0};
-                    final int[] shown = {0};
+                    List<ChallengeCardData> freshCards = new ArrayList<>();
 
                     for (QueryDocumentSnapshot teamDoc : teamSnapshots) {
                         String challengeId = teamDoc.getString("challengeId");
                         String joinCode = teamDoc.getString("joinCode");
                         String teamId = teamDoc.getId();
+                        long teamSortMillis = getCreatedAtMillis(teamDoc);
 
                         if (challengeId == null || challengeId.trim().isEmpty()) {
                             finished[0]++;
-                            maybeShowMyTeamsEmpty(finished[0], totalTeams, shown[0]);
+                            maybeFinishMyTeamsRefresh(uid, version, finished[0], totalTeams, freshCards);
                             continue;
                         }
 
@@ -225,19 +364,78 @@ public class ChallengesFragment extends Fragment {
                                 .addOnSuccessListener(challengeDoc -> {
                                     Boolean active = challengeDoc.getBoolean("active");
                                     if (challengeDoc.exists() && Boolean.TRUE.equals(active)) {
-                                        shown[0]++;
-                                        addChallengeCard(challengeDoc, true, teamId, joinCode);
+                                        freshCards.add(mapChallengeDocument(
+                                                challengeDoc,
+                                                true,
+                                                teamId,
+                                                joinCode,
+                                                teamSortMillis
+                                        ));
                                     }
                                 })
                                 .addOnCompleteListener(task -> {
                                     finished[0]++;
-                                    maybeShowMyTeamsEmpty(finished[0], totalTeams, shown[0]);
+                                    maybeFinishMyTeamsRefresh(uid, version, finished[0], totalTeams, freshCards);
                                 });
                     }
                 })
-                .addOnFailureListener(e ->
-                        showMyTeamsEmpty("Could not load your teams: " + e.getMessage())
-                );
+                .addOnFailureListener(e -> {
+                    if (!isAdded() || !isCurrent(version)) return;
+
+                    if (llMyTeamsList == null || llMyTeamsList.getChildCount() == 0) {
+                        showMyTeamsEmpty("Could not load your teams: " + e.getMessage());
+                    }
+                });
+    }
+
+    private void maybeFinishMyTeamsRefresh(@NonNull String uid,
+                                           int version,
+                                           int finished,
+                                           int total,
+                                           @NonNull List<ChallengeCardData> freshCards) {
+        if (finished < total) return;
+        if (!isAdded() || !isCurrent(version)) return;
+
+        executor.execute(() ->
+                challengeCacheDao.replaceMode(
+                        uid,
+                        CACHE_MODE_TEAMS,
+                        toCacheEntities(uid, CACHE_MODE_TEAMS, freshCards)
+                )
+        );
+
+        if (freshCards.isEmpty()) {
+            showMyTeamsEmpty("You haven't joined any challenges yet.\nBrowse and tap Join to get started!");
+        } else {
+            renderMyTeamCards(freshCards);
+        }
+    }
+
+    private void renderMyTeamCards(@NonNull List<ChallengeCardData> cards) {
+        if (llMyTeamsList == null || tvMyTeamsEmpty == null) return;
+
+        llMyTeamsList.removeAllViews();
+
+        if (cards.isEmpty()) {
+            showMyTeamsEmpty("You haven't joined any challenges yet.\nBrowse and tap Join to get started!");
+            return;
+        }
+
+        tvMyTeamsEmpty.setVisibility(View.GONE);
+
+        for (ChallengeCardData data : cards) {
+            addChallengeCard(data);
+        }
+    }
+
+    private void showMyTeamsLoading() {
+        if (llMyTeamsList != null) {
+            llMyTeamsList.removeAllViews();
+        }
+        if (tvMyTeamsEmpty != null) {
+            tvMyTeamsEmpty.setText("Loading your teams…");
+            tvMyTeamsEmpty.setVisibility(View.VISIBLE);
+        }
     }
 
     /**
@@ -246,19 +444,24 @@ public class ChallengesFragment extends Fragment {
      *
      * @param uid current user UID
      */
-    private void loadLegacyJoinedChallenges(String uid) {
+    private void loadLegacyJoinedChallenges(String uid, int version) {
         db.collection(COLLECTION_CHALLENGES)
                 .whereEqualTo("active", true)
                 .get()
                 .addOnSuccessListener(challenges -> {
+                    if (!isAdded() || !isCurrent(version)) return;
+
                     if (challenges.isEmpty()) {
+                        executor.execute(() ->
+                                challengeCacheDao.replaceMode(uid, CACHE_MODE_TEAMS, new ArrayList<>())
+                        );
                         showMyTeamsEmpty("You haven't joined any challenges yet.\nBrowse and tap Join to get started!");
                         return;
                     }
 
                     final int total = challenges.size();
                     final int[] finished = {0};
-                    final int[] shown = {0};
+                    List<ChallengeCardData> freshCards = new ArrayList<>();
 
                     for (QueryDocumentSnapshot challengeDoc : challenges) {
                         db.collection(COLLECTION_CHALLENGES)
@@ -268,45 +471,77 @@ public class ChallengesFragment extends Fragment {
                                 .get()
                                 .addOnSuccessListener(memberDoc -> {
                                     if (memberDoc.exists()) {
-                                        shown[0]++;
                                         String legacyCode = memberDoc.getString("teamCode");
-                                        addChallengeCard(challengeDoc, true, null, legacyCode);
+                                        freshCards.add(mapChallengeDocument(
+                                                challengeDoc,
+                                                true,
+                                                null,
+                                                legacyCode,
+                                                getStartMillis(challengeDoc)
+                                        ));
                                     }
                                 })
                                 .addOnCompleteListener(task -> {
                                     finished[0]++;
-                                    maybeShowMyTeamsEmpty(finished[0], total, shown[0]);
+                                    maybeFinishLegacyMyTeamsRefresh(uid, version, finished[0], total, freshCards);
                                 });
                     }
                 })
-                .addOnFailureListener(e ->
-                        showMyTeamsEmpty("Could not load your teams: " + e.getMessage())
-                );
+                .addOnFailureListener(e -> {
+                    if (!isAdded() || !isCurrent(version)) return;
+
+                    if (llMyTeamsList == null || llMyTeamsList.getChildCount() == 0) {
+                        showMyTeamsEmpty("Could not load your teams: " + e.getMessage());
+                    }
+                });
     }
+
+    private void maybeFinishLegacyMyTeamsRefresh(@NonNull String uid,
+                                                 int version,
+                                                 int finished,
+                                                 int total,
+                                                 @NonNull List<ChallengeCardData> freshCards) {
+        if (finished < total) return;
+        if (!isAdded() || !isCurrent(version)) return;
+
+        executor.execute(() ->
+                challengeCacheDao.replaceMode(
+                        uid,
+                        CACHE_MODE_TEAMS,
+                        toCacheEntities(uid, CACHE_MODE_TEAMS, freshCards)
+                )
+        );
+
+        if (freshCards.isEmpty()) {
+            showMyTeamsEmpty("You haven't joined any challenges yet.\nBrowse and tap Join to get started!");
+        } else {
+            renderMyTeamCards(freshCards);
+        }
+    }
+
+    // ─────────────────────────────────────────────────
+    // CARD RENDERING
+    // ─────────────────────────────────────────────────
 
     /**
      * Creates and displays one challenge card.
-     *
-     * @param doc challenge document
-     * @param joined true if this is shown in My Teams
-     * @param teamId team document ID, or null for legacy membership
-     * @param joinCode team join code, or null if unavailable
      */
-    private void addChallengeCard(DocumentSnapshot doc,
-                                  boolean joined,
-                                  @Nullable String teamId,
-                                  @Nullable String joinCode) {
+    private void addChallengeCard(@NonNull ChallengeCardData data) {
+        boolean joined = data.joined;
 
         View card = LayoutInflater.from(requireContext())
                 .inflate(R.layout.item_challenge_card,
                         joined ? llMyTeamsList : llChallengesList,
                         false);
 
-        String challengeId = doc.getId();
-        String name = doc.getString("name");
-        String description = doc.getString("description");
-        Timestamp endDate = doc.getTimestamp("endDate");
-        Long target = doc.getLong("target");
+        String challengeId = data.challengeId;
+        String safeName = data.name != null && !data.name.trim().isEmpty()
+                ? data.name
+                : "Unnamed Challenge";
+        String safeDescription = data.description != null ? data.description : "";
+        Long target = data.target;
+        String teamId = data.teamId;
+        String joinCode = data.joinCode;
 
         TextView tvName = card.findViewById(R.id.tv_challenge_name);
         TextView tvMeta = card.findViewById(R.id.tv_challenge_meta);
@@ -318,16 +553,13 @@ public class ChallengesFragment extends Fragment {
         TextView tvCode = card.findViewById(R.id.tv_team_code);
         TextView btnShare = card.findViewById(R.id.btn_share_code);
 
-        String safeName = name != null ? name : "Unnamed Challenge";
-        String safeDescription = description != null ? description : "";
-
         tvName.setText(safeName);
         tvDesc.setText(safeDescription);
 
         final String endStr;
-        if (endDate != null) {
+        if (data.endDateMillis > 0) {
             endStr = "Ends " + new SimpleDateFormat("dd MMM", Locale.getDefault())
-                    .format(endDate.toDate());
+                    .format(new java.util.Date(data.endDateMillis));
         } else {
             endStr = "No end date";
         }
@@ -340,7 +572,7 @@ public class ChallengesFragment extends Fragment {
             btnJoin.setVisibility(View.GONE);
             rowCode.setVisibility(View.VISIBLE);
 
-            String visibleCode = joinCode != null ? joinCode : "—";
+            String visibleCode = joinCode != null && !joinCode.trim().isEmpty() ? joinCode : "—";
             tvCode.setText("Team code: " + visibleCode);
             setShareButton(btnShare, safeName, visibleCode);
 
@@ -349,7 +581,7 @@ public class ChallengesFragment extends Fragment {
             card.setClickable(true);
             card.setFocusable(true);
             card.setOnClickListener(v -> {
-                if (teamId == null) {
+                if (teamId == null || teamId.trim().isEmpty()) {
                     Toast.makeText(getContext(),
                             "This older team record does not have a full progress screen yet.",
                             Toast.LENGTH_SHORT).show();
@@ -387,16 +619,10 @@ public class ChallengesFragment extends Fragment {
         }
     }
 
-    /**
-     * Shows a choice dialog for creating a new team or joining with a code.
-     *
-     * @param challengeId challenge ID
-     * @param challengeName challenge name
-     * @param btnJoin join button
-     * @param rowCode team code row
-     * @param tvCode team code text
-     * @param btnShare share button
-     */
+    // ─────────────────────────────────────────────────
+    // JOIN / CREATE TEAM
+    // ─────────────────────────────────────────────────
+
     private void showTeamOptionsDialog(String challengeId,
                                        String challengeName,
                                        TextView btnJoin,
@@ -417,16 +643,6 @@ public class ChallengesFragment extends Fragment {
                 .show();
     }
 
-    /**
-     * Creates a new team for the selected challenge.
-     *
-     * @param challengeId challenge ID
-     * @param challengeName challenge name
-     * @param btnJoin join button
-     * @param rowCode team code row
-     * @param tvCode team code text
-     * @param btnShare share button
-     */
     private void createNewTeam(String challengeId,
                                String challengeName,
                                TextView btnJoin,
@@ -475,6 +691,7 @@ public class ChallengesFragment extends Fragment {
                                                 .document(challengeId)
                                                 .update("participantCount", FieldValue.increment(1));
 
+                                        invalidateChallengeCacheForCurrentUser();
                                         showJoinedUi(challengeName, joinCode, btnJoin, rowCode, tvCode, btnShare);
 
                                         Toast.makeText(getContext(),
@@ -490,16 +707,6 @@ public class ChallengesFragment extends Fragment {
         });
     }
 
-    /**
-     * Opens a dialog where the user can enter a 4-character join code.
-     *
-     * @param challengeId challenge ID
-     * @param challengeName challenge name
-     * @param btnJoin join button
-     * @param rowCode team code row
-     * @param tvCode team code text
-     * @param btnShare share button
-     */
     private void showJoinCodeDialog(String challengeId,
                                     String challengeName,
                                     TextView btnJoin,
@@ -532,17 +739,6 @@ public class ChallengesFragment extends Fragment {
                 .show();
     }
 
-    /**
-     * Joins an existing team using a team code.
-     *
-     * @param challengeId challenge ID
-     * @param challengeName challenge name
-     * @param joinCode entered team code
-     * @param btnJoin join button
-     * @param rowCode team code row
-     * @param tvCode team code text
-     * @param btnShare share button
-     */
     private void joinTeamWithCode(String challengeId,
                                   String challengeName,
                                   String joinCode,
@@ -615,6 +811,7 @@ public class ChallengesFragment extends Fragment {
                                                             .document(challengeId)
                                                             .update("participantCount", FieldValue.increment(1));
 
+                                                    invalidateChallengeCacheForCurrentUser();
                                                     showJoinedUi(challengeName, joinCode, btnJoin, rowCode, tvCode, btnShare);
 
                                                     Toast.makeText(getContext(),
@@ -636,12 +833,6 @@ public class ChallengesFragment extends Fragment {
         });
     }
 
-    /**
-     * Checks whether the current user is already in any team for this challenge.
-     *
-     * @param challengeId challenge ID
-     * @param callback callback returning true if already joined
-     */
     private void checkAlreadyJoinedChallenge(String challengeId,
                                              AlreadyJoinedCallback callback) {
         if (currentUser == null) {
@@ -683,14 +874,6 @@ public class ChallengesFragment extends Fragment {
                 .addOnFailureListener(e -> callback.onResult(false));
     }
 
-    /**
-     * Writes a compatibility membership record under challenges/{id}/members/{uid}.
-     *
-     * @param challengeId challenge ID
-     * @param teamId team ID
-     * @param joinCode join code
-     * @param uid user ID
-     */
     private void writeLegacyMembership(String challengeId,
                                        String teamId,
                                        String joinCode,
@@ -709,16 +892,6 @@ public class ChallengesFragment extends Fragment {
                 .set(memberData);
     }
 
-    /**
-     * Updates the challenge card after the user joins or creates a team.
-     *
-     * @param challengeName challenge name
-     * @param joinCode team code
-     * @param btnJoin join button
-     * @param rowCode team code row
-     * @param tvCode team code text
-     * @param btnShare share button
-     */
     private void showJoinedUi(String challengeName,
                               String joinCode,
                               TextView btnJoin,
@@ -731,13 +904,6 @@ public class ChallengesFragment extends Fragment {
         setShareButton(btnShare, challengeName, joinCode);
     }
 
-    /**
-     * Configures the share-code button.
-     *
-     * @param btnShare share button
-     * @param challengeName challenge name
-     * @param joinCode team code
-     */
     private void setShareButton(TextView btnShare,
                                 String challengeName,
                                 String joinCode) {
@@ -751,16 +917,10 @@ public class ChallengesFragment extends Fragment {
         });
     }
 
-    /**
-     * Updates the Browse card summary with total teams and joined members.
-     *
-     * @param challengeId challenge ID
-     * @param target challenge target
-     * @param progBar progress bar
-     * @param tvProgress progress text
-     * @param tvMeta metadata text
-     * @param endStr formatted end-date string
-     */
+    // ─────────────────────────────────────────────────
+    // LIVE PROGRESS / SUMMARIES
+    // ─────────────────────────────────────────────────
+
     private void updateBrowseChallengeSummary(String challengeId,
                                               @Nullable Long target,
                                               ProgressBar progBar,
@@ -800,16 +960,6 @@ public class ChallengesFragment extends Fragment {
                 });
     }
 
-    /**
-     * Loads old member summary from challenges/{id}/members for compatibility.
-     *
-     * @param challengeId challenge ID
-     * @param target challenge target
-     * @param progBar progress bar
-     * @param tvProgress progress text
-     * @param tvMeta metadata text
-     * @param endStr formatted end-date string
-     */
     private void loadLegacyMemberSummary(String challengeId,
                                          @Nullable Long target,
                                          ProgressBar progBar,
@@ -835,17 +985,6 @@ public class ChallengesFragment extends Fragment {
                 });
     }
 
-    /**
-     * Updates a joined team card with team contribution progress.
-     *
-     * @param challengeId challenge ID
-     * @param teamId team ID, or null for legacy progress
-     * @param target challenge target
-     * @param progBar progress bar
-     * @param tvProgress progress text
-     * @param tvMeta metadata text
-     * @param endStr formatted end-date string
-     */
     private void updateJoinedTeamProgress(String challengeId,
                                           @Nullable String teamId,
                                           @Nullable Long target,
@@ -853,7 +992,7 @@ public class ChallengesFragment extends Fragment {
                                           TextView tvProgress,
                                           TextView tvMeta,
                                           String endStr) {
-        if (teamId == null) {
+        if (teamId == null || teamId.trim().isEmpty()) {
             updateLegacyTeamProgress(challengeId, target, progBar, tvProgress, tvMeta, endStr);
             return;
         }
@@ -889,16 +1028,6 @@ public class ChallengesFragment extends Fragment {
                 });
     }
 
-    /**
-     * Updates progress for older challenge membership records.
-     *
-     * @param challengeId challenge ID
-     * @param target challenge target
-     * @param progBar progress bar
-     * @param tvProgress progress text
-     * @param tvMeta metadata text
-     * @param endStr formatted end-date string
-     */
     private void updateLegacyTeamProgress(String challengeId,
                                           @Nullable Long target,
                                           ProgressBar progBar,
@@ -935,48 +1064,143 @@ public class ChallengesFragment extends Fragment {
                 });
     }
 
-    /**
-     * Shows the empty Browse message.
-     *
-     * @param message message to display
-     */
+    // ─────────────────────────────────────────────────
+    // CACHE MAPPING
+    // ─────────────────────────────────────────────────
+
+    private ChallengeCardData mapChallengeDocument(@NonNull DocumentSnapshot doc,
+                                                   boolean joined,
+                                                   @Nullable String teamId,
+                                                   @Nullable String joinCode,
+                                                   long sortMillis) {
+        ChallengeCardData data = new ChallengeCardData();
+        data.challengeId = doc.getId();
+        data.name = doc.getString("name");
+        data.description = doc.getString("description");
+
+        Timestamp endDate = doc.getTimestamp("endDate");
+        data.endDateMillis = endDate != null ? endDate.toDate().getTime() : 0L;
+
+        data.target = doc.getLong("target");
+        data.joined = joined;
+        data.teamId = teamId;
+        data.joinCode = joinCode;
+        data.sortMillis = sortMillis > 0 ? sortMillis : System.currentTimeMillis();
+
+        return data;
+    }
+
+    private List<ChallengeCardData> toCardDataList(@NonNull List<ChallengeCacheEntity> entities,
+                                                   boolean joined) {
+        List<ChallengeCardData> result = new ArrayList<>();
+
+        for (ChallengeCacheEntity entity : entities) {
+            ChallengeCardData data = new ChallengeCardData();
+            data.challengeId = entity.challengeId;
+            data.name = entity.name;
+            data.description = entity.description;
+            data.endDateMillis = entity.endDateMillis;
+            data.target = entity.target;
+            data.joined = joined;
+            data.teamId = entity.teamId;
+            data.joinCode = entity.joinCode;
+            data.sortMillis = entity.sortMillis;
+            result.add(data);
+        }
+
+        return result;
+    }
+
+    private List<ChallengeCacheEntity> toCacheEntities(@NonNull String ownerUid,
+                                                       @NonNull String mode,
+                                                       @NonNull List<ChallengeCardData> cards) {
+        List<ChallengeCacheEntity> result = new ArrayList<>();
+
+        for (ChallengeCardData card : cards) {
+            String cacheId = ownerUid
+                    + "_" + mode
+                    + "_" + safe(card.challengeId)
+                    + "_" + safe(card.teamId);
+
+            result.add(new ChallengeCacheEntity(
+                    cacheId,
+                    ownerUid,
+                    mode,
+                    safe(card.challengeId),
+                    safe(card.teamId),
+                    safe(card.joinCode),
+                    safe(card.name),
+                    safe(card.description),
+                    card.endDateMillis,
+                    card.target,
+                    card.sortMillis,
+                    System.currentTimeMillis()
+            ));
+        }
+
+        return result;
+    }
+
+    private long getStartMillis(@NonNull DocumentSnapshot doc) {
+        Timestamp ts = doc.getTimestamp("startDate");
+        return ts != null ? ts.toDate().getTime() : System.currentTimeMillis();
+    }
+
+    private long getCreatedAtMillis(@NonNull DocumentSnapshot doc) {
+        Timestamp ts = doc.getTimestamp("createdAt");
+        return ts != null ? ts.toDate().getTime() : System.currentTimeMillis();
+    }
+
+    private void invalidateChallengeCacheForCurrentUser() {
+        if (currentUser == null) return;
+        String uid = currentUser.getUid();
+
+        executor.execute(() -> challengeCacheDao.deleteForOwner(uid));
+    }
+
+    // ─────────────────────────────────────────────────
+    // EMPTY STATES / HELPERS
+    // ─────────────────────────────────────────────────
+
     private void showBrowseEmpty(String message) {
-        llChallengesList.removeAllViews();
-        tvBrowseEmpty.setText(message);
-        tvBrowseEmpty.setVisibility(View.VISIBLE);
+        if (llChallengesList != null) {
+            llChallengesList.removeAllViews();
+        }
+        if (tvBrowseEmpty != null) {
+            tvBrowseEmpty.setText(message);
+            tvBrowseEmpty.setVisibility(View.VISIBLE);
+        }
     }
 
-    /**
-     * Shows the empty My Teams message.
-     *
-     * @param message message to display
-     */
     private void showMyTeamsEmpty(String message) {
-        llMyTeamsList.removeAllViews();
-        tvMyTeamsEmpty.setText(message);
-        tvMyTeamsEmpty.setVisibility(View.VISIBLE);
-    }
-
-    /**
-     * Shows My Teams empty state after all async checks complete.
-     *
-     * @param finished number of completed checks
-     * @param total total checks
-     * @param shown number of teams shown
-     */
-    private void maybeShowMyTeamsEmpty(int finished, int total, int shown) {
-        if (finished >= total && shown == 0) {
-            showMyTeamsEmpty("You haven't joined any challenges yet.\nBrowse and tap Join to get started!");
-        } else if (shown > 0) {
-            tvMyTeamsEmpty.setVisibility(View.GONE);
+        if (llMyTeamsList != null) {
+            llMyTeamsList.removeAllViews();
+        }
+        if (tvMyTeamsEmpty != null) {
+            tvMyTeamsEmpty.setText(message);
+            tvMyTeamsEmpty.setVisibility(View.VISIBLE);
         }
     }
 
     /**
-     * Generates a random 4-character uppercase alphanumeric team code.
-     *
-     * @return team code string, e.g. GRNX
+     * Kept for compatibility with older async flow.
      */
+    private void maybeShowMyTeamsEmpty(int finished, int total, int shown) {
+        if (finished >= total && shown == 0) {
+            showMyTeamsEmpty("You haven't joined any challenges yet.\nBrowse and tap Join to get started!");
+        } else if (shown > 0 && tvMyTeamsEmpty != null) {
+            tvMyTeamsEmpty.setVisibility(View.GONE);
+        }
+    }
+
+    private boolean isCurrent(int version) {
+        return version == renderVersion;
+    }
+
+    private String safe(@Nullable String value) {
+        return value == null ? "" : value;
+    }
+
     private String generateTeamCode() {
         String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
         StringBuilder code = new StringBuilder();

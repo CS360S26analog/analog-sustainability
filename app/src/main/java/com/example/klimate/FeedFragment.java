@@ -2,23 +2,17 @@
  * FeedFragment.java
  *
  * Community feed screen with four filter chips: Verified, News, Tips,
- * and Challenges.
+ * and My Teams.
  *
- * Verified tab    embeds ValidationFeedFragment as a child fragment,
- *                  reusing all its voting, proof-image, and upvote logic.
- * News tab        reads news_articles where approved == true, ordered
- *                  by publishedAt descending. Tapping a card opens the
- *                  article URL in the device browser.
- * Tips tab        reads staff-published tips from the tips collection.
- * Challenges tab  embeds ChallengesFragment via childFragmentManager.
+ * Room-first implementation:
+ * - News and Tips render immediately from Room cache when available.
+ * - Firestore refreshes in the background.
+ * - Fresh Firestore data replaces the Room cache.
  *
- * Role in design: Part of the View layer. Uses child-fragment embedding
- * for the Verified and Challenges tabs so that their own fragment logic
- * (voting, team joining, etc.) works correctly without duplication.
- *
- * Outstanding issues: None.
- *
- * @author Maryam Waseem
+ * Note:
+ * - Verified is still delegated to ValidationFeedFragment.
+ * - Challenges/My Teams are still delegated to ChallengesFragment.
+ *   If those are slow, cache them inside ChallengesFragment separately.
  */
 package com.example.klimate;
 
@@ -40,6 +34,9 @@ import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.example.klimate.local.AppDatabase;
+import com.example.klimate.local.FeedCacheDao;
+import com.example.klimate.local.FeedCacheEntity;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -48,15 +45,34 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class FeedFragment extends Fragment {
 
+    private static final String CACHE_TYPE_NEWS = "news";
+    private static final String CACHE_TYPE_TIP  = "tip";
+
     private TextView chipFeed, chipNews, chipExplore, chipTeams;
     private ViewGroup contentContainer;
+
     private FirebaseFirestore db;
+    private AppDatabase appDatabase;
+    private FeedCacheDao feedCacheDao;
+
+    private final Executor executor = Executors.newSingleThreadExecutor();
+
+    // Incremented whenever the user switches chips. Prevents old async callbacks
+    // from rendering into the wrong tab after fast switching.
+    private int contentVersion = 0;
+
+    // In-memory copies make repeated tab switching instant within this fragment instance.
+    private final List<FeedCacheEntity> memoryNewsCache = new ArrayList<>();
+    private final List<FeedCacheEntity> memoryTipCycle  = new ArrayList<>();
 
     @Nullable
     @Override
@@ -65,19 +81,21 @@ public class FeedFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_feed, container, false);
+
         db = FirebaseFirestore.getInstance();
+        appDatabase = AppDatabase.getInstance(requireContext());
+        feedCacheDao = appDatabase.feedCacheDao();
 
-        chipFeed       = view.findViewById(R.id.chip_feed);
-        chipNews       = view.findViewById(R.id.chip_news);
-        chipExplore    = view.findViewById(R.id.chip_explore);
-        chipTeams    = view.findViewById(R.id.chip_teams);
-
+        chipFeed    = view.findViewById(R.id.chip_feed);
+        chipNews    = view.findViewById(R.id.chip_news);
+        chipExplore = view.findViewById(R.id.chip_explore);
+        chipTeams   = view.findViewById(R.id.chip_teams);
 
         contentContainer = view.findViewById(R.id.feed_content_container);
 
-        chipFeed.setOnClickListener(v       -> selectChip(0));
-        chipNews.setOnClickListener(v       -> selectChip(1));
-        chipExplore.setOnClickListener(v       -> selectChip(2));
+        chipFeed.setOnClickListener(v -> selectChip(0));
+        chipNews.setOnClickListener(v -> selectChip(1));
+        chipExplore.setOnClickListener(v -> selectChip(2));
         chipTeams.setOnClickListener(v -> selectChip(3));
 
         selectChip(0);
@@ -85,50 +103,42 @@ public class FeedFragment extends Fragment {
     }
 
     /**
-     * Switches the active filter chip and refreshes content.
-     * Clears any child fragments before swapping so that embedded
-     * fragments (Verified / Challenges) are properly torn down.
-     *
-     * 0 = Verified, 1 = News, 2 = Tips, 3 = Challenges
-     *
-     * @param index the selected chip index
+     * 0 = Verified, 1 = News, 2 = Explore/Tips + Challenges, 3 = My Teams
      */
     private void selectChip(int index) {
-        // Style — reset all, then highlight selected
-        TextView[] chips = { chipFeed, chipNews, chipExplore, chipTeams};
+        contentVersion++;
+        int version = contentVersion;
+
+        TextView[] chips = { chipFeed, chipNews, chipExplore, chipTeams };
         for (TextView chip : chips) {
             chip.setBackgroundResource(R.drawable.bg_card_outline);
             chip.setTextColor(requireContext().getColor(R.color.color_text_secondary));
             chip.setTypeface(null, android.graphics.Typeface.NORMAL);
         }
+
         chips[index].setBackgroundResource(R.drawable.bg_button_amber);
         chips[index].setTextColor(requireContext().getColor(android.R.color.white));
         chips[index].setTypeface(null, android.graphics.Typeface.BOLD);
 
-        // Remove any previously embedded child fragment before switching
         Fragment existing = getChildFragmentManager().findFragmentById(R.id.feed_content_container);
         if (existing != null) {
             getChildFragmentManager().beginTransaction().remove(existing).commitNow();
         }
+
         contentContainer.removeAllViews();
 
         switch (index) {
             case 0: loadVerifiedContent(); break;
-            case 1: loadNewsContent();     break;
-            case 2: loadExploreContent();  break; // Index 2 is now Explore
-            case 3: loadMyTeamsContent();    break;
+            case 1: loadNewsContent(version); break;
+            case 2: loadExploreContent(version); break;
+            case 3: loadMyTeamsContent(); break;
         }
     }
 
     // ─────────────────────────────────────────────────
-    // VERIFIED TAB — delegates entirely to ValidationFeedFragment
+    // VERIFIED TAB
     // ─────────────────────────────────────────────────
 
-    /**
-     * Embeds ValidationFeedFragment into the content container so that
-     * all voting, proof-image loading, and upvote logic is handled there
-     * without any duplication.
-     */
     private void loadVerifiedContent() {
         FragmentTransaction ft = getChildFragmentManager().beginTransaction();
         ft.replace(R.id.feed_content_container, new ValidationFeedFragment());
@@ -136,78 +146,121 @@ public class FeedFragment extends Fragment {
     }
 
     // ─────────────────────────────────────────────────
-    // NEWS TAB
+    // NEWS TAB — ROOM FIRST, FIRESTORE REFRESH SECOND
     // ─────────────────────────────────────────────────
 
-    /**
-     * Loads approved news articles from Firestore, ordered by publishedAt
-     * descending. Each card is tappable and opens the article URL in the
-     * device's default browser via an Intent.
-     *
-     * Articles are pre-imported into Firestore (no scraping in the app).
-     * Only documents where approved == true are shown.
-     */
-    private void loadNewsContent() {
+    private void loadNewsContent(int version) {
         LinearLayout list = buildScrollList();
-        list.addView(buildLoadingLabel("Loading news…"));
 
+        if (!memoryNewsCache.isEmpty()) {
+            renderNewsList(list, memoryNewsCache);
+        } else {
+            list.addView(buildLoadingLabel("Loading news…"));
+        }
+
+        // 1. Room first: instant cached render.
+        executor.execute(() -> {
+            List<FeedCacheEntity> cached = feedCacheDao.getItemsByType(CACHE_TYPE_NEWS);
+
+            if (!isAdded()) return;
+
+            requireActivity().runOnUiThread(() -> {
+                if (!isCurrent(version)) return;
+
+                if (!cached.isEmpty()) {
+                    memoryNewsCache.clear();
+                    memoryNewsCache.addAll(cached);
+                    renderNewsList(list, cached);
+                } else if (memoryNewsCache.isEmpty()) {
+                    list.removeAllViews();
+                    list.addView(buildLoadingLabel("Loading news…"));
+                }
+            });
+        });
+
+        // 2. Firestore second: refresh cache in background.
         db.collection("news_article")
                 .whereEqualTo("approved", true)
                 .orderBy("publishedAt", Query.Direction.DESCENDING)
                 .limit(30)
                 .get()
                 .addOnSuccessListener(snapshots -> {
-                    list.removeAllViews();
-
-                    if (snapshots.isEmpty()) {
-                        list.addView(buildEmptyLabel(
-                                "No news articles yet.\nCheck back soon! 📰"));
-                        return;
-                    }
+                    List<FeedCacheEntity> freshItems = new ArrayList<>();
 
                     for (QueryDocumentSnapshot doc : snapshots) {
-                        list.addView(buildNewsCard(
-                                doc.getString("title"),
-                                doc.getString("summary"),
-                                doc.getString("url"),
-                                doc.getString("source"),
-                                doc.getString("category"),
-                                doc.getTimestamp("publishedAt")));
+                        freshItems.add(mapNewsDocumentToCacheEntity(doc));
+                    }
+
+                    executor.execute(() ->
+                            feedCacheDao.replaceType(CACHE_TYPE_NEWS, freshItems)
+                    );
+
+                    if (!isAdded() || !isCurrent(version)) return;
+
+                    memoryNewsCache.clear();
+                    memoryNewsCache.addAll(freshItems);
+
+                    if (freshItems.isEmpty()) {
+                        list.removeAllViews();
+                        list.addView(buildEmptyLabel("No news articles yet.\nCheck back soon! 📰"));
+                    } else {
+                        renderNewsList(list, freshItems);
                     }
                 })
                 .addOnFailureListener(e -> {
-                    list.removeAllViews();
-                    list.addView(buildEmptyLabel("Could not load news."));
+                    if (!isAdded() || !isCurrent(version)) return;
+
+                    // If we had cached data, keep it on screen. Only show error when cache is empty.
+                    if (memoryNewsCache.isEmpty()) {
+                        list.removeAllViews();
+                        list.addView(buildEmptyLabel("Could not load news."));
+                    }
                 });
     }
 
-    private void loadMyTeamsContent() {
-        ChallengesFragment fragment = new ChallengesFragment();
+    private void renderNewsList(@NonNull LinearLayout list,
+                                @NonNull List<FeedCacheEntity> items) {
+        list.removeAllViews();
 
-        // Create a bundle to tell the fragment to show "My Teams" by default
-        Bundle args = new Bundle();
-        args.putString("mode", "teams"); // Triggers fragment_challenges_my_teams.xml
-        fragment.setArguments(args);
+        if (items.isEmpty()) {
+            list.addView(buildEmptyLabel("No news articles yet.\nCheck back soon! 📰"));
+            return;
+        }
 
-        getChildFragmentManager().beginTransaction()
-                .replace(R.id.feed_content_container, fragment).commit();
+        for (FeedCacheEntity item : items) {
+            list.addView(buildNewsCard(
+                    item.title,
+                    item.summary,
+                    item.url,
+                    item.source,
+                    item.category,
+                    item.timestampMillis
+            ));
+        }
     }
 
-    /**
-     * Builds a tappable news article card. Tapping opens the article URL
-     * in the device's default browser. If the URL is missing the card is
-     * still shown but is not tappable.
-     *
-     * @param title       article headline
-     * @param summary     short article summary
-     * @param url         full article URL
-     * @param source      publisher name e.g. "Dawn", "BBC"
-     * @param category    topic category e.g. "Climate"
-     * @param publishedAt Firestore Timestamp of publication date
-     */
+    private FeedCacheEntity mapNewsDocumentToCacheEntity(@NonNull DocumentSnapshot doc) {
+        Timestamp publishedAt = doc.getTimestamp("publishedAt");
+        long publishedAtMillis = publishedAt != null
+                ? publishedAt.toDate().getTime()
+                : System.currentTimeMillis();
+
+        return new FeedCacheEntity(
+                CACHE_TYPE_NEWS + "_" + doc.getId(),
+                CACHE_TYPE_NEWS,
+                nullToEmpty(doc.getString("title")),
+                nullToEmpty(doc.getString("summary")),
+                nullToEmpty(doc.getString("url")),
+                nullToEmpty(doc.getString("source")),
+                nullToEmpty(doc.getString("category")),
+                publishedAtMillis,
+                System.currentTimeMillis()
+        );
+    }
+
     private View buildNewsCard(String title, String summary, String url,
                                String source, String category,
-                               Timestamp publishedAt) {
+                               long publishedAtMillis) {
         CardView card = new CardView(requireContext());
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -234,7 +287,6 @@ public class FeedFragment extends Fragment {
         inner.setOrientation(LinearLayout.VERTICAL);
         inner.setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(14));
 
-        // Meta row: category badge + source + date
         LinearLayout metaRow = new LinearLayout(requireContext());
         metaRow.setOrientation(LinearLayout.HORIZONTAL);
         metaRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
@@ -252,24 +304,24 @@ public class FeedFragment extends Fragment {
             metaRow.addView(tvSource);
         }
 
-        if (publishedAt != null) {
+        if (publishedAtMillis > 0) {
             TextView tvDate = new TextView(requireContext());
             tvDate.setText("  ·  " + new SimpleDateFormat(
-                    "dd MMM", Locale.getDefault()).format(publishedAt.toDate()));
+                    "dd MMM", Locale.getDefault()).format(new Date(publishedAtMillis)));
             tvDate.setTextSize(11f);
             tvDate.setTextColor(requireContext().getColor(R.color.color_text_secondary));
             metaRow.addView(tvDate);
         }
 
         TextView tvTitle = new TextView(requireContext());
-        tvTitle.setText(title != null ? title : "Untitled article");
+        tvTitle.setText(title != null && !title.isEmpty() ? title : "Untitled article");
         tvTitle.setTextSize(15f);
         tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
         tvTitle.setTextColor(requireContext().getColor(R.color.color_text_primary));
         LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
-        titleLp.topMargin    = dpToPx(8);
+        titleLp.topMargin = dpToPx(8);
         titleLp.bottomMargin = dpToPx(4);
         tvTitle.setLayoutParams(titleLp);
 
@@ -302,104 +354,26 @@ public class FeedFragment extends Fragment {
     }
 
     // ─────────────────────────────────────────────────
-    // TIPS TAB
+    // MY TEAMS TAB
     // ─────────────────────────────────────────────────
 
-    /**
-     * Loads staff-published sustainability tips from the 'tips' collection.
-     */
-    private void loadTipsContent() {
-        LinearLayout list = buildScrollList();
-        list.addView(buildLoadingLabel("Loading tips…"));
+    private void loadMyTeamsContent() {
+        ChallengesFragment fragment = new ChallengesFragment();
 
-        db.collection("tips")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .get()
-                .addOnSuccessListener(snapshots -> {
-                    list.removeAllViews();
-                    if (snapshots.isEmpty()) {
-                        list.addView(buildEmptyLabel(
-                                "No tips published yet.\nCheck back soon! 💡"));
-                        return;
-                    }
-                    for (QueryDocumentSnapshot doc : snapshots) {
-                        list.addView(buildTipCard(
-                                doc.getString("title"),
-                                doc.getString("body"),
-                                doc.getString("category"),
-                                doc.getTimestamp("timestamp")));
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    list.removeAllViews();
-                    list.addView(buildEmptyLabel("Could not load tips."));
-                });
-    }
+        Bundle args = new Bundle();
+        args.putString("mode", "teams");
+        fragment.setArguments(args);
 
-    private View buildTipCard(String title, String body,
-                              String category, Timestamp ts) {
-        CardView card = new CardView(requireContext());
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                dpToPx(280), ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(dpToPx(16), 0, 0, dpToPx(10)); // Margin start only for spacing
-        card.setLayoutParams(lp);
-        card.setRadius(dpToPx(14));
-        card.setCardElevation(dpToPx(2));
-        card.setCardBackgroundColor(requireContext().getColor(android.R.color.white));
-
-        LinearLayout inner = new LinearLayout(requireContext());
-        inner.setOrientation(LinearLayout.VERTICAL);
-        inner.setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(14));
-
-        LinearLayout metaRow = new LinearLayout(requireContext());
-        metaRow.setOrientation(LinearLayout.HORIZONTAL);
-        metaRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
-
-        if (category != null) {
-            metaRow.addView(buildBadge( category,
-                    R.color.color_green_header, android.R.color.white));
-        }
-
-        if (ts != null) {
-            TextView tvDate = new TextView(requireContext());
-            tvDate.setText("  ·  " + new SimpleDateFormat(
-                    "dd MMM", Locale.getDefault()).format(ts.toDate()));
-            tvDate.setTextSize(11f);
-            tvDate.setTextColor(requireContext().getColor(R.color.color_text_secondary));
-            metaRow.addView(tvDate);
-        }
-
-        TextView tvTitle = new TextView(requireContext());
-        tvTitle.setText(title != null ? title : "Tip");
-        tvTitle.setTextSize(15f);
-        tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
-        tvTitle.setTextColor(requireContext().getColor(R.color.color_text_primary));
-        LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        titleLp.topMargin    = dpToPx(8);
-        titleLp.bottomMargin = dpToPx(4);
-        tvTitle.setLayoutParams(titleLp);
-
-        TextView tvBody = new TextView(requireContext());
-        tvBody.setText(body != null ? body : "");
-        tvBody.setTextSize(13f);
-        tvBody.setTextColor(requireContext().getColor(R.color.color_text_secondary));
-        tvBody.setLineSpacing(dpToPx(2), 1f);
-
-        inner.addView(metaRow);
-        inner.addView(tvTitle);
-        inner.addView(tvBody);
-        card.addView(inner);
-        return card;
+        getChildFragmentManager().beginTransaction()
+                .replace(R.id.feed_content_container, fragment)
+                .commit();
     }
 
     // ─────────────────────────────────────────────────
-    // CHALLENGES TAB — embeds ChallengesFragment
+    // TIPS + CHALLENGES TAB — TIPS ARE ROOM FIRST
     // ─────────────────────────────────────────────────
 
-    private void loadExploreContent() {
-        // 1. Parent vertical layout: labeled tips row on top, labeled challenges below.
+    private void loadExploreContent(int version) {
         LinearLayout parent = new LinearLayout(requireContext());
         parent.setOrientation(LinearLayout.VERTICAL);
         parent.setLayoutParams(new ViewGroup.LayoutParams(
@@ -408,10 +382,8 @@ public class FeedFragment extends Fragment {
 
         contentContainer.addView(parent);
 
-        // ── TIPS LABEL ───────────────────────────────────
         parent.addView(buildSectionLabel("Tips", "Swipe through quick sustainability ideas"));
 
-        // 2. Horizontal, endlessly extendable tips rail.
         HorizontalScrollView tipScroll = new HorizontalScrollView(requireContext());
         LinearLayout.LayoutParams tipScrollParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -431,10 +403,8 @@ public class FeedFragment extends Fragment {
         tipScroll.addView(tipRow);
         parent.addView(tipScroll);
 
-        // ── CHALLENGES LABEL ──────────────────────────────
         parent.addView(buildSectionLabel("Challenges", "Join a challenge and track your progress"));
 
-        // 3. Challenges fill the remaining vertical space.
         FrameLayout challengeFrame = new FrameLayout(requireContext());
         challengeFrame.setId(View.generateViewId());
 
@@ -444,61 +414,81 @@ public class FeedFragment extends Fragment {
                 1f);
         challengeParams.topMargin = dpToPx(4);
         challengeFrame.setLayoutParams(challengeParams);
-
         parent.addView(challengeFrame);
-
-        // 4. Load all tips once, shuffle once, then repeat that same shuffled cycle.
-        TextView loading = buildLoadingLabel("Loading tips…");
-        LinearLayout.LayoutParams loadingParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        loadingParams.setMargins(dpToPx(16), 0, 0, 0);
-        loading.setLayoutParams(loadingParams);
-        tipRow.addView(loading);
 
         final boolean[] isAppendingTips = {false};
 
+        if (!memoryTipCycle.isEmpty()) {
+            renderInfiniteTipRail(tipScroll, tipRow, memoryTipCycle, isAppendingTips);
+        } else {
+            TextView loading = buildLoadingLabel("Loading tips…");
+            LinearLayout.LayoutParams loadingParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            loadingParams.setMargins(dpToPx(16), 0, 0, 0);
+            loading.setLayoutParams(loadingParams);
+            tipRow.addView(loading);
+        }
+
+        // 1. Room first: show cached tips instantly.
+        executor.execute(() -> {
+            List<FeedCacheEntity> cachedTips = feedCacheDao.getItemsByType(CACHE_TYPE_TIP);
+
+            if (!isAdded()) return;
+
+            requireActivity().runOnUiThread(() -> {
+                if (!isCurrent(version)) return;
+
+                if (!cachedTips.isEmpty() && memoryTipCycle.isEmpty()) {
+                    memoryTipCycle.clear();
+                    memoryTipCycle.addAll(cachedTips);
+                    Collections.shuffle(memoryTipCycle);
+                    renderInfiniteTipRail(tipScroll, tipRow, memoryTipCycle, isAppendingTips);
+                } else if (cachedTips.isEmpty() && memoryTipCycle.isEmpty()) {
+                    tipRow.removeAllViews();
+                    tipRow.addView(buildEmptyHorizontalLabel(
+                            "No tips published yet. Check back soon! 💡"));
+                }
+            });
+        });
+
+        // 2. Firestore second: refresh Room and visible UI.
         db.collection("tips")
                 .get()
                 .addOnSuccessListener(snapshots -> {
-                    if (!isAdded()) return;
+                    List<FeedCacheEntity> freshTips = new ArrayList<>();
 
-                    tipRow.removeAllViews();
-                    List<DocumentSnapshot> tipDocs = new ArrayList<>(snapshots.getDocuments());
-
-                    if (tipDocs.isEmpty()) {
-                        tipRow.addView(buildEmptyHorizontalLabel(
-                                "No tips published yet. Check back soon! 💡"));
-                        return;
+                    for (QueryDocumentSnapshot doc : snapshots) {
+                        freshTips.add(mapTipDocumentToCacheEntity(doc));
                     }
 
-                    // Shuffle once, like a music playlist shuffle.
-                    List<DocumentSnapshot> shuffledTipCycle = new ArrayList<>(tipDocs);
-                    java.util.Collections.shuffle(shuffledTipCycle);
+                    executor.execute(() ->
+                            feedCacheDao.replaceType(CACHE_TYPE_TIP, freshTips)
+                    );
 
-                    // Add two copies so the rail feels full immediately.
-                    appendTipCycle(tipRow, shuffledTipCycle);
-                    appendTipCycle(tipRow, shuffledTipCycle);
+                    if (!isAdded() || !isCurrent(version)) return;
 
-                    tipScroll.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-                        if (isAppendingTips[0] || shuffledTipCycle.isEmpty()) return;
+                    memoryTipCycle.clear();
+                    memoryTipCycle.addAll(freshTips);
+                    Collections.shuffle(memoryTipCycle);
 
-                        int distanceToEnd = tipRow.getWidth() - (scrollX + tipScroll.getWidth());
-
-                        if (distanceToEnd < dpToPx(420)) {
-                            isAppendingTips[0] = true;
-                            appendTipCycle(tipRow, shuffledTipCycle);
-                            tipRow.post(() -> isAppendingTips[0] = false);
-                        }
-                    });
+                    if (memoryTipCycle.isEmpty()) {
+                        tipRow.removeAllViews();
+                        tipRow.addView(buildEmptyHorizontalLabel(
+                                "No tips published yet. Check back soon! 💡"));
+                    } else {
+                        renderInfiniteTipRail(tipScroll, tipRow, memoryTipCycle, isAppendingTips);
+                    }
                 })
                 .addOnFailureListener(e -> {
-                    if (!isAdded()) return;
-                    tipRow.removeAllViews();
-                    tipRow.addView(buildEmptyHorizontalLabel("Could not load tips."));
+                    if (!isAdded() || !isCurrent(version)) return;
+
+                    if (memoryTipCycle.isEmpty()) {
+                        tipRow.removeAllViews();
+                        tipRow.addView(buildEmptyHorizontalLabel("Could not load tips."));
+                    }
                 });
 
-        // 5. Load ChallengesFragment into the inner frame.
         ChallengesFragment fragment = new ChallengesFragment();
         Bundle args = new Bundle();
         args.putString("mode", "browse");
@@ -508,6 +498,176 @@ public class FeedFragment extends Fragment {
                 .beginTransaction()
                 .replace(challengeFrame.getId(), fragment)
                 .commit();
+    }
+
+    private FeedCacheEntity mapTipDocumentToCacheEntity(@NonNull DocumentSnapshot doc) {
+        Timestamp timestamp = doc.getTimestamp("timestamp");
+        long timestampMillis = timestamp != null
+                ? timestamp.toDate().getTime()
+                : System.currentTimeMillis();
+
+        return new FeedCacheEntity(
+                CACHE_TYPE_TIP + "_" + doc.getId(),
+                CACHE_TYPE_TIP,
+                nullToEmpty(doc.getString("title")),
+                nullToEmpty(doc.getString("body")),
+                "",
+                "",
+                nullToEmpty(doc.getString("category")),
+                timestampMillis,
+                System.currentTimeMillis()
+        );
+    }
+
+    private void renderInfiniteTipRail(@NonNull HorizontalScrollView tipScroll,
+                                       @NonNull LinearLayout tipRow,
+                                       @NonNull List<FeedCacheEntity> tipCycle,
+                                       @NonNull boolean[] isAppendingTips) {
+        tipRow.removeAllViews();
+
+        appendTipCycle(tipRow, tipCycle);
+        appendTipCycle(tipRow, tipCycle);
+
+        tipScroll.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            if (isAppendingTips[0] || tipCycle.isEmpty()) return;
+
+            int distanceToEnd = tipRow.getWidth() - (scrollX + tipScroll.getWidth());
+
+            if (distanceToEnd < dpToPx(420)) {
+                isAppendingTips[0] = true;
+                appendTipCycle(tipRow, tipCycle);
+                tipRow.post(() -> isAppendingTips[0] = false);
+            }
+        });
+    }
+
+    private void appendTipCycle(@NonNull LinearLayout tipRow,
+                                @NonNull List<FeedCacheEntity> tipCycle) {
+        for (FeedCacheEntity tip : tipCycle) {
+            tipRow.addView(buildTipCard(
+                    tip.title,
+                    tip.summary,
+                    tip.category,
+                    tip.timestampMillis
+            ));
+        }
+    }
+
+    private View buildTipCard(String title, String body,
+                              String category, long timestampMillis) {
+        CardView card = new CardView(requireContext());
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                dpToPx(280), ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(dpToPx(16), 0, 0, dpToPx(10));
+        card.setLayoutParams(lp);
+        card.setRadius(dpToPx(14));
+        card.setCardElevation(dpToPx(2));
+        card.setCardBackgroundColor(requireContext().getColor(android.R.color.white));
+
+        LinearLayout inner = new LinearLayout(requireContext());
+        inner.setOrientation(LinearLayout.VERTICAL);
+        inner.setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(14));
+
+        LinearLayout metaRow = new LinearLayout(requireContext());
+        metaRow.setOrientation(LinearLayout.HORIZONTAL);
+        metaRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
+        if (category != null && !category.isEmpty()) {
+            metaRow.addView(buildBadge(category,
+                    R.color.color_green_header, android.R.color.white));
+        }
+
+        if (timestampMillis > 0) {
+            TextView tvDate = new TextView(requireContext());
+            tvDate.setText("  ·  " + new SimpleDateFormat(
+                    "dd MMM", Locale.getDefault()).format(new Date(timestampMillis)));
+            tvDate.setTextSize(11f);
+            tvDate.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+            metaRow.addView(tvDate);
+        }
+
+        TextView tvTitle = new TextView(requireContext());
+        tvTitle.setText(title != null && !title.isEmpty() ? title : "Tip");
+        tvTitle.setTextSize(15f);
+        tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvTitle.setTextColor(requireContext().getColor(R.color.color_text_primary));
+        LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        titleLp.topMargin = dpToPx(8);
+        titleLp.bottomMargin = dpToPx(4);
+        tvTitle.setLayoutParams(titleLp);
+
+        TextView tvBody = new TextView(requireContext());
+        tvBody.setText(body != null ? body : "");
+        tvBody.setTextSize(13f);
+        tvBody.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+        tvBody.setLineSpacing(dpToPx(2), 1f);
+
+        inner.addView(metaRow);
+        inner.addView(tvTitle);
+        inner.addView(tvBody);
+        card.addView(inner);
+        return card;
+    }
+
+    // ─────────────────────────────────────────────────
+    // VIEW BUILDERS
+    // ─────────────────────────────────────────────────
+
+    private LinearLayout buildScrollList() {
+        NestedScrollView scroll = new NestedScrollView(requireContext());
+        scroll.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+
+        LinearLayout list = new LinearLayout(requireContext());
+        list.setOrientation(LinearLayout.VERTICAL);
+        int pad = dpToPx(16);
+        list.setPadding(pad, pad, pad, pad);
+
+        scroll.addView(list);
+        contentContainer.addView(scroll);
+        return list;
+    }
+
+    private TextView buildBadge(String text, int bgColorRes, int textColorRes) {
+        TextView tv = new TextView(requireContext());
+        tv.setText(text);
+        tv.setTextSize(11f);
+        tv.setTextColor(requireContext().getColor(textColorRes));
+        tv.setBackground(requireContext().getDrawable(R.drawable.bg_card_green));
+        tv.setPadding(dpToPx(8), dpToPx(3), dpToPx(8), dpToPx(3));
+        tv.getBackground().setTint(requireContext().getColor(bgColorRes));
+        return tv;
+    }
+
+    private TextView buildEmptyLabel(String text) {
+        TextView tv = new TextView(requireContext());
+        tv.setText(text);
+        tv.setTextSize(14f);
+        tv.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+        tv.setPadding(0, dpToPx(16), 0, 0);
+        return tv;
+    }
+
+    private TextView buildEmptyHorizontalLabel(String text) {
+        TextView tv = buildEmptyLabel(text);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.setMargins(dpToPx(16), 0, dpToPx(16), 0);
+        tv.setLayoutParams(params);
+        return tv;
+    }
+
+    private TextView buildLoadingLabel(String text) {
+        TextView tv = new TextView(requireContext());
+        tv.setText(text);
+        tv.setTextSize(13f);
+        tv.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+        tv.setPadding(0, dpToPx(12), 0, 0);
+        return tv;
     }
 
     private View buildSectionLabel(String title, String subtitle) {
@@ -543,104 +703,16 @@ public class FeedFragment extends Fragment {
         return wrapper;
     }
 
-    /**
-     * Adds one copy of the already-shuffled tips cycle to the horizontal rail.
-     * Important: this method does NOT reshuffle. The order is chosen once in
-     * loadExploreContent(), then repeated forever like a shuffled playlist.
-     */
-    private void appendTipCycle(LinearLayout tipRow, List<DocumentSnapshot> shuffledTipCycle) {
-        for (DocumentSnapshot doc : shuffledTipCycle) {
-            tipRow.addView(buildTipCard(
-                    doc.getString("title"),
-                    doc.getString("body"),
-                    doc.getString("category"),
-                    doc.getTimestamp("timestamp")
-            ));
-        }
-    }
-
-    private TextView buildEmptyHorizontalLabel(String text) {
-        TextView tv = buildEmptyLabel(text);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.setMargins(dpToPx(16), 0, dpToPx(16), 0);
-        tv.setLayoutParams(params);
-        return tv;
-    }
-
-    // ─────────────────────────────────────────────────
-    // VIEW BUILDERS
-    // ─────────────────────────────────────────────────
-
-    /**
-     * Creates a NestedScrollView wrapping a padded vertical LinearLayout,
-     * adds it to the content container, and returns the inner list so
-     * callers can append cards to it directly.
-     */
-    private LinearLayout buildScrollList() {
-        NestedScrollView scroll = new NestedScrollView(requireContext());
-        scroll.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-
-        LinearLayout list = new LinearLayout(requireContext());
-        list.setOrientation(LinearLayout.VERTICAL);
-        int pad = dpToPx(16);
-        list.setPadding(pad, pad, pad, pad);
-        scroll.addView(list);
-        contentContainer.addView(scroll);
-        return list;
-    }
-
-    private TextView buildBadge(String text, int bgColorRes, int textColorRes) {
-        TextView tv = new TextView(requireContext());
-        tv.setText(text);
-        tv.setTextSize(11f);
-        tv.setTextColor(requireContext().getColor(textColorRes));
-        tv.setBackground(requireContext().getDrawable(R.drawable.bg_card_green));
-        tv.setPadding(dpToPx(8), dpToPx(3), dpToPx(8), dpToPx(3));
-        tv.getBackground().setTint(requireContext().getColor(bgColorRes));
-        return tv;
-    }
-
-    private TextView buildEmptyLabel(String text) {
-        TextView tv = new TextView(requireContext());
-        tv.setText(text);
-        tv.setTextSize(14f);
-        tv.setTextColor(requireContext().getColor(R.color.color_text_secondary));
-        tv.setPadding(0, dpToPx(16), 0, 0);
-        return tv;
-    }
-
-    private TextView buildLoadingLabel(String text) {
-        TextView tv = new TextView(requireContext());
-        tv.setText(text);
-        tv.setTextSize(13f);
-        tv.setTextColor(requireContext().getColor(R.color.color_text_secondary));
-        tv.setPadding(0, dpToPx(12), 0, 0);
-        return tv;
-    }
-
     // ─────────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────────
 
-    /**
-     * Returns a human-friendly "time ago" string for a Firestore Timestamp.
-     * e.g. "just now", "5 min ago", "2 hrs ago", "3 days ago"
-     */
-    private String getTimeAgo(Timestamp ts) {
-        if (ts == null) return "";
-        long diffMs = new Date().getTime() - ts.toDate().getTime();
-        long mins  = diffMs / 60000;
-        long hours = mins / 60;
-        long days  = hours / 24;
+    private boolean isCurrent(int version) {
+        return version == contentVersion;
+    }
 
-        if (mins < 2)   return "just now";
-        if (mins < 60)  return mins + " min ago";
-        if (hours < 24) return hours + " hr" + (hours == 1 ? "" : "s") + " ago";
-        return days + " day" + (days == 1 ? "" : "s") + " ago";
+    private String nullToEmpty(@Nullable String value) {
+        return value == null ? "" : value;
     }
 
     private int dpToPx(int dp) {
