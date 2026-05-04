@@ -151,7 +151,7 @@ public class FeedFragment extends Fragment {
         LinearLayout list = buildScrollList();
         list.addView(buildLoadingLabel("Loading news…"));
 
-        db.collection("news_articles")
+        db.collection("news_article")
                 .whereEqualTo("approved", true)
                 .orderBy("publishedAt", Query.Direction.DESCENDING)
                 .limit(30)
@@ -399,12 +399,17 @@ public class FeedFragment extends Fragment {
     // ─────────────────────────────────────────────────
 
     private void loadExploreContent() {
-        // 1. Parent vertical layout: tips row on top, challenges below.
+        // 1. Parent vertical layout: labeled tips row on top, labeled challenges below.
         LinearLayout parent = new LinearLayout(requireContext());
         parent.setOrientation(LinearLayout.VERTICAL);
         parent.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
+
+        contentContainer.addView(parent);
+
+        // ── TIPS LABEL ───────────────────────────────────
+        parent.addView(buildSectionLabel("Tips", "Swipe through quick sustainability ideas"));
 
         // 2. Horizontal, endlessly extendable tips rail.
         HorizontalScrollView tipScroll = new HorizontalScrollView(requireContext());
@@ -412,7 +417,7 @@ public class FeedFragment extends Fragment {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
         tipScroll.setLayoutParams(tipScrollParams);
-        tipScroll.setPadding(0, dpToPx(16), dpToPx(16), dpToPx(16));
+        tipScroll.setPadding(0, dpToPx(8), dpToPx(16), dpToPx(14));
         tipScroll.setClipToPadding(false);
         tipScroll.setHorizontalScrollBarEnabled(false);
         tipScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
@@ -422,20 +427,25 @@ public class FeedFragment extends Fragment {
         tipRow.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
+
         tipScroll.addView(tipRow);
         parent.addView(tipScroll);
+
+        // ── CHALLENGES LABEL ──────────────────────────────
+        parent.addView(buildSectionLabel("Challenges", "Join a challenge and track your progress"));
 
         // 3. Challenges fill the remaining vertical space.
         FrameLayout challengeFrame = new FrameLayout(requireContext());
         challengeFrame.setId(View.generateViewId());
+
         LinearLayout.LayoutParams challengeParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 0,
                 1f);
+        challengeParams.topMargin = dpToPx(4);
         challengeFrame.setLayoutParams(challengeParams);
-        parent.addView(challengeFrame);
 
-        contentContainer.addView(parent);
+        parent.addView(challengeFrame);
 
         // 4. Load all tips once, shuffle once, then repeat that same shuffled cycle.
         TextView loading = buildLoadingLabel("Loading tips…");
@@ -463,12 +473,10 @@ public class FeedFragment extends Fragment {
                     }
 
                     // Shuffle once, like a music playlist shuffle.
-                    // Example: if Firestore order is 1,2,3 and this becomes 1,3,2,
-                    // the rail repeats as 1,3,2,1,3,2,1,3,2...
                     List<DocumentSnapshot> shuffledTipCycle = new ArrayList<>(tipDocs);
                     java.util.Collections.shuffle(shuffledTipCycle);
 
-                    // Add two copies of the same cycle so the rail feels full immediately.
+                    // Add two copies so the rail feels full immediately.
                     appendTipCycle(tipRow, shuffledTipCycle);
                     appendTipCycle(tipRow, shuffledTipCycle);
 
@@ -477,7 +485,6 @@ public class FeedFragment extends Fragment {
 
                         int distanceToEnd = tipRow.getWidth() - (scrollX + tipScroll.getWidth());
 
-                        // Conventional lazy-load threshold: start adding before the user hits the edge.
                         if (distanceToEnd < dpToPx(420)) {
                             isAppendingTips[0] = true;
                             appendTipCycle(tipRow, shuffledTipCycle);
@@ -501,6 +508,39 @@ public class FeedFragment extends Fragment {
                 .beginTransaction()
                 .replace(challengeFrame.getId(), fragment)
                 .commit();
+    }
+
+    private View buildSectionLabel(String title, String subtitle) {
+        LinearLayout wrapper = new LinearLayout(requireContext());
+        wrapper.setOrientation(LinearLayout.VERTICAL);
+
+        LinearLayout.LayoutParams wrapperParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        wrapperParams.setMargins(dpToPx(16), dpToPx(16), dpToPx(16), 0);
+        wrapper.setLayoutParams(wrapperParams);
+
+        TextView tvTitle = new TextView(requireContext());
+        tvTitle.setText(title);
+        tvTitle.setTextSize(18f);
+        tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvTitle.setTextColor(requireContext().getColor(R.color.color_text_primary));
+
+        TextView tvSubtitle = new TextView(requireContext());
+        tvSubtitle.setText(subtitle);
+        tvSubtitle.setTextSize(12f);
+        tvSubtitle.setTextColor(requireContext().getColor(R.color.color_text_secondary));
+
+        LinearLayout.LayoutParams subtitleParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        subtitleParams.topMargin = dpToPx(2);
+        tvSubtitle.setLayoutParams(subtitleParams);
+
+        wrapper.addView(tvTitle);
+        wrapper.addView(tvSubtitle);
+
+        return wrapper;
     }
 
     /**
