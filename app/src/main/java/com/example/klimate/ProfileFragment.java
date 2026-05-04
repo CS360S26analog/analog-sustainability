@@ -233,6 +233,7 @@ public class ProfileFragment extends Fragment {
         View btnTopLeftAccount = view.findViewById(R.id.btn_top_left_account);
         View btnAvatarSettings = view.findViewById(R.id.btn_avatar_settings);
         View btnNotifications  = view.findViewById(R.id.btn_notifications);
+        View btnShareProfile   = view.findViewById(R.id.btn_share_profile);
         View notificationDot   = view.findViewById(R.id.view_notification_dot);
         View historyScrollView = view.findViewById(R.id.history_scroll_view);
 
@@ -248,6 +249,7 @@ public class ProfileFragment extends Fragment {
         if (btnTopLeftAccount != null) btnTopLeftAccount.setOnClickListener(v -> openAccountSettings());
         if (btnAvatarSettings != null) btnAvatarSettings.setOnClickListener(v -> openAccountSettings());
         if (btnNotifications != null)  btnNotifications.setOnClickListener(v -> showNotifications(uid));
+        if (btnShareProfile != null)   btnShareProfile.setOnClickListener(v -> shareProfile(uid));
 
         setupNotifications(uid, notificationDot);
 
@@ -836,6 +838,42 @@ public class ProfileFragment extends Fragment {
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Failed to load notifications.",
+                                Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    private void shareProfile(String uid) {
+        if (getContext() == null) return;
+
+        db.collection("users")
+                .document(uid)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (!isAdded() || getContext() == null) return;
+
+                    String name = doc.getString("displayName");
+                    Long points = doc.getLong("totalPoints");
+                    Long streak = doc.getLong("streakDays");
+                    Double co2 = doc.getDouble("co2SavedKg");
+
+                    String cleanName = !TextUtils.isEmpty(name) ? name : "A Klimate user";
+                    long pointsValue = points != null ? points : 0;
+                    long streakValue = streak != null ? streak : 0;
+                    double co2Value = co2 != null ? co2 : 0.0;
+
+                    String message = "🌿 " + cleanName + " is making a difference on Klimate!\n\n"
+                            + "⭐ Points: " + pointsValue + "\n"
+                            + "🔥 Streak: " + streakValue + " days\n"
+                            + "♻️ CO₂ saved: " + String.format(Locale.getDefault(), "%.1f kg", co2Value)
+                            + "\n\nJoin me on Klimate and track your sustainability impact! 🌍";
+
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.setType("text/plain");
+                    shareIntent.putExtra(Intent.EXTRA_TEXT, message);
+                    startActivity(Intent.createChooser(shareIntent, "Share profile"));
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Could not share profile right now.",
                                 Toast.LENGTH_SHORT).show()
                 );
     }

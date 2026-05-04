@@ -209,130 +209,82 @@ public class EcoPicksFragment extends Fragment {
 
     private void showSwipeableStickyNote(EcoSpot spot) {
         ArrayList<CarouselTip> tips = new ArrayList<>();
-
         for (String defaultTip : spot.tips) {
             tips.add(new CarouselTip(defaultTip, false));
         }
 
         final int[] currentIndex = {0};
-        final float[] downX = {0f};
+
+        LinearLayout rootLayout = new LinearLayout(requireContext());
+        rootLayout.setOrientation(LinearLayout.VERTICAL);
+        rootLayout.setPadding(dp(18), dp(18), dp(18), dp(14));
+        rootLayout.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+
+        TextView title = new TextView(requireContext());
+        title.setText(spot.title);
+        title.setTextColor(requireContext().getColor(R.color.color_text_primary));
+        title.setTextSize(21);
+        title.setGravity(Gravity.CENTER);
+        title.setTypeface(Typeface.create("casual", Typeface.BOLD));
+        title.setPadding(0, 0, 0, dp(12));
+        rootLayout.addView(title);
+
+        LinearLayout carouselRow = new LinearLayout(requireContext());
+        carouselRow.setOrientation(LinearLayout.HORIZONTAL);
+        carouselRow.setGravity(Gravity.CENTER);
+        carouselRow.setPadding(0, 0, 0, dp(12));
+
+        TextView btnPrev = createArrowButton("‹");
 
         LinearLayout noteLayout = new LinearLayout(requireContext());
         noteLayout.setOrientation(LinearLayout.VERTICAL);
+        noteLayout.setGravity(Gravity.CENTER);
         noteLayout.setBackgroundResource(R.drawable.bg_sticky_note);
-        noteLayout.setPadding(dp(22), dp(20), dp(22), dp(16));
+        noteLayout.setPadding(dp(24), dp(24), dp(24), dp(24));
 
-        TextView title = new TextView(requireContext());
-        title.setText("📌 " + spot.title);
-        title.setTextColor(requireContext().getColor(R.color.color_text_primary));
-        title.setTextSize(20);
-        title.setTypeface(Typeface.create("casual", Typeface.BOLD));
-        noteLayout.addView(title);
-
-        TextView sourceLabel = new TextView(requireContext());
-        sourceLabel.setText("Default tip");
-        sourceLabel.setTextColor(requireContext().getColor(R.color.color_green_header));
-        sourceLabel.setTextSize(13);
-        sourceLabel.setTypeface(Typeface.DEFAULT_BOLD);
-        sourceLabel.setPadding(0, dp(10), 0, dp(2));
-        noteLayout.addView(sourceLabel);
+        LinearLayout.LayoutParams noteParams = new LinearLayout.LayoutParams(
+                dp(240),
+                dp(150)
+        );
+        noteParams.setMargins(dp(10), 0, dp(10), 0);
+        noteLayout.setLayoutParams(noteParams);
 
         TextView tipText = new TextView(requireContext());
         tipText.setTextColor(requireContext().getColor(R.color.color_text_primary));
-        tipText.setTextSize(19);
+        tipText.setTextSize(18);
         tipText.setTypeface(Typeface.create("casual", Typeface.NORMAL));
         tipText.setGravity(Gravity.CENTER);
-        tipText.setMinHeight(dp(110));
-        tipText.setPadding(dp(8), dp(10), dp(8), dp(10));
+        tipText.setLineSpacing(dp(2), 1.0f);
         noteLayout.addView(tipText);
 
-        LinearLayout navRow = new LinearLayout(requireContext());
-        navRow.setOrientation(LinearLayout.HORIZONTAL);
-        navRow.setGravity(Gravity.CENTER);
-        navRow.setPadding(0, dp(4), 0, dp(4));
+        TextView btnNext = createArrowButton("›");
 
-        TextView btnPrev = createStickyButton("‹");
-        TextView counter = new TextView(requireContext());
-        counter.setTextColor(requireContext().getColor(R.color.color_text_secondary));
-        counter.setTextSize(12);
-        counter.setGravity(Gravity.CENTER);
-        counter.setPadding(dp(14), 0, dp(14), 0);
-
-        TextView btnNext = createStickyButton("›");
-
-        navRow.addView(btnPrev);
-        navRow.addView(counter);
-        navRow.addView(btnNext);
-        noteLayout.addView(navRow);
-
-        TextView helper = new TextView(requireContext());
-        helper.setText("Swipe left/right to browse tips");
-        helper.setTextColor(requireContext().getColor(R.color.color_text_secondary));
-        helper.setTextSize(12);
-        helper.setGravity(Gravity.CENTER);
-        helper.setPadding(0, 0, 0, dp(8));
-        noteLayout.addView(helper);
-
-        TextView suggested = new TextView(requireContext());
-        suggested.setText("Suggested log: " + spot.activityType);
-        suggested.setTextColor(requireContext().getColor(R.color.color_green_header));
-        suggested.setTextSize(14);
-        suggested.setTypeface(Typeface.DEFAULT_BOLD);
-        suggested.setPadding(0, dp(6), 0, 0);
-        noteLayout.addView(suggested);
+        carouselRow.addView(btnPrev);
+        carouselRow.addView(noteLayout);
+        carouselRow.addView(btnNext);
+        rootLayout.addView(carouselRow);
 
         LinearLayout buttons = new LinearLayout(requireContext());
         buttons.setOrientation(LinearLayout.HORIZONTAL);
-        buttons.setGravity(Gravity.END);
-        buttons.setPadding(0, dp(16), 0, 0);
+        buttons.setGravity(Gravity.CENTER);
 
         TextView btnLog = createStickyButton("Log this");
-        TextView btnSuggest = createStickyButton("Suggest tip");
+        TextView btnSuggest = createStickyButton("Suggest Tip");
         TextView btnClose = createStickyButton("Close");
 
         buttons.addView(btnLog);
         buttons.addView(btnSuggest);
         buttons.addView(btnClose);
-        noteLayout.addView(buttons);
+        rootLayout.addView(buttons);
 
         Runnable updateTip = () -> {
-            if (tips.isEmpty()) return;
-
-            CarouselTip tip = tips.get(currentIndex[0]);
-            tipText.setText(tip.text);
-            sourceLabel.setText(tip.fromCommunity ? "Community-approved tip" : "Default tip");
-            counter.setText((currentIndex[0] + 1) + " / " + tips.size());
-        };
-
-        View.OnTouchListener swipeListener = (v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                downX[0] = event.getX();
-                return true;
+            if (!tips.isEmpty()) {
+                tipText.setText(tips.get(currentIndex[0]).text);
             }
-
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                float deltaX = event.getX() - downX[0];
-
-                if (Math.abs(deltaX) > dp(40)) {
-                    if (deltaX < 0) {
-                        currentIndex[0] = (currentIndex[0] + 1) % tips.size();
-                    } else {
-                        currentIndex[0] = (currentIndex[0] - 1 + tips.size()) % tips.size();
-                    }
-                    updateTip.run();
-                }
-
-                return true;
-            }
-
-            return true;
         };
-
-        noteLayout.setOnTouchListener(swipeListener);
-        tipText.setOnTouchListener(swipeListener);
 
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setView(noteLayout)
+                .setView(rootLayout)
                 .create();
 
         btnPrev.setOnClickListener(v -> {
@@ -374,9 +326,25 @@ public class EcoPicksFragment extends Fragment {
         });
 
         dialog.show();
-
         updateTip.run();
-        loadApprovedTipsForSpot(spot, tips, counter, sourceLabel, tipText, currentIndex);
+
+        loadApprovedTipsForSpot(spot, tips, new TextView(requireContext()), new TextView(requireContext()), tipText, currentIndex);
+    }
+
+    private TextView createArrowButton(String text) {
+        TextView button = new TextView(requireContext());
+        button.setText(text);
+        button.setTextSize(42);
+        button.setTypeface(Typeface.DEFAULT_BOLD);
+        button.setTextColor(requireContext().getColor(R.color.color_green_header));
+        button.setGravity(Gravity.CENTER);
+        button.setClickable(true);
+        button.setFocusable(true);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(44), dp(120));
+        button.setLayoutParams(params);
+
+        return button;
     }
 
     private void loadApprovedTipsForSpot(EcoSpot spot,
@@ -553,7 +521,9 @@ public class EcoPicksFragment extends Fragment {
 
     private void openLogWithActivity(String activityType) {
         if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).navigateToLog();
+            MainActivity mainActivity = (MainActivity) getActivity();
+            mainActivity.setBottomNavVisible(true);
+            mainActivity.navigateToLog();
         }
     }
 
