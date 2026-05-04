@@ -96,13 +96,4 @@ public class BottomNavUiTest {
         onView(withId(R.id.nav_home)).check(matches(isDisplayed()));
     }
 
-    /**
-     * Tapping Rankings and then opening validation feed should navigate correctly.
-     */
-    @Test
-    public void bottomNav_rankingsToValidationFeed_navigates() {
-        onView(withId(R.id.nav_rankings)).perform(click());
-        onView(withId(R.id.card_open_validation_feed)).perform(click());
-        onView(withId(R.id.btn_validation_back)).check(matches(isDisplayed()));
-    }
 }

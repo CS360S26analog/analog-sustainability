@@ -25,6 +25,7 @@
  */
 package com.example.klimate;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -92,7 +93,6 @@ public class ProfileFragment extends Fragment {
     private ListenerRegistration badgesListener;
     private ListenerRegistration notificationsListener;
 
-    // ── V2: state needed for snapshot-triggered reward refresh ────────────────
     private boolean rewardsAllowed = false;
     private View currentRootView;
     private String currentUid;
@@ -100,10 +100,6 @@ public class ProfileFragment extends Fragment {
     private final Set<String> earnedBadgeIds = new HashSet<>();
     private final Map<String, Timestamp> earnedDates = new HashMap<>();
     private final List<HistoryEntry> historyEntries = new ArrayList<>();
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Static inner classes
-    // ─────────────────────────────────────────────────────────────────────────
 
     private static class Reward {
         final String emoji;
@@ -153,10 +149,6 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Static data
-    // ─────────────────────────────────────────────────────────────────────────
-
     private static final Reward[] REWARDS = {
             new Reward("☕", "Free Coffee", 500),
             new Reward("🚲", "Bike Rental Voucher", 1200),
@@ -200,10 +192,6 @@ public class ProfileFragment extends Fragment {
                     R.drawable.bg_badge_amber, 0, 0)
     };
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Lifecycle
-    // ─────────────────────────────────────────────────────────────────────────
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -212,8 +200,10 @@ public class ProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
         currentRootView = view;
-        db   = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
+
+        Context appContext = requireContext().getApplicationContext();
 
         FirebaseUser currentUser = auth.getCurrentUser();
         if (currentUser == null) return view;
@@ -221,23 +211,21 @@ public class ProfileFragment extends Fragment {
         String uid = currentUser.getUid();
         currentUid = uid;
 
-        // ── View refs ─────────────────────────────────────────────────────────
-        TextView tvName         = view.findViewById(R.id.tv_display_name);
-        TextView tvPointsBadge  = view.findViewById(R.id.tv_points_badge);
-        TextView tvAvatar       = view.findViewById(R.id.tv_avatar_initials);
+        TextView tvName = view.findViewById(R.id.tv_display_name);
+        TextView tvPointsBadge = view.findViewById(R.id.tv_points_badge);
+        TextView tvAvatar = view.findViewById(R.id.tv_avatar_initials);
         ImageView ivAvatarPhoto = view.findViewById(R.id.iv_avatar_photo);
 
-        badgesContainer       = view.findViewById(R.id.badges_container);
+        badgesContainer = view.findViewById(R.id.badges_container);
         historyPreviewContainer = view.findViewById(R.id.history_preview_container);
 
         View btnTopLeftAccount = view.findViewById(R.id.btn_top_left_account);
         View btnAvatarSettings = view.findViewById(R.id.btn_avatar_settings);
-        View btnNotifications  = view.findViewById(R.id.btn_notifications);
-        View btnShareProfile   = view.findViewById(R.id.btn_share_profile);
-        View notificationDot   = view.findViewById(R.id.view_notification_dot);
+        View btnNotifications = view.findViewById(R.id.btn_notifications);
+        View btnShareProfile = view.findViewById(R.id.btn_share_profile);
+        View notificationDot = view.findViewById(R.id.view_notification_dot);
         View historyScrollView = view.findViewById(R.id.history_scroll_view);
 
-        // ── V2: scroll interception for nested history list ───────────────────
         if (historyScrollView != null) {
             historyScrollView.setOnTouchListener((v, event) -> {
                 disallowParentScroll(v, event);
@@ -245,74 +233,77 @@ public class ProfileFragment extends Fragment {
             });
         }
 
-        // ── V2: top-bar account / notification buttons ────────────────────────
         if (btnTopLeftAccount != null) btnTopLeftAccount.setOnClickListener(v -> openAccountSettings());
         if (btnAvatarSettings != null) btnAvatarSettings.setOnClickListener(v -> openAccountSettings());
-        if (btnNotifications != null)  btnNotifications.setOnClickListener(v -> showNotifications(uid));
-        if (btnShareProfile != null)   btnShareProfile.setOnClickListener(v -> shareProfile(uid));
+        if (btnNotifications != null) btnNotifications.setOnClickListener(v -> showNotifications(uid));
+        if (btnShareProfile != null) btnShareProfile.setOnClickListener(v -> shareProfile(uid));
 
         setupNotifications(uid, notificationDot);
 
-        // ── V1: Room cache → instant display ─────────────────────────────────
         executor.execute(() -> {
-            UserEntity cached = AppDatabase.getInstance(requireContext())
+            UserEntity cached = AppDatabase.getInstance(appContext)
                     .userDao().getUserSync(uid);
             if (cached == null || !isAdded()) return;
 
             requireActivity().runOnUiThread(() -> {
-                if (tvName != null && !cached.displayName.isEmpty())
+                if (!isAdded() || getContext() == null) return;
+
+                if (tvName != null && !cached.displayName.isEmpty()) {
                     tvName.setText(cached.displayName);
-                if (tvAvatar != null && !cached.displayName.isEmpty())
+                }
+                if (tvAvatar != null && !cached.displayName.isEmpty()) {
                     tvAvatar.setText(getInitials(cached.displayName));
-                if (tvPointsBadge != null)
+                }
+                if (tvPointsBadge != null) {
                     tvPointsBadge.setText("• " + cached.totalPoints + " pts");
+                }
+
                 currentTotalPoints = cached.totalPoints;
-                currentStreakDays  = cached.streakDays;
-                renderBadges(); // render from cached stats immediately
+                currentStreakDays = cached.streakDays;
+                renderBadges();
             });
         });
 
-        // ── Firestore real-time listener ──────────────────────────────────────
         profileListener = db.collection("users").document(uid)
                 .addSnapshotListener((doc, e) -> {
                     if (!isAdded() || getContext() == null) return;
                     if (e != null || doc == null || !doc.exists()) return;
 
-                    String displayName         = doc.getString("displayName");
-                    Long totalPointsValue      = doc.getLong("totalPoints");
-                    Long streakDaysValue       = doc.getLong("streakDays");
-                    Double co2SavedValue       = doc.getDouble("co2SavedKg");
-                    String profilePhotoBase64  = doc.getString("profilePhotoBase64");
+                    String displayName = doc.getString("displayName");
+                    Long totalPointsValue = doc.getLong("totalPoints");
+                    Long streakDaysValue = doc.getLong("streakDays");
+                    Double co2SavedValue = doc.getDouble("co2SavedKg");
+                    String profilePhotoBase64 = doc.getString("profilePhotoBase64");
 
                     currentTotalPoints = totalPointsValue != null ? totalPointsValue : 0;
-                    currentStreakDays   = streakDaysValue  != null ? streakDaysValue  : 0;
-                    double co2Saved    = co2SavedValue     != null ? co2SavedValue    : 0.0;
+                    currentStreakDays = streakDaysValue != null ? streakDaysValue : 0;
+                    double co2Saved = co2SavedValue != null ? co2SavedValue : 0.0;
 
-                    if (tvName != null && !TextUtils.isEmpty(displayName))
+                    if (tvName != null && !TextUtils.isEmpty(displayName)) {
                         tvName.setText(displayName);
+                    }
 
-                    // V2: avatar photo or initials
                     updateAvatar(tvAvatar, ivAvatarPhoto, displayName, profilePhotoBase64);
 
-                    if (tvPointsBadge != null)
+                    if (tvPointsBadge != null) {
                         tvPointsBadge.setText("• " + currentTotalPoints + " pts");
+                    }
 
-                    // V1: update Room cache from authoritative Firestore data
                     executor.execute(() -> {
-                        UserEntity u = AppDatabase.getInstance(requireContext())
+                        UserEntity u = AppDatabase.getInstance(appContext)
                                 .userDao().getUserSync(uid);
                         if (u != null) {
                             u.totalPoints = (int) currentTotalPoints;
-                            u.streakDays  = (int) currentStreakDays;
-                            u.co2SavedKg  = co2Saved;
-                            AppDatabase.getInstance(requireContext()).userDao().update(u);
+                            u.streakDays = (int) currentStreakDays;
+                            u.co2SavedKg = co2Saved;
+                            AppDatabase.getInstance(appContext).userDao().update(u);
                         }
                     });
 
                     renderBadges();
 
-                    // V2: re-render rewards so affordability state stays current
-                    if (rewardsAllowed && currentRootView != null && currentUid != null) {
+                    if (rewardsAllowed && currentRootView != null && currentUid != null
+                            && isAdded() && getContext() != null) {
                         populateRewards(currentRootView, currentUid);
                     }
                 });
@@ -322,11 +313,12 @@ public class ProfileFragment extends Fragment {
         wireSettingsRows(view);
         wireLogout(view);
 
-        // ── Role gate for rewards ─────────────────────────────────────────────
         db.collection("users").document(uid).get()
                 .addOnSuccessListener(roleDoc -> {
-                    String role      = roleDoc.getString("role");
-                    boolean isStaff  = "staff".equals(role);
+                    if (!isAdded() || getContext() == null) return;
+
+                    String role = roleDoc.getString("role");
+                    boolean isStaff = "staff".equals(role);
 
                     if (isStaff) {
                         rewardsAllowed = false;
@@ -344,16 +336,21 @@ public class ProfileFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
 
-        if (profileListener != null)      { profileListener.remove();      profileListener      = null; }
-        if (badgesListener != null)       { badgesListener.remove();        badgesListener       = null; }
-        if (notificationsListener != null){ notificationsListener.remove(); notificationsListener = null; }
+        if (profileListener != null) {
+            profileListener.remove();
+            profileListener = null;
+        }
+        if (badgesListener != null) {
+            badgesListener.remove();
+            badgesListener = null;
+        }
+        if (notificationsListener != null) {
+            notificationsListener.remove();
+            notificationsListener = null;
+        }
 
         currentRootView = null;
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Badges
-    // ─────────────────────────────────────────────────────────────────────────
 
     private void loadBadges(String uid) {
         if (badgesContainer == null) return;
@@ -398,7 +395,7 @@ public class ProfileFragment extends Fragment {
         badgesContainer.setColumnCount(4);
 
         for (BadgeDefinition badge : BADGE_CATALOGUE) {
-            boolean earned    = isBadgeEarned(badge);
+            boolean earned = isBadgeEarned(badge);
             Timestamp earnedAt = earnedDates.get(normalizeBadgeId(badge.id));
             badgesContainer.addView(createBadgeView(badge, earned, earnedAt));
         }
@@ -412,24 +409,27 @@ public class ProfileFragment extends Fragment {
     }
 
     private View createBadgeView(BadgeDefinition badge, boolean earned, Timestamp earnedAt) {
-        LinearLayout outer = new LinearLayout(requireContext());
+        Context context = getContext();
+        if (context == null) return new View(requireActivity());
+
+        LinearLayout outer = new LinearLayout(context);
         outer.setOrientation(LinearLayout.VERTICAL);
         outer.setGravity(Gravity.CENTER);
         outer.setPadding(dpToPx(4), dpToPx(6), dpToPx(4), dpToPx(6));
 
         GridLayout.LayoutParams outerParams = new GridLayout.LayoutParams();
-        outerParams.width  = 0;
+        outerParams.width = 0;
         outerParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
         outerParams.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
         outerParams.setGravity(Gravity.FILL_HORIZONTAL);
         outerParams.setMargins(0, 0, 0, dpToPx(12));
         outer.setLayoutParams(outerParams);
 
-        FrameLayout badgeCircle = new FrameLayout(requireContext());
+        FrameLayout badgeCircle = new FrameLayout(context);
         badgeCircle.setLayoutParams(new LinearLayout.LayoutParams(dpToPx(62), dpToPx(62)));
         badgeCircle.setAlpha(earned ? 1.0f : 0.35f);
 
-        TextView emojiView = new TextView(requireContext());
+        TextView emojiView = new TextView(context);
         emojiView.setLayoutParams(new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         emojiView.setBackgroundResource(earned ? badge.backgroundDrawable : R.drawable.bg_badge_locked);
@@ -439,7 +439,7 @@ public class ProfileFragment extends Fragment {
         badgeCircle.addView(emojiView);
 
         if (!earned) {
-            TextView lockView = new TextView(requireContext());
+            TextView lockView = new TextView(context);
             lockView.setLayoutParams(new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             lockView.setGravity(Gravity.CENTER);
@@ -448,13 +448,13 @@ public class ProfileFragment extends Fragment {
             badgeCircle.addView(lockView);
         }
 
-        TextView nameView = new TextView(requireContext());
+        TextView nameView = new TextView(context);
         nameView.setText(badge.name.toUpperCase(Locale.getDefault()));
         nameView.setTextSize(9);
         nameView.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         nameView.setGravity(Gravity.CENTER);
         nameView.setMaxLines(2);
-        nameView.setTextColor(ContextCompat.getColor(requireContext(),
+        nameView.setTextColor(ContextCompat.getColor(context,
                 earned ? R.color.color_green_text : R.color.color_text_secondary));
 
         LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
@@ -495,10 +495,6 @@ public class ProfileFragment extends Fragment {
                 .show();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // History preview (V2)
-    // ─────────────────────────────────────────────────────────────────────────
-
     private void loadHistoryPreview(String uid) {
         historyEntries.clear();
 
@@ -506,12 +502,14 @@ public class ProfileFragment extends Fragment {
                 .whereEqualTo("userId", uid)
                 .get()
                 .addOnSuccessListener(logSnapshots -> {
+                    if (!isAdded() || getContext() == null) return;
+
                     for (QueryDocumentSnapshot doc : logSnapshots) {
                         String activityType = doc.getString("activityType");
-                        Long points         = doc.getLong("points");
+                        Long points = doc.getLong("points");
                         Timestamp timestamp = doc.getTimestamp("timestamp");
 
-                        String title  = "Log: " + (!TextUtils.isEmpty(activityType) ? activityType : "Activity");
+                        String title = "Log: " + (!TextUtils.isEmpty(activityType) ? activityType : "Activity");
                         String detail = (points != null ? points : 0) + " pts";
                         if (timestamp != null) detail += " • " + formatShortDate(timestamp);
 
@@ -527,10 +525,12 @@ public class ProfileFragment extends Fragment {
                 .whereEqualTo("userId", uid)
                 .get()
                 .addOnSuccessListener(postSnapshots -> {
+                    if (!isAdded() || getContext() == null) return;
+
                     for (QueryDocumentSnapshot doc : postSnapshots) {
-                        String text      = doc.getString("text");
-                        String caption   = doc.getString("caption");
-                        String content   = doc.getString("content");
+                        String text = doc.getString("text");
+                        String caption = doc.getString("caption");
+                        String content = doc.getString("content");
                         Timestamp timestamp = doc.getTimestamp("timestamp");
 
                         String postText = !TextUtils.isEmpty(text) ? text : caption;
@@ -569,35 +569,34 @@ public class ProfileFragment extends Fragment {
     }
 
     private TextView createHistoryText(String title, String detail) {
-        TextView tv = new TextView(requireContext());
+        Context context = getContext();
+        if (context == null) return new TextView(requireActivity());
+
+        TextView tv = new TextView(context);
         tv.setText(title + "\n" + detail);
         tv.setTextSize(14);
-        tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.color_text_primary));
+        tv.setTextColor(ContextCompat.getColor(context, R.color.color_text_primary));
         tv.setPadding(dpToPx(16), dpToPx(12), dpToPx(16), dpToPx(12));
         return tv;
     }
 
     private View createDivider() {
-        View divider = new View(requireContext());
+        Context context = getContext();
+        if (context == null) return new View(requireActivity());
+
+        View divider = new View(context);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 1);
         params.setMarginStart(dpToPx(16));
         divider.setLayoutParams(params);
-        divider.setBackgroundColor(
-                ContextCompat.getColor(requireContext(), R.color.color_divider));
+        divider.setBackgroundColor(ContextCompat.getColor(context, R.color.color_divider));
         return divider;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Rewards
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Populates the rewards list. Rows the user cannot yet afford are dimmed
-     * and non-clickable. Affordability is re-evaluated on every Firestore
-     * snapshot (via the profileListener → populateRewards chain). (V2)
-     */
     private void populateRewards(View root, String uid) {
+        if (!isAdded() || getContext() == null || root == null) return;
+
+        Context context = getContext();
         LinearLayout container = root.findViewById(R.id.rewards_container);
         if (container == null) return;
 
@@ -607,10 +606,10 @@ public class ProfileFragment extends Fragment {
         int dp12 = dpToPx(12);
 
         for (int i = 0; i < REWARDS.length; i++) {
-            Reward reward     = REWARDS[i];
+            Reward reward = REWARDS[i];
             boolean canRedeem = currentTotalPoints >= reward.pointsCost;
 
-            LinearLayout row = new LinearLayout(getContext());
+            LinearLayout row = new LinearLayout(context);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
 
@@ -622,27 +621,25 @@ public class ProfileFragment extends Fragment {
             row.setClickable(canRedeem);
             row.setFocusable(canRedeem);
 
-            TextView tvEmoji = new TextView(getContext());
+            TextView tvEmoji = new TextView(context);
             tvEmoji.setText(reward.emoji);
             tvEmoji.setTextSize(20);
             tvEmoji.setPadding(0, 0, dp12, 0);
             row.addView(tvEmoji);
 
-            TextView tvName = new TextView(getContext());
+            TextView tvName = new TextView(context);
             tvName.setText(reward.name);
             tvName.setTextSize(15);
-            tvName.setTextColor(
-                    ContextCompat.getColor(requireContext(), R.color.color_text_primary));
+            tvName.setTextColor(ContextCompat.getColor(context, R.color.color_text_primary));
             LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
                     0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
             tvName.setLayoutParams(nameParams);
             row.addView(tvName);
 
-            TextView tvCost = new TextView(getContext());
+            TextView tvCost = new TextView(context);
             tvCost.setText(reward.pointsCost + " pts");
             tvCost.setTextSize(13);
-            tvCost.setTextColor(
-                    ContextCompat.getColor(requireContext(), R.color.color_green_text));
+            tvCost.setTextColor(ContextCompat.getColor(context, R.color.color_green_text));
             tvCost.setTypeface(null, Typeface.BOLD);
             row.addView(tvCost);
 
@@ -654,23 +651,17 @@ public class ProfileFragment extends Fragment {
             container.addView(row);
 
             if (i < REWARDS.length - 1) {
-                View divider = new View(getContext());
+                View divider = new View(context);
                 LinearLayout.LayoutParams divParams = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT, 1);
                 divParams.setMarginStart(dp16);
                 divider.setLayoutParams(divParams);
-                divider.setBackgroundColor(
-                        ContextCompat.getColor(requireContext(), R.color.color_divider));
+                divider.setBackgroundColor(ContextCompat.getColor(context, R.color.color_divider));
                 container.addView(divider);
             }
         }
     }
 
-    /**
-     * Shows a confirmation dialog, then on success writes a redemption record
-     * (with a generated code + "active" status), deducts points, and shows
-     * the reward code to the user. (V2)
-     */
     private void showRedeemDialog(String uid, Reward reward, View rootView) {
         if (getContext() == null) return;
 
@@ -681,22 +672,24 @@ public class ProfileFragment extends Fragment {
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Redeem", (dialog, which) -> {
                     if (currentTotalPoints < reward.pointsCost) {
-                        Toast.makeText(getContext(),
-                                "Not enough points (need " + reward.pointsCost
-                                        + ", have " + currentTotalPoints + ")",
-                                Toast.LENGTH_LONG).show();
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(),
+                                    "Not enough points (need " + reward.pointsCost
+                                            + ", have " + currentTotalPoints + ")",
+                                    Toast.LENGTH_LONG).show();
+                        }
                         return;
                     }
 
                     String rewardCode = generateRewardCode();
 
                     Map<String, Object> redemptionData = new HashMap<>();
-                    redemptionData.put("uid",        uid);
-                    redemptionData.put("rewardId",   reward.name.toLowerCase(Locale.getDefault()).replace(" ", "_"));
+                    redemptionData.put("uid", uid);
+                    redemptionData.put("rewardId", reward.name.toLowerCase(Locale.getDefault()).replace(" ", "_"));
                     redemptionData.put("rewardName", reward.name);
-                    redemptionData.put("cost",       reward.pointsCost);
-                    redemptionData.put("code",       rewardCode);
-                    redemptionData.put("status",     "active");
+                    redemptionData.put("cost", reward.pointsCost);
+                    redemptionData.put("code", rewardCode);
+                    redemptionData.put("status", "active");
                     redemptionData.put("redeemedAt", Timestamp.now());
 
                     db.collection("rewards_redemptions")
@@ -707,27 +700,31 @@ public class ProfileFragment extends Fragment {
                                             .update("totalPoints",
                                                     FieldValue.increment(-reward.pointsCost))
                                             .addOnSuccessListener(unused -> {
+                                                if (!isAdded() || getContext() == null) return;
                                                 showRewardCodeDialog(reward, rewardCode);
                                                 Snackbar.make(rootView,
                                                         reward.emoji + " Reward redeemed!",
                                                         Snackbar.LENGTH_LONG).show();
                                             })
-                                            .addOnFailureListener(e ->
+                                            .addOnFailureListener(e -> {
+                                                if (getContext() != null) {
                                                     Toast.makeText(getContext(),
                                                             "Failed to deduct points. Please try again.",
-                                                            Toast.LENGTH_SHORT).show()
-                                            )
+                                                            Toast.LENGTH_SHORT).show();
+                                                }
+                                            })
                             )
-                            .addOnFailureListener(e ->
+                            .addOnFailureListener(e -> {
+                                if (getContext() != null) {
                                     Toast.makeText(getContext(),
                                             "Redemption failed. Please try again.",
-                                            Toast.LENGTH_SHORT).show()
-                            );
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
                 })
                 .show();
     }
 
-    /** Displays the generated reward code in a styled dialog. (V2) */
     private void showRewardCodeDialog(Reward reward, String rewardCode) {
         if (getContext() == null) return;
 
@@ -778,10 +775,6 @@ public class ProfileFragment extends Fragment {
         return String.valueOf(new Random().nextInt(900000) + 100000);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Notifications (V2)
-    // ─────────────────────────────────────────────────────────────────────────
-
     private void setupNotifications(String uid, View notificationDot) {
         if (notificationDot == null) return;
 
@@ -816,11 +809,11 @@ public class ProfileFragment extends Fragment {
 
                     StringBuilder builder = new StringBuilder();
                     for (QueryDocumentSnapshot doc : querySnapshot) {
-                        String title   = doc.getString("title");
+                        String title = doc.getString("title");
                         String message = doc.getString("message");
-                        Timestamp ts   = doc.getTimestamp("timestamp");
+                        Timestamp ts = doc.getTimestamp("timestamp");
 
-                        if (!TextUtils.isEmpty(title))   builder.append(title).append("\n");
+                        if (!TextUtils.isEmpty(title)) builder.append(title).append("\n");
                         if (!TextUtils.isEmpty(message)) builder.append(message).append("\n");
                         if (ts != null) {
                             SimpleDateFormat fmt =
@@ -836,10 +829,12 @@ public class ProfileFragment extends Fragment {
                             .setPositiveButton("OK", null)
                             .show();
                 })
-                .addOnFailureListener(e ->
+                .addOnFailureListener(e -> {
+                    if (getContext() != null) {
                         Toast.makeText(getContext(), "Failed to load notifications.",
-                                Toast.LENGTH_SHORT).show()
-                );
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void shareProfile(String uid) {
@@ -872,20 +867,14 @@ public class ProfileFragment extends Fragment {
                     shareIntent.putExtra(Intent.EXTRA_TEXT, message);
                     startActivity(Intent.createChooser(shareIntent, "Share profile"));
                 })
-                .addOnFailureListener(e ->
+                .addOnFailureListener(e -> {
+                    if (getContext() != null) {
                         Toast.makeText(getContext(), "Could not share profile right now.",
-                                Toast.LENGTH_SHORT).show()
-                );
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Settings & navigation
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Wires all settings rows. Account and notifications have functional
-     * destinations; privacy and help show "coming soon" toasts. (merged V1+V2)
-     */
     private void wireSettingsRows(View view) {
         LinearLayout rowAccount = view.findViewById(R.id.row_account);
         LinearLayout rowHelp = view.findViewById(R.id.row_help);
@@ -900,7 +889,7 @@ public class ProfileFragment extends Fragment {
             rowHelp.setOnClickListener(v -> {
                 if (getActivity() instanceof MainActivity) {
                     ((MainActivity) getActivity()).startStudentTutorialAgain();
-                } else {
+                } else if (getContext() != null) {
                     Toast.makeText(getContext(), "Tutorial unavailable right now", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -919,8 +908,9 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-    /** Navigates to the account settings screen. (V2) */
     private void openAccountSettings() {
+        if (!isAdded()) return;
+
         getParentFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, new AccountSettingsFragment())
@@ -928,13 +918,6 @@ public class ProfileFragment extends Fragment {
                 .commit();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Avatar (V2)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Shows the Base64 profile photo when available; falls back to initials. (V2)
-     */
     private void updateAvatar(TextView tvAvatar, ImageView ivAvatarPhoto,
                               String displayName, String profilePhotoBase64) {
         if (tvAvatar == null || ivAvatarPhoto == null) return;
@@ -957,14 +940,6 @@ public class ProfileFragment extends Fragment {
         tvAvatar.setText(getInitials(displayName));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Staff helpers
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Hides the entire rewards card/section for staff accounts.
-     * Walks up to the nearest CardView; falls back to hiding the container.
-     */
     private void hideRewardsSectionForStaff(View view) {
         View rewardsContainer = view.findViewById(R.id.rewards_container);
         if (rewardsContainer == null) return;
@@ -982,19 +957,17 @@ public class ProfileFragment extends Fragment {
         rewardsContainer.setVisibility(View.GONE);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Pure helpers
-    // ─────────────────────────────────────────────────────────────────────────
-
     private String getInitials(String displayName) {
         if (TextUtils.isEmpty(displayName)) return "ST";
         String clean = displayName.trim();
         if (clean.isEmpty()) return "ST";
         String[] parts = clean.split("\\s+");
-        if (parts.length >= 2)
+        if (parts.length >= 2) {
             return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase(Locale.getDefault());
-        if (clean.length() >= 2)
+        }
+        if (clean.length() >= 2) {
             return clean.substring(0, 2).toUpperCase(Locale.getDefault());
+        }
         return clean.substring(0, 1).toUpperCase(Locale.getDefault());
     }
 
@@ -1013,13 +986,12 @@ public class ProfileFragment extends Fragment {
     }
 
     private int dpToPx(int dp) {
-        return Math.round(dp * getResources().getDisplayMetrics().density);
+        Context context = getContext();
+        if (context == null) return dp;
+        float density = context.getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 
-    /**
-     * Prevents the parent ScrollView from intercepting touch events while the
-     * user is scrolling inside a nested scroll view (history list). (V2)
-     */
     private void disallowParentScroll(View view, MotionEvent event) {
         ViewParent parent = view.getParent();
         while (parent != null) {
