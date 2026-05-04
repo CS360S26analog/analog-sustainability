@@ -4,13 +4,13 @@
  * Community feed screen with four filter chips: Verified, News, Tips,
  * and Challenges.
  *
- * Verified tab   — embeds ValidationFeedFragment as a child fragment,
+ * Verified tab    embeds ValidationFeedFragment as a child fragment,
  *                  reusing all its voting, proof-image, and upvote logic.
- * News tab       — reads news_articles where approved == true, ordered
+ * News tab        reads news_articles where approved == true, ordered
  *                  by publishedAt descending. Tapping a card opens the
  *                  article URL in the device browser.
- * Tips tab       — reads staff-published tips from the tips collection.
- * Challenges tab — embeds ChallengesFragment via childFragmentManager.
+ * Tips tab        reads staff-published tips from the tips collection.
+ * Challenges tab  embeds ChallengesFragment via childFragmentManager.
  *
  * Role in design: Part of the View layer. Uses child-fragment embedding
  * for the Verified and Challenges tabs so that their own fragment logic
@@ -356,7 +356,7 @@ public class FeedFragment extends Fragment {
         metaRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
 
         if (category != null) {
-            metaRow.addView(buildBadge("💡 " + category,
+            metaRow.addView(buildBadge( category,
                     R.color.color_green_header, android.R.color.white));
         }
 
@@ -399,54 +399,134 @@ public class FeedFragment extends Fragment {
     // ─────────────────────────────────────────────────
 
     private void loadExploreContent() {
-        // 1. Create a parent vertical layout
+        // 1. Parent vertical layout: tips row on top, challenges below.
         LinearLayout parent = new LinearLayout(requireContext());
         parent.setOrientation(LinearLayout.VERTICAL);
         parent.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
 
-        // 2. Create the Horizontal Scroll for Tips
+        // 2. Horizontal, endlessly extendable tips rail.
         HorizontalScrollView tipScroll = new HorizontalScrollView(requireContext());
-        tipScroll.setPadding(0, dpToPx(16), 0, dpToPx(16));
+        LinearLayout.LayoutParams tipScrollParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        tipScroll.setLayoutParams(tipScrollParams);
+        tipScroll.setPadding(0, dpToPx(16), dpToPx(16), dpToPx(16));
         tipScroll.setClipToPadding(false);
-        tipScroll.setScrollBarSize(0); // Hide scrollbar
+        tipScroll.setHorizontalScrollBarEnabled(false);
+        tipScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         LinearLayout tipRow = new LinearLayout(requireContext());
         tipRow.setOrientation(LinearLayout.HORIZONTAL);
+        tipRow.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
         tipScroll.addView(tipRow);
         parent.addView(tipScroll);
 
-        // 3. Create a FrameLayout to hold the ChallengesFragment
+        // 3. Challenges fill the remaining vertical space.
         FrameLayout challengeFrame = new FrameLayout(requireContext());
-        challengeFrame.setId(View.generateViewId()); // Unique ID for transaction
+        challengeFrame.setId(View.generateViewId());
+        LinearLayout.LayoutParams challengeParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                0,
+                1f);
+        challengeFrame.setLayoutParams(challengeParams);
         parent.addView(challengeFrame);
 
         contentContainer.addView(parent);
 
-        // 4. Fetch Random Tips for the row
-        db.collection("tips").get().addOnSuccessListener(snapshots -> {
-            List<DocumentSnapshot> tipDocs = new ArrayList<>(snapshots.getDocuments());
-            java.util.Collections.shuffle(tipDocs); // Randomize for every open
+        // 4. Load all tips once, shuffle once, then repeat that same shuffled cycle.
+        TextView loading = buildLoadingLabel("Loading tips…");
+        LinearLayout.LayoutParams loadingParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        loadingParams.setMargins(dpToPx(16), 0, 0, 0);
+        loading.setLayoutParams(loadingParams);
+        tipRow.addView(loading);
 
-            for (DocumentSnapshot doc : tipDocs) {
-                tipRow.addView(buildTipCard(
-                        doc.getString("title"),
-                        doc.getString("body"),
-                        doc.getString("category"),
-                        doc.getTimestamp("timestamp")
-                ));
-            }
-        });
+        final boolean[] isAppendingTips = {false};
+
+        db.collection("tips")
+                .get()
+                .addOnSuccessListener(snapshots -> {
+                    if (!isAdded()) return;
+
+                    tipRow.removeAllViews();
+                    List<DocumentSnapshot> tipDocs = new ArrayList<>(snapshots.getDocuments());
+
+                    if (tipDocs.isEmpty()) {
+                        tipRow.addView(buildEmptyHorizontalLabel(
+                                "No tips published yet. Check back soon! 💡"));
+                        return;
+                    }
+
+                    // Shuffle once, like a music playlist shuffle.
+                    // Example: if Firestore order is 1,2,3 and this becomes 1,3,2,
+                    // the rail repeats as 1,3,2,1,3,2,1,3,2...
+                    List<DocumentSnapshot> shuffledTipCycle = new ArrayList<>(tipDocs);
+                    java.util.Collections.shuffle(shuffledTipCycle);
+
+                    // Add two copies of the same cycle so the rail feels full immediately.
+                    appendTipCycle(tipRow, shuffledTipCycle);
+                    appendTipCycle(tipRow, shuffledTipCycle);
+
+                    tipScroll.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                        if (isAppendingTips[0] || shuffledTipCycle.isEmpty()) return;
+
+                        int distanceToEnd = tipRow.getWidth() - (scrollX + tipScroll.getWidth());
+
+                        // Conventional lazy-load threshold: start adding before the user hits the edge.
+                        if (distanceToEnd < dpToPx(420)) {
+                            isAppendingTips[0] = true;
+                            appendTipCycle(tipRow, shuffledTipCycle);
+                            tipRow.post(() -> isAppendingTips[0] = false);
+                        }
+                    });
+                })
+                .addOnFailureListener(e -> {
+                    if (!isAdded()) return;
+                    tipRow.removeAllViews();
+                    tipRow.addView(buildEmptyHorizontalLabel("Could not load tips."));
+                });
+
+        // 5. Load ChallengesFragment into the inner frame.
         ChallengesFragment fragment = new ChallengesFragment();
         Bundle args = new Bundle();
-        args.putString("mode", "browse"); // Triggers fragment_challenges_browse.xml
+        args.putString("mode", "browse");
         fragment.setArguments(args);
 
-        // 5. Load Challenges Fragment into the inner frame
         getChildFragmentManager()
                 .beginTransaction()
-                .replace(challengeFrame.getId(), new ChallengesFragment())
+                .replace(challengeFrame.getId(), fragment)
                 .commit();
+    }
+
+    /**
+     * Adds one copy of the already-shuffled tips cycle to the horizontal rail.
+     * Important: this method does NOT reshuffle. The order is chosen once in
+     * loadExploreContent(), then repeated forever like a shuffled playlist.
+     */
+    private void appendTipCycle(LinearLayout tipRow, List<DocumentSnapshot> shuffledTipCycle) {
+        for (DocumentSnapshot doc : shuffledTipCycle) {
+            tipRow.addView(buildTipCard(
+                    doc.getString("title"),
+                    doc.getString("body"),
+                    doc.getString("category"),
+                    doc.getTimestamp("timestamp")
+            ));
+        }
+    }
+
+    private TextView buildEmptyHorizontalLabel(String text) {
+        TextView tv = buildEmptyLabel(text);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.setMargins(dpToPx(16), 0, dpToPx(16), 0);
+        tv.setLayoutParams(params);
+        return tv;
     }
 
     // ─────────────────────────────────────────────────
@@ -478,7 +558,7 @@ public class FeedFragment extends Fragment {
         tv.setText(text);
         tv.setTextSize(11f);
         tv.setTextColor(requireContext().getColor(textColorRes));
-        tv.setBackground(requireContext().getDrawable(R.drawable.bg_header_green));
+        tv.setBackground(requireContext().getDrawable(R.drawable.bg_card_green));
         tv.setPadding(dpToPx(8), dpToPx(3), dpToPx(8), dpToPx(3));
         tv.getBackground().setTint(requireContext().getColor(bgColorRes));
         return tv;
