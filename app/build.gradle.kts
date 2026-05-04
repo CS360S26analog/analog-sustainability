@@ -62,6 +62,6 @@ dependencies {
     androidTestImplementation("androidx.work:work-testing:2.9.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
     implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
-    implementation("androidx.room:room-runtime:2.6.1")
-    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:2.8.4")
+    annotationProcessor("androidx.room:room-compiler:2.8.4")
 }

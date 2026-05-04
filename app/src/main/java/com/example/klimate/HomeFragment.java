@@ -1040,6 +1040,7 @@ public class HomeFragment extends Fragment {
             int localId = (int) localDb.activityLogDao().insert(entity);
             localDb.userDao().incrementPoints(uid, basePoints);
             localDb.userDao().incrementCo2(uid, co2);
+            NotificationHelper.scheduleMimiHungryReminder(context);
 
             // Show success immediately — don't wait for Firestore
             if (isAdded()) requireActivity().runOnUiThread(() -> {

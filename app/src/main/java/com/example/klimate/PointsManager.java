@@ -116,8 +116,13 @@ public class PointsManager {
                             .collection("badges")
                             .document(badge.id)
                             .set(badgeData)
-                            .addOnSuccessListener(unused ->
-                                    Log.d(TAG, "Badge awarded: " + badge.id + " to user " + userId))
+                            .addOnSuccessListener(unused -> {
+                                Log.d(TAG, "Badge awarded: " + badge.id + " to user " + userId);
+                                NotificationHelper.showBadgeEarnedNotification(
+                                        db.getApp().getApplicationContext(),
+                                        badge.name
+                                );
+                            })
                             .addOnFailureListener(e ->
                                     Log.e(TAG, "Failed to award badge " + badge.id, e));
                 })

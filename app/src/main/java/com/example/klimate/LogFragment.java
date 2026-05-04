@@ -999,6 +999,7 @@ public class LogFragment extends Fragment {
             // Increment user stats in Room immediately (optimistic update)
             app_database.userDao().incrementPoints(userId, points);
             app_database.userDao().incrementCo2(userId, co2SavedKg);
+            NotificationHelper.scheduleMimiHungryReminder(requireContext());
 
             // ── 2. Push to Firestore in background ───────────────────────────
             Map<String, Object> logData = new HashMap<>();
