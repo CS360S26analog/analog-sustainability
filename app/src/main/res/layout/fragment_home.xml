@@ -134,7 +134,6 @@
                         android:progress="0"
                         android:progressBackgroundTint="#40FFFFFF"
                         android:progressTint="@color/color_amber" />
-
                 </LinearLayout>
 
                 <TextView
@@ -566,7 +565,6 @@
                 android:orientation="horizontal">
 
                 <!-- Campus Impact -->
-                <!-- Campus Impact -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/card_campus_impact_compact"
                     android:layout_width="0dp"
@@ -583,7 +581,6 @@
                         android:orientation="vertical"
                         android:padding="18dp">
 
-                        <!-- Top title -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -592,13 +589,11 @@
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
-                        <!-- Spacer -->
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="0dp"
                             android:layout_weight="1" />
 
-                        <!-- Middle big number -->
                         <TextView
                             android:id="@+id/tv_campus_co2"
                             android:layout_width="wrap_content"
@@ -606,12 +601,11 @@
                             android:layout_gravity="center_horizontal"
                             android:gravity="center"
                             android:maxLines="1"
-                            android:text="14.8 kg"
+                            android:text="0.0 kg"
                             android:textColor="@color/white"
                             android:textSize="28sp"
                             android:textStyle="bold" />
 
-                        <!-- Bottom small label -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -621,7 +615,6 @@
                             android:textColor="#EAF4E5"
                             android:textSize="12sp" />
 
-                        <!-- Keep this hidden so existing code doesn't crash -->
                         <TextView
                             android:id="@+id/tv_campus_students"
                             android:layout_width="wrap_content"
@@ -629,14 +622,13 @@
                             android:text=""
                             android:visibility="gone" />
 
-                        <!-- Spacer -->
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="0dp"
                             android:layout_weight="1" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
-                <!-- EcoPicks Near You -->
+
                 <!-- EcoPicks Near You -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/card_ecopicks_widget"
@@ -655,7 +647,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent">
 
-                        <!-- Map background -->
                         <ImageView
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
@@ -663,7 +654,6 @@
                             android:scaleType="centerCrop"
                             android:src="@drawable/ecopicks_map_preview" />
 
-                        <!-- Overlay content -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
@@ -673,14 +663,12 @@
                             android:paddingEnd="14dp"
                             android:paddingBottom="12dp">
 
-                            <!-- Title/subtitle + arrow -->
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:gravity="top"
                                 android:orientation="horizontal">
 
-                                <!-- Readable background behind title/subtitle -->
                                 <LinearLayout
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
@@ -727,7 +715,6 @@
                                 android:layout_height="0dp"
                                 android:layout_weight="1" />
 
-                            <!-- Open map pill -->
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="40dp"
@@ -810,7 +797,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Zero Waste February 🗑️"
+                            android:text="No monthly challenge joined"
                             android:textColor="@color/color_text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -835,7 +822,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="8dp"
                         android:layout_marginTop="12dp"
-                        android:max="20"
+                        android:max="1"
                         android:progress="0"
                         android:progressBackgroundTint="#E0E0E0"
                         android:progressTint="@color/color_green_header" />
@@ -851,7 +838,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="0 / 20 logs"
+                            android:text="Join a challenge to track progress"
                             android:textColor="@color/color_text_secondary"
                             android:textSize="13sp" />
 
@@ -859,7 +846,7 @@
                             android:id="@+id/tv_challenge_percent"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Start logging to make progress"
+                            android:text="Browse challenges to get started"
                             android:textColor="@color/color_green_text"
                             android:textSize="13sp"
                             android:textStyle="bold" />

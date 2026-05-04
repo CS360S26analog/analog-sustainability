@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,11 +25,10 @@ public class StaffProfileFragment extends Fragment {
     private FirebaseAuth auth;
     private FirebaseFirestore db;
 
-    private TextView tvStaffName;
-    private TextView tvStaffEmail;
-    private TextView tvStaffRole;
-    private TextView tvTipsPublished;
-    private TextView tvLogsReported;
+    private TextView tvName;
+    private TextView tvEmail;
+    private TextView tvRole;
+    private TextView tvAvatar;
 
     @Nullable
     @Override
@@ -39,81 +39,118 @@ public class StaffProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_staff_profile, container, false);
 
         auth = FirebaseAuth.getInstance();
-        forceGreenHeaderColor();
         db = FirebaseFirestore.getInstance();
 
-        tvStaffName = view.findViewById(R.id.tv_staff_profile_name);
-        tvStaffEmail = view.findViewById(R.id.tv_staff_profile_email);
-        tvStaffRole = view.findViewById(R.id.tv_staff_profile_role);
-        tvTipsPublished = view.findViewById(R.id.tv_staff_tips_published);
-        tvLogsReported = view.findViewById(R.id.tv_staff_logs_reported);
+        forceGreenHeaderColor();
 
-        view.findViewById(R.id.row_staff_logout).setOnClickListener(v -> {
-            auth.signOut();
-            Intent intent = new Intent(requireContext(), LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-        });
+        // ── View refs (MATCH XML EXACTLY)
+        tvName   = view.findViewById(R.id.tv_staff_profile_name);
+        tvEmail  = view.findViewById(R.id.tv_staff_profile_email);
+        tvRole   = view.findViewById(R.id.tv_staff_profile_role);
+        tvAvatar = view.findViewById(R.id.tv_avatar_initials);
+
+        // ── IMPORTANT: copy student wiring
+        wireSettingsRows(view);
+        wireLogout(view);
 
         loadStaffInfo();
-        loadStaffStats();
 
         return view;
     }
 
     private void forceGreenHeaderColor() {
-        if (getActivity() == null) return;
+        if (getActivity() == null || getContext() == null) return;
 
-        Window window = getActivity().getWindow();
-        window.setStatusBarColor(ContextCompat.getColor(requireContext(), R.color.color_green_header));
+        Window window = requireActivity().getWindow();
+        window.setStatusBarColor(
+                ContextCompat.getColor(requireContext(), R.color.color_green_header)
+        );
     }
 
-    private void loadStaffInfo() {
-        FirebaseUser currentUser = auth.getCurrentUser();
+    // ─────────────────────────────────────────
+    // 🔥 COPY OF STUDENT LOGIC (THIS FIXES BUTTONS)
+    // ─────────────────────────────────────────
+    private void wireSettingsRows(View view) {
+        LinearLayout rowAccount = view.findViewById(R.id.row_account);
+        LinearLayout rowNotifications = view.findViewById(R.id.row_notifications);
 
-        if (currentUser == null) {
-            tvStaffName.setText("Staff");
-            tvStaffEmail.setText("");
-            tvStaffRole.setText("Staff Account");
+        if (rowAccount != null) {
+            rowAccount.setOnClickListener(v ->
+                    Toast.makeText(getContext(), "Account Settings — coming soon!", Toast.LENGTH_SHORT).show()
+            );
+        }
+
+        if (rowNotifications != null) {
+            rowNotifications.setOnClickListener(v ->
+                    Toast.makeText(getContext(), "Notifications — coming soon!", Toast.LENGTH_SHORT).show()
+            );
+        }
+    }
+
+    private void wireLogout(View view) {
+        LinearLayout rowLogout = view.findViewById(R.id.row_staff_logout);
+
+        if (rowLogout != null) {
+            rowLogout.setOnClickListener(v -> {
+                auth.signOut();
+
+                Intent intent = new Intent(getActivity(), LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+            });
+        }
+    }
+
+    // ─────────────────────────────────────────
+
+    private void loadStaffInfo() {
+        FirebaseUser user = auth.getCurrentUser();
+
+        if (user == null) {
+            setUI("Staff", "", "Staff Account");
             return;
         }
 
-        tvStaffEmail.setText(currentUser.getEmail() != null ? currentUser.getEmail() : "");
+        String fallbackEmail = user.getEmail() != null ? user.getEmail() : "";
 
         db.collection("users")
-                .document(currentUser.getUid())
+                .document(user.getUid())
                 .get()
                 .addOnSuccessListener(doc -> {
-                    String displayName = doc.getString("displayName");
+                    String name = doc.getString("displayName");
                     String email = doc.getString("email");
                     String role = doc.getString("role");
 
-                    if (TextUtils.isEmpty(displayName)) {
-                        displayName = !TextUtils.isEmpty(email) ? email : "Staff";
-                    }
+                    if (TextUtils.isEmpty(name)) name = fallbackEmail;
+                    if (TextUtils.isEmpty(email)) email = fallbackEmail;
 
-                    tvStaffName.setText(displayName);
-                    tvStaffEmail.setText(!TextUtils.isEmpty(email) ? email : currentUser.getEmail());
-                    tvStaffRole.setText("staff".equalsIgnoreCase(role) ? "Staff Account" : "Account");
+                    String roleText = "staff".equalsIgnoreCase(role)
+                            ? "Staff Account"
+                            : "Account";
+
+                    setUI(name, email, roleText);
                 })
-                .addOnFailureListener(e -> {
-                    tvStaffName.setText("Staff");
-                    tvStaffRole.setText("Staff Account");
-                });
+                .addOnFailureListener(e ->
+                        setUI("Staff", fallbackEmail, "Staff Account")
+                );
     }
 
-    private void loadStaffStats() {
-        db.collection("tips")
-                .get()
-                .addOnSuccessListener(snap ->
-                        tvTipsPublished.setText(String.valueOf(snap.size()))
-                );
+    private void setUI(String name, String email, String role) {
+        tvName.setText(name);
+        tvEmail.setText(email);
+        tvRole.setText(role);
+        tvAvatar.setText(getInitials(name));
+    }
 
-        db.collection("activity_logs")
-                .whereEqualTo("reported", true)
-                .get()
-                .addOnSuccessListener(snap ->
-                        tvLogsReported.setText(String.valueOf(snap.size()))
-                );
+    private String getInitials(String name) {
+        if (TextUtils.isEmpty(name)) return "ST";
+
+        String[] parts = name.trim().split("\\s+");
+
+        if (parts.length >= 2) {
+            return (parts[0].substring(0,1) + parts[1].substring(0,1)).toUpperCase();
+        }
+
+        return name.substring(0,1).toUpperCase();
     }
 }

@@ -4,10 +4,15 @@
  * Staff-only reports screen for Klimate.
  *
  * Shows admin metrics, a staff leaderboard with log count,
- * and flagged pending logs with approve / reject actions.
+ * and flagged/reported logs with keep / delete actions.
  *
- * This fragment is standalone for now.
- * Staff navigation can later open it with new StaffReportsFragment().
+ * Fix included:
+ * - Displays logs where status == "flagged"
+ * - Displays logs where flagged == true
+ * - Displays logs where reported == true
+ * - Displays logs with 5 or more downvotes even if status was not updated
+ * - Reads both old fields: upvotes/downvotes
+ * - Reads new fields: upvoteCount/downvoteCount
  *
  * @author Karar
  */
@@ -37,10 +42,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -48,9 +53,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class StaffReportsFragment extends Fragment {
+
+    private static final int DOWNVOTE_FLAG_THRESHOLD = 5;
 
     private FirebaseFirestore db;
     private FirebaseAuth auth;
@@ -73,6 +79,7 @@ public class StaffReportsFragment extends Fragment {
 
     private final List<StaffUserRow> latestUsers = new ArrayList<>();
     private final Map<String, Long> latestLogCounts = new HashMap<>();
+
     private long latestTotalLogs = 0;
     private double latestTotalCo2 = 0.0;
 
@@ -94,6 +101,7 @@ public class StaffReportsFragment extends Fragment {
         String userId;
         String activityType;
         String status;
+        String flagReason;
         long points;
         long bonusPoints;
         long upvotes;
@@ -105,6 +113,7 @@ public class StaffReportsFragment extends Fragment {
                       String userId,
                       String activityType,
                       String status,
+                      String flagReason,
                       long points,
                       long bonusPoints,
                       long upvotes,
@@ -115,6 +124,7 @@ public class StaffReportsFragment extends Fragment {
             this.userId = userId;
             this.activityType = activityType;
             this.status = status;
+            this.flagReason = flagReason;
             this.points = points;
             this.bonusPoints = bonusPoints;
             this.upvotes = upvotes;
@@ -131,8 +141,9 @@ public class StaffReportsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_staff_reports, container, false);
 
         db = FirebaseFirestore.getInstance();
-        forceGreenHeaderColor();
         auth = FirebaseAuth.getInstance();
+
+        forceGreenHeaderColor();
 
         reportsContentContainer = view.findViewById(R.id.reports_content_container);
         accessDeniedCard = view.findViewById(R.id.card_staff_access_denied);
@@ -153,10 +164,12 @@ public class StaffReportsFragment extends Fragment {
     }
 
     private void forceGreenHeaderColor() {
-        if (getActivity() == null) return;
+        if (getActivity() == null || getContext() == null) return;
 
-        Window window = getActivity().getWindow();
-        window.setStatusBarColor(ContextCompat.getColor(requireContext(), R.color.color_green_header));
+        Window window = requireActivity().getWindow();
+        window.setStatusBarColor(
+                ContextCompat.getColor(requireContext(), R.color.color_green_header)
+        );
     }
 
     private void checkStaffAccess() {
@@ -229,7 +242,6 @@ public class StaffReportsFragment extends Fragment {
                     for (DocumentSnapshot doc : snapshots.getDocuments()) {
                         String role = doc.getString("role");
 
-                        // Staff reports leaderboard should show students only.
                         if (!"student".equalsIgnoreCase(role != null ? role.trim() : "")) {
                             continue;
                         }
@@ -266,7 +278,7 @@ public class StaffReportsFragment extends Fragment {
                     latestTotalLogs = snapshots.size();
                     latestTotalCo2 = 0.0;
 
-                    List<DocumentSnapshot> reportedLogs = new ArrayList<>();
+                    List<DocumentSnapshot> flaggedLogs = new ArrayList<>();
 
                     for (DocumentSnapshot doc : snapshots.getDocuments()) {
                         String userId = doc.getString("userId");
@@ -280,18 +292,29 @@ public class StaffReportsFragment extends Fragment {
 
                         latestTotalCo2 += readDouble(doc, "co2SavedKg");
 
-                        Boolean reported = doc.getBoolean("reported");
-                        String status = doc.getString("status");
-
-                        if (Boolean.TRUE.equals(reported) || "reported".equals(status)) {
-                            reportedLogs.add(doc);
+                        if (shouldShowInFlaggedLogs(doc)) {
+                            flaggedLogs.add(doc);
                         }
                     }
 
                     renderMetrics();
                     renderLeaderboard();
-                    loadFlaggedLogs(reportedLogs);
+                    loadFlaggedLogs(flaggedLogs);
                 });
+    }
+
+    private boolean shouldShowInFlaggedLogs(@NonNull DocumentSnapshot doc) {
+        Boolean reported = doc.getBoolean("reported");
+        Boolean flagged = doc.getBoolean("flagged");
+        String status = doc.getString("status");
+
+        long downvoteCount = readLongAny(doc, "downvoteCount", "downvotes");
+
+        return Boolean.TRUE.equals(reported)
+                || Boolean.TRUE.equals(flagged)
+                || "flagged".equalsIgnoreCase(status)
+                || "reported".equalsIgnoreCase(status)
+                || downvoteCount >= DOWNVOTE_FLAG_THRESHOLD;
     }
 
     private void renderMetrics() {
@@ -323,6 +346,7 @@ public class StaffReportsFragment extends Fragment {
 
         for (int i = 0; i < limit; i++) {
             StaffUserRow user = latestUsers.get(i);
+
             long logCount = latestLogCounts.containsKey(user.uid)
                     ? latestLogCounts.get(user.uid)
                     : 0;
@@ -374,43 +398,44 @@ public class StaffReportsFragment extends Fragment {
         return row;
     }
 
-    private void loadFlaggedLogs(List<DocumentSnapshot> reportedLogs) {
+    private void loadFlaggedLogs(@NonNull List<DocumentSnapshot> flaggedLogs) {
         if (flaggedLogsContainer == null || getContext() == null) return;
 
         flaggedLogsContainer.removeAllViews();
 
-        if (reportedLogs.isEmpty()) {
+        if (flaggedLogs.isEmpty()) {
             showNoFlaggedLogs(0);
             return;
         }
 
-        int reportedCount = 0;
+        int flaggedCount = 0;
 
-        for (DocumentSnapshot logDoc : reportedLogs) {
+        for (DocumentSnapshot logDoc : flaggedLogs) {
             String logId = logDoc.getString("logId");
 
             if (TextUtils.isEmpty(logId)) {
                 logId = logDoc.getId();
             }
 
-            FlaggedLogRow reportedLog = new FlaggedLogRow(
+            FlaggedLogRow flaggedLog = new FlaggedLogRow(
                     logDoc.getId(),
                     logId,
                     logDoc.getString("userId"),
                     safeText(logDoc.getString("activityType"), "Unknown activity"),
-                    safeText(logDoc.getString("status"), "reported"),
+                    safeText(logDoc.getString("status"), "flagged"),
+                    safeText(logDoc.getString("flagReason"), "Needs staff review"),
                     readLong(logDoc, "points"),
                     readLong(logDoc, "bonusPoints"),
-                    readLong(logDoc, "upvotes"),
-                    readLong(logDoc, "downvotes"),
+                    readLongAny(logDoc, "upvoteCount", "upvotes"),
+                    readLongAny(logDoc, "downvoteCount", "downvotes"),
                     logDoc.getTimestamp("timestamp")
             );
 
-            flaggedLogsContainer.addView(createFlaggedLogCard(reportedLog));
-            reportedCount++;
+            flaggedLogsContainer.addView(createFlaggedLogCard(flaggedLog));
+            flaggedCount++;
         }
 
-        showNoFlaggedLogs(reportedCount);
+        showNoFlaggedLogs(flaggedCount);
     }
 
     private void showNoFlaggedLogs(int flaggedCount) {
@@ -445,7 +470,8 @@ public class StaffReportsFragment extends Fragment {
 
         TextView meta = createSmallText(
                 "User: " + safeText(log.userId, "Unknown")
-                        + "\nStatus: " + log.status
+                        + "\nStatus: " + safeText(log.status, "flagged")
+                        + "\nReason: " + formatFlagReason(log.flagReason)
                         + "\nSubmitted: " + formatTimestamp(log.timestamp)
         );
         meta.setPadding(0, dpToPx(4), 0, 0);
@@ -481,10 +507,26 @@ public class StaffReportsFragment extends Fragment {
         return card;
     }
 
+    private String formatFlagReason(@Nullable String reason) {
+        if (TextUtils.isEmpty(reason)) {
+            return "Needs staff review";
+        }
+
+        if ("manual_report".equals(reason)) {
+            return "Manual report";
+        }
+
+        if ("5_downvotes".equals(reason)) {
+            return "5 or more downvotes";
+        }
+
+        return reason.replace("_", " ");
+    }
+
     private void confirmKeep(FlaggedLogRow log) {
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Keep log?")
-                .setMessage("This will remove the report flag and keep the log visible.")
+                .setMessage("This will remove the flag and return the log to pending verification.")
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Keep", (dialog, which) -> keepLog(log))
                 .show();
@@ -496,10 +538,13 @@ public class StaffReportsFragment extends Fragment {
 
         Map<String, Object> updates = new HashMap<>();
         updates.put("reported", false);
+        updates.put("flagged", false);
         updates.put("status", "pending_verification");
         updates.put("reviewDecision", "kept");
         updates.put("reviewedBy", reviewerId);
         updates.put("reviewedAt", Timestamp.now());
+        updates.put("flagReason", FieldValue.delete());
+        updates.put("flaggedAt", FieldValue.delete());
 
         db.collection("activity_logs")
                 .document(log.documentId)
@@ -514,7 +559,7 @@ public class StaffReportsFragment extends Fragment {
 
     private void confirmDelete(FlaggedLogRow log) {
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Delete reported log?")
+                .setTitle("Delete flagged log?")
                 .setMessage("This will permanently delete this activity log.")
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Delete", (dialog, which) -> deleteReportedLog(log))
@@ -584,10 +629,14 @@ public class StaffReportsFragment extends Fragment {
         String reviewerId = reviewer != null ? reviewer.getUid() : "unknown";
 
         Map<String, Object> updates = new HashMap<>();
+        updates.put("reported", false);
+        updates.put("flagged", false);
         updates.put("status", "verified");
         updates.put("reviewDecision", "approved");
         updates.put("reviewedBy", reviewerId);
         updates.put("reviewedAt", Timestamp.now());
+        updates.put("flagReason", FieldValue.delete());
+        updates.put("flaggedAt", FieldValue.delete());
 
         db.collection("activity_logs")
                 .document(log.documentId)
@@ -608,10 +657,14 @@ public class StaffReportsFragment extends Fragment {
 
         if (TextUtils.isEmpty(log.userId)) {
             Map<String, Object> updates = new HashMap<>();
+            updates.put("reported", false);
+            updates.put("flagged", false);
             updates.put("status", "rejected");
             updates.put("reviewDecision", "rejected");
             updates.put("reviewedBy", reviewerId);
             updates.put("reviewedAt", Timestamp.now());
+            updates.put("flagReason", FieldValue.delete());
+            updates.put("flaggedAt", FieldValue.delete());
 
             logRef.update(updates)
                     .addOnSuccessListener(unused ->
@@ -637,11 +690,15 @@ public class StaffReportsFragment extends Fragment {
             long newUserPoints = Math.max(0, currentUserPoints - deduction);
 
             Map<String, Object> updates = new HashMap<>();
+            updates.put("reported", false);
+            updates.put("flagged", false);
             updates.put("status", "rejected");
             updates.put("reviewDecision", "rejected");
             updates.put("reviewedBy", reviewerId);
             updates.put("reviewedAt", Timestamp.now());
             updates.put("pointsDeductedOnReject", deduction);
+            updates.put("flagReason", FieldValue.delete());
+            updates.put("flaggedAt", FieldValue.delete());
 
             transaction.update(logRef, updates);
             transaction.update(userRef, "totalPoints", newUserPoints);
@@ -681,6 +738,16 @@ public class StaffReportsFragment extends Fragment {
         }
 
         return 0;
+    }
+
+    private long readLongAny(DocumentSnapshot doc, String firstField, String secondField) {
+        long firstValue = readLong(doc, firstField);
+
+        if (firstValue != 0) {
+            return firstValue;
+        }
+
+        return readLong(doc, secondField);
     }
 
     private double readDouble(DocumentSnapshot doc, String field) {
