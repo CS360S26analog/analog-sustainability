@@ -747,6 +747,47 @@ Social screen showing a student's friend list ranked by eco points and active st
 
 </details>
 
+### Wireframes – Project Part 4
+
+<details>
+<summary><strong>Updated App Screenshots</strong></summary>
+
+| Screen | Preview | Description |
+|--------|---------|-------------|
+| Login | <img src="./screenshots/signuppage.jpeg" width="250"/> | Login screen for existing users with email and password fields. |
+| Sign Up | <img src="./screenshots/signup.jpeg" width="250"/> | Account creation page with name, email, university, and password fields. |
+| Sign Up Form | <img src="./screenshots/signup2.jpeg" width="250"/> | Completed sign up form view with the main Sign Up button. |
+| Home Dashboard | <img src="./screenshots/hom1.jpeg" width="250"/> | Main dashboard showing quick logs, campus impact, EcoPicks, and monthly challenges. |
+| Tutorial Popup | <img src="./screenshots/tutorial.jpeg" width="250"/> | First time tutorial explaining how to use the main app features. |
+| Home Tutorial Overlay | <img src="./screenshots/tips.jpeg" width="250"/> | Guided tutorial overlay explaining the Home Dashboard. |
+| Quick Log | <img src="./screenshots/quicklog.jpeg" width="250"/> | Quick activity logging page with common sustainable actions. |
+| Log Slider | <img src="./screenshots/logslider.jpeg" width="250"/> | Quick log screen with item quantity slider and selected activity. |
+| Verified Log | <img src="./screenshots/verifiedlog.jpeg" width="250"/> | Verified logging page where users attach or capture proof photos. |
+| Validation Feed | <img src="./screenshots/verifiedfeed.jpeg" width="250"/> | Community validation feed with proof review, upvote, downvote, and report options. |
+| Community Feed Challenges | <img src="./screenshots/feed1.jpeg" width="250"/> | Feed page showing tips and challenge cards. |
+| Community Feed News | <img src="./screenshots/feednews.jpeg" width="250"/> | News tab showing environmental and nature related articles. |
+| Community Feed My Teams | <img src="./screenshots/feedteams.jpeg" width="250"/> | My Teams tab showing team contribution and sharing options. |
+| EcoPicks Map | <img src="./screenshots/map.jpeg" width="250"/> | Campus eco map showing sustainability spots around campus. |
+| EcoPicks Suggestion Popup | <img src="./screenshots/mapsuggestion.jpeg" width="250"/> | Suggestion popup shown on the eco map with sustainable reminders. |
+| Suggest a Tip | <img src="./screenshots/suggesttip.jpeg" width="250"/> | User form for suggesting a new EcoMap tip for staff review. |
+| Leaderboard List | <img src="./screenshots/leaderboard.jpeg" width="250"/> | Live leaderboard ranking users by total points. |
+| Leaderboard Rivalry | <img src="./screenshots/leaderboardrivalry.jpeg" width="250"/> | Podium and rival comparison view showing points needed to overtake another user. |
+| Nemesis Card | <img src="./screenshots/nemesiscard.jpeg" width="250"/> | Rival catch-up card with recommended activities to close the points gap. |
+| Profile Main | <img src="./screenshots/profile1.jpeg" width="250"/> | User profile page with avatar, points, achievements, and rewards. |
+| Profile History | <img src="./screenshots/profilehistory.jpeg" width="250"/> | Profile section showing reward options and past activity history. |
+| Edit Profile | <img src="./screenshots/editprof.jpeg" width="250"/> | Account settings page for updating display name and profile picture. |
+| Staff Manage Challenges | <img src="./screenshots/staffchallenge.jpeg" width="250"/> | Staff page for creating and configuring campus sustainability challenges. |
+| Staff Campus Overview | <img src="./screenshots/staffhome.jpeg" width="250"/> | Staff dashboard showing campus impact, active challenges, flagged logs, and tips. |
+| Staff Quick Actions | <img src="./screenshots/staffhome2.jpeg" width="250"/> | Staff overview with quick actions for challenges, tips, reports, and activity logs. |
+| Staff Top Activities | <img src="./screenshots/staffhome3.jpeg" width="250"/> | Staff overview showing pending reviews and top activities this week. |
+| Staff Profile | <img src="./screenshots/staffprofile.jpeg" width="250"/> | Staff profile page with account settings, notifications, and logout. |
+| Staff Reports | <img src="./screenshots/staffreports.jpeg" width="250"/> | Reports page showing users, logs, CO₂ saved, flagged logs, and leaderboard. |
+| Staff Reports Leaderboard | <img src="./screenshots/staffreports2.jpeg" width="250"/> | Extended staff leaderboard with points and log counts. |
+| Staff Publish Tips | <img src="./screenshots/stafftips.jpeg" width="250"/> | Staff page for publishing new tips and reviewing EcoMap suggestions. |
+| Staff Tips Review | <img src="./screenshots/stafftips2.jpeg" width="250"/> | Staff review page for approving or rejecting student suggestions and editing published tips. |
+
+</details>
+
 ---
 
 ## Acceptance Criteria
