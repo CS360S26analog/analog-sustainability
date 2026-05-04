@@ -43,6 +43,7 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -170,6 +171,10 @@ public class HomeFragment extends Fragment {
         if (tvSeeMoreLogs != null) {
             tvSeeMoreLogs.setOnClickListener(v -> navigateToLog());
         }
+        TextView btnMimiLog = view.findViewById(R.id.btn_mimi_log);
+        if (btnMimiLog != null) {
+            btnMimiLog.setOnClickListener(v -> navigateToLog());
+        }
 
         if (btnRecent1 != null) {
             btnRecent1.setOnClickListener(v ->
@@ -209,6 +214,13 @@ public class HomeFragment extends Fragment {
 //                }
 //            });
 //        }
+        View cardMimiHome = view.findViewById(R.id.card_mimi_home);
+        if (cardMimiHome != null) {
+            cardMimiHome.setOnClickListener(v -> {
+                Intent intent = new Intent(requireContext(), MimiDetailActivity.class);
+                startActivity(intent);
+            });
+        }
 
         // ── Role-gated buttons ────────────────────────────────────────────────
         if (currentUser != null) {

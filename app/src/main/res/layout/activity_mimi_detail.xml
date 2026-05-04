@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_cream_bg"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <app.rive.runtime.kotlin.RiveAnimationView
+        android:id="@+id/rive_mimi_detail"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        app:riveAutoPlay="true"
+        app:riveFit="CONTAIN"
+        app:riveResource="@raw/mimi_cat_3" />
+
+    <TextView
+        android:id="@+id/tv_mimi_detail_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:text="Mimi (your favourite library catto) - Pat her!"
+        android:textColor="@color/color_text_primary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+</LinearLayout>
